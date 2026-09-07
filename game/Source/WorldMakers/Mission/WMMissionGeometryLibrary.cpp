@@ -2,7 +2,7 @@
 
 float UWMMissionGeometryLibrary::MeasureWorldDistanceCm(const FVector& Start, const FVector& End)
 {
-    return FVector::Distance(Start, End);
+    return FVector::Dist(Start, End);
 }
 
 bool UWMMissionGeometryLibrary::IsWorldPointInsideBox(
