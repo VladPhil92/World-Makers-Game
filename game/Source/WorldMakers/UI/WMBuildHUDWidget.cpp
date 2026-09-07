@@ -178,7 +178,7 @@ void UWMBuildHUDWidget::RefreshStatus()
                     const int32 MeasuredCm = FMath::RoundToInt(Missions->GetLastMeasuredSpanCm());
                     const float MeasuredMeters = Missions->GetLastMeasuredSpanCm() / 100.0f;
                     MissionStatusText->SetText(FText::Format(
-                        LOCTEXT("MissionMeasuredBuildSpan", "{0}: measured {1} cm ({2} m). Build or adjust to about {3} cm."),
+                        LOCTEXT("MissionMeasuredBuildSpan", "{0} — Measured: {1} cm ({2} m). Build or adjust to about {3} cm."),
                         MissionIdText,
                         FText::AsNumber(MeasuredCm),
                         FText::AsNumber(MeasuredMeters),
