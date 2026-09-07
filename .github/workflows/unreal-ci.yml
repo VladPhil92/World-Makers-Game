@@ -9,6 +9,7 @@ on:
       - 'docs/m1-8-visual-proof.md'
       - 'docs/m1-9-runtime-certification.md'
       - 'docs/m2-mission-runtime.md'
+      - 'docs/m2-1-spatial-measurement.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
@@ -20,6 +21,7 @@ on:
       - 'scripts/validate-m1-visual-proof.py'
       - 'scripts/validate-m1-runtime-cert-infra.py'
       - 'scripts/validate-m2-mission-runtime.py'
+      - 'scripts/validate-m2-1-spatial-measurement.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -31,6 +33,7 @@ on:
       - 'docs/m1-8-visual-proof.md'
       - 'docs/m1-9-runtime-certification.md'
       - 'docs/m2-mission-runtime.md'
+      - 'docs/m2-1-spatial-measurement.md'
       - 'scripts/**'
   workflow_dispatch:
 
@@ -60,6 +63,8 @@ jobs:
         run: python scripts/validate-m1-runtime-cert-infra.py
       - name: Validate M2 Mission Runtime
         run: python scripts/validate-m2-mission-runtime.py
+      - name: Validate M2.1 Spatial Measurement
+        run: python scripts/validate-m2-1-spatial-measurement.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
