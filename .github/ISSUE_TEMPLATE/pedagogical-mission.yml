@@ -1,0 +1,35 @@
+name: New pedagogical mission
+description: Propose a curriculum-aligned mission
+title: "[Mission]: "
+body:
+  - type: dropdown
+    id: axis
+    attributes:
+      label: Curriculum axis
+      options:
+        - Mathematics
+        - Science
+        - Language / Narrative
+        - History / Culture
+    validations:
+      required: true
+  - type: input
+    id: age
+    attributes:
+      label: Target age band
+      placeholder: 4-6, 7-8, 9-10
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Learning objective and evidence
+    validations:
+      required: true
+  - type: textarea
+    id: mechanics
+    attributes:
+      label: Gameplay mapping
+      description: Explain how the learning objective appears through play rather than a detached quiz.
+    validations:
+      required: true

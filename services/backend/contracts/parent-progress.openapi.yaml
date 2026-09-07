@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: World Makers Parent Progress API
+  version: 0.1.0
+  description: >-
+    Provider-neutral contract sketch. Authorization must verify that the authenticated
+    parent/guardian is allowed to access the requested pseudonymous child profile.
+paths:
+  /v1/children/{profileId}/progress:
+    get:
+      summary: Get authorized child progress summary
+      security:
+        - parentAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authorized progress summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressSummary'
+        '403':
+          description: Authenticated principal is not authorized for this profile
+        '404':
+          description: Profile not found or intentionally concealed
+components:
+  securitySchemes:
+    parentAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProgressSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - profileId
+        - playTimeMinutes
+        - learningObjectives
+      properties:
+        profileId:
+          type: string
+          description: Pseudonymous child profile identifier, not a display name.
+        playTimeMinutes:
+          type: integer
+          minimum: 0
+        recentBuilds:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              buildId:
+                type: string
+              summaryKey:
+                type: string
+        learningObjectives:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - objectiveId
+              - status
+            properties:
+              objectiveId:
+                type: string
+              status:
+                type: string
+                enum:
+                  - introduced
+                  - practicing
+                  - demonstrated

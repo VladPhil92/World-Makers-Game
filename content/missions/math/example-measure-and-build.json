@@ -1,0 +1,35 @@
+{
+  "id": "mission.mathematics.measure-and-build-01",
+  "axis": "mathematics",
+  "ageBand": "7-8",
+  "learningObjectives": [
+    "math.measure.compare-lengths",
+    "math.spatial.plan-to-constraint"
+  ],
+  "playerGoalKey": "mission.math.measure01.goal",
+  "mechanics": [
+    "measure-span",
+    "select-building-pieces",
+    "place-and-adjust-structure"
+  ],
+  "evidenceEvents": [
+    "measurement_used_before_build",
+    "structure_fits_target_span"
+  ],
+  "difficulty": 2,
+  "scaffolds": [
+    "show-measuring-tool-hint",
+    "highlight-overhang"
+  ],
+  "localizationKeys": [
+    "mission.math.measure01.goal",
+    "mission.math.measure01.hint.measure",
+    "mission.math.measure01.success"
+  ],
+  "analyticsClassification": "minimized-learning-evidence",
+  "review": {
+    "pedagogy": "draft",
+    "safety": "draft",
+    "cultural": "not-required"
+  }
+}

@@ -1,0 +1,30 @@
+name: New art asset
+description: Request or specify a production art asset
+title: "[Art]: "
+body:
+  - type: input
+    id: asset
+    attributes:
+      label: Asset name
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Asset type
+      options:
+        - Static mesh
+        - Skeletal mesh
+        - Texture
+        - Material
+        - Animation
+        - VFX
+        - Audio
+        - UI
+  - type: textarea
+    id: specs
+    attributes:
+      label: Visual and technical specification
+      description: Include target platform, triangle/LOD expectations, texture budget, material complexity, collision, and references.
+    validations:
+      required: true

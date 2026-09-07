@@ -1,0 +1,14 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "",
+  "Category": "Games",
+  "Description": "World Makers child-safe 3D building and exploration sandbox.",
+  "Modules": [
+    {
+      "Name": "WorldMakers",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": []
+}

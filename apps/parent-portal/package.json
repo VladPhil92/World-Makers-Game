@@ -1,0 +1,13 @@
+{
+  "name": "@world-makers/parent-portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Parent-facing application boundary for World Makers.",
+  "scripts": {
+    "lint": "node scripts/lint.mjs",
+    "test": "node scripts/test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

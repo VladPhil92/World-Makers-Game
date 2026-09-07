@@ -1,0 +1,39 @@
+name: Repository Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  content-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate pedagogical content
+        run: python scripts/validate-content.py
+
+  parent-portal:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/parent-portal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/parent-portal/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test

@@ -1,0 +1,27 @@
+name: Gameplay bug
+description: Report a reproducible gameplay defect
+title: "[Gameplay Bug]: "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform/device
+      placeholder: Windows, macOS, iPad model, Android device
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs/screenshots without personal data.
