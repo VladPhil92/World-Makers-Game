@@ -144,6 +144,10 @@ bool UWMMissionRuntimeSubsystem::CycleMission(const int32 Direction)
     {
         return false;
     }
+    if (ActivatableMissionIds.Num() == 1 && ActivatableMissionIds[0] == GetActiveMissionId())
+    {
+        return false;
+    }
 
     int32 Index = ActivatableMissionIds.IndexOfByKey(GetActiveMissionId());
     if (Index == INDEX_NONE)
@@ -218,10 +222,36 @@ bool UWMMissionRuntimeSubsystem::LoadJourneyProgress()
         return false;
     }
 
-    TArray<FName> SanitizedCompleted;
+    TSet<FName> CandidateCompleted;
     for (const FName MissionId : Save->CompletedMissionIds)
     {
-        if (MissionCatalog.Contains(MissionId)) SanitizedCompleted.AddUnique(MissionId);
+        if (MissionCatalog.Contains(MissionId)) CandidateCompleted.Add(MissionId);
+    }
+
+    TArray<FName> SanitizedCompleted;
+    bool bAddedMission = true;
+    while (bAddedMission)
+    {
+        bAddedMission = false;
+        for (const FName MissionId : AvailableMissionIds)
+        {
+            if (!CandidateCompleted.Contains(MissionId) || SanitizedCompleted.Contains(MissionId)) continue;
+            const FWMMissionRuntimeDefinition& Definition = MissionCatalog.FindChecked(MissionId);
+            bool bPrerequisitesPresent = true;
+            for (const FName PrerequisiteId : Definition.PrerequisiteMissionIds)
+            {
+                if (!SanitizedCompleted.Contains(PrerequisiteId))
+                {
+                    bPrerequisitesPresent = false;
+                    break;
+                }
+            }
+            if (bPrerequisitesPresent)
+            {
+                SanitizedCompleted.Add(MissionId);
+                bAddedMission = true;
+            }
+        }
     }
 
     Journey.Restore(SanitizedCompleted, Save->GrantedRewardIds);
