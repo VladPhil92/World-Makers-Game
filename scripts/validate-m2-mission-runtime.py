@@ -82,10 +82,18 @@ def main() -> None:
 
     building_h = read("game/Source/WorldMakers/Building/WMBuildingComponent.h")
     building_cpp = read("game/Source/WorldMakers/Building/WMBuildingComponent.cpp")
-    for token in ("UseMissionMeasurementTool", "CalculatePlacedStructureSpanX", "NotifyMissionOfStructureChange"):
+    for token in ("UseMissionMeasurementTool", "NotifyMissionOfStructureChange"):
         if token not in building_h or token not in building_cpp:
             fail(f"Building/Mission bridge missing: {token}")
-    if "RecordStructureSpan(CalculatePlacedStructureSpanX())" not in building_cpp:
+
+    # M2 established a geometry-derived bridge. M2.1 strengthens it from a global
+    # X span to a mission-scoped local-axis span; either implementation name is an
+    # acceptable M2 contract, while M2.1 independently requires the stricter form.
+    span_functions = ("CalculatePlacedStructureSpanX", "CalculateMissionScopedStructureSpan")
+    active_span_function = next((name for name in span_functions if name in building_h and name in building_cpp), None)
+    if not active_span_function:
+        fail("Building/Mission bridge missing a geometry-derived structure-span function")
+    if f"RecordStructureSpan({active_span_function}())" not in building_cpp:
         fail("Building Core must emit geometry-derived structure span to Mission Runtime")
 
     hud = read("game/Source/WorldMakers/UI/WMBuildHUDWidget.cpp")
