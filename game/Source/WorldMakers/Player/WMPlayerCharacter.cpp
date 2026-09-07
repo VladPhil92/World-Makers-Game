@@ -70,6 +70,9 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction(TEXT("RotateBuild"), IE_Pressed, this, &AWMPlayerCharacter::RotateBuildClockwise);
     PlayerInputComponent->BindAction(TEXT("RotateBuildBack"), IE_Pressed, this, &AWMPlayerCharacter::RotateBuildCounterClockwise);
     PlayerInputComponent->BindAction(TEXT("RemoveBuild"), IE_Pressed, this, &AWMPlayerCharacter::RemoveBuild);
+    PlayerInputComponent->BindAction(TEXT("MoveBuild"), IE_Pressed, this, &AWMPlayerCharacter::MoveBuild);
+    PlayerInputComponent->BindAction(TEXT("CycleBuildPiece"), IE_Pressed, this, &AWMPlayerCharacter::CycleBuildPiece);
+    PlayerInputComponent->BindAction(TEXT("CancelBuildEdit"), IE_Pressed, this, &AWMPlayerCharacter::CancelBuildEdit);
     PlayerInputComponent->BindAction(TEXT("UndoBuild"), IE_Pressed, this, &AWMPlayerCharacter::UndoBuild);
     PlayerInputComponent->BindAction(TEXT("RedoBuild"), IE_Pressed, this, &AWMPlayerCharacter::RedoBuild);
     PlayerInputComponent->BindAction(TEXT("SaveWorld"), IE_Pressed, this, &AWMPlayerCharacter::SavePrototypeWorld);
@@ -141,6 +144,30 @@ void AWMPlayerCharacter::RemoveBuild()
     if (BuildingComponent)
     {
         BuildingComponent->TryRemoveTargetPiece();
+    }
+}
+
+void AWMPlayerCharacter::MoveBuild()
+{
+    if (BuildingComponent)
+    {
+        BuildingComponent->TryBeginMoveTargetPiece();
+    }
+}
+
+void AWMPlayerCharacter::CycleBuildPiece()
+{
+    if (BuildingComponent)
+    {
+        BuildingComponent->CycleSelectedPiece(1);
+    }
+}
+
+void AWMPlayerCharacter::CancelBuildEdit()
+{
+    if (BuildingComponent)
+    {
+        BuildingComponent->CancelMove();
     }
 }
 

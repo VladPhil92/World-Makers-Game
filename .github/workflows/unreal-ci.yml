@@ -9,6 +9,7 @@ on:
       - 'scripts/test-unreal.ps1'
       - 'scripts/validate-m1-prototype.py'
       - 'scripts/validate-m1-certification.py'
+      - 'scripts/validate-m1-building-core.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -35,6 +36,8 @@ jobs:
         run: python scripts/validate-m1-prototype.py
       - name: Validate M1.5 source hardening
         run: python scripts/validate-m1-certification.py
+      - name: Validate M1.6 Building Core
+        run: python scripts/validate-m1-building-core.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}

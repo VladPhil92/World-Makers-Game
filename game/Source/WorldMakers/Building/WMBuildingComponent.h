@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "WMBuildCatalogSettings.h"
 #include "WMBuildingComponent.generated.h"
 
 class AWMBuildPieceActor;
@@ -25,6 +26,18 @@ public:
     bool TryRemoveTargetPiece();
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
+    bool TryBeginMoveTargetPiece();
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
+    bool CancelMove();
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
+    bool CycleSelectedPiece(int32 Direction = 1);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
+    bool SelectPiece(FName PieceId);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
     void RotatePreview(float Direction = 1.0f);
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
@@ -42,20 +55,26 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Building")
     bool IsPreviewPlacementValid() const { return bHasPlacementTarget; }
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Building")
+    bool IsMoveInProgress() const { return MovingActor.IsValid(); }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Building")
+    FName GetSelectedPieceId() const { return SelectedPieceId; }
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "25.0"))
     float GridSize = 100.0f;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "15.0", ClampMax = "180.0"))
-    float RotationStepDegrees = 90.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "200.0"))
     float BuildDistance = 1500.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.10", ClampMax = "0.49"))
-    float PlacementClearanceRatio = 0.45f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.10", ClampMax = "1.0"))
+    float PlacementBoundsScale = 0.90f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.0", ClampMax = "1.0"))
     float MinPlacementSurfaceUpDot = 0.90f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building")
+    FName SelectedPieceId = TEXT("prototype.cube");
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building")
     TSubclassOf<AWMBuildPieceActor> BuildPieceClass;
@@ -68,20 +87,24 @@ private:
     enum class EWMBuildCommandType : uint8
     {
         Place,
-        Remove
+        Remove,
+        Move
     };
 
     struct FWMBuildCommand
     {
         EWMBuildCommandType Type = EWMBuildCommandType::Place;
         FTransform Transform = FTransform::Identity;
+        FTransform PreviousTransform = FTransform::Identity;
         FName PieceId = NAME_None;
         TWeakObjectPtr<AWMBuildPieceActor> ActiveActor;
     };
 
     bool UpdatePreviewTransform();
     bool GetViewTrace(FHitResult& OutHit, bool bIgnorePreview) const;
-    bool IsPlacementValid(const FTransform& CandidateTransform, const AActor* SupportingActor) const;
+    bool ResolvePieceSpec(FName PieceId, FWMBuildPieceSpec& OutSpec) const;
+    bool IsPlacementValid(const FTransform& CandidateTransform, const FWMBuildPieceSpec& Spec, const AActor* SupportingActor) const;
+    bool CommitMove();
     AWMBuildPieceActor* SpawnPlacedPiece(const FTransform& Transform, FName PieceId);
     void EnsurePreviewActor();
     void PushCommand(const FWMBuildCommand& Command);
@@ -89,6 +112,9 @@ private:
 
     float CurrentYaw = 0.0f;
     bool bHasPlacementTarget = false;
+    TWeakObjectPtr<AActor> PreviewSupportingActor;
+    TWeakObjectPtr<AWMBuildPieceActor> MovingActor;
+    FTransform MoveOriginalTransform = FTransform::Identity;
     TArray<FWMBuildCommand> UndoStack;
     TArray<FWMBuildCommand> RedoStack;
     static constexpr int32 MaxHistoryEntries = 50;

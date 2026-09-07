@@ -16,13 +16,17 @@ FVector UWMBuildGridLibrary::SnapLocationToGrid(const FVector& Location, const f
     return Result;
 }
 
-FVector UWMBuildGridLibrary::SnapLocationToSurfaceGrid(const FVector& SurfaceImpactPoint, const float GridSize)
+FVector UWMBuildGridLibrary::SnapLocationToSurfaceGrid(
+    const FVector& SurfaceImpactPoint,
+    const float GridSize,
+    const float PieceHeightCm)
 {
     const float SafeGrid = FMath::Max(GridSize, 1.0f);
+    const float SafeHeight = FMath::Max(PieceHeightCm, 1.0f);
     return FVector(
         FMath::GridSnap(SurfaceImpactPoint.X, SafeGrid),
         FMath::GridSnap(SurfaceImpactPoint.Y, SafeGrid),
-        SurfaceImpactPoint.Z + (SafeGrid * 0.5f));
+        SurfaceImpactPoint.Z + (SafeHeight * 0.5f));
 }
 
 float UWMBuildGridLibrary::SnapYawToStep(const float YawDegrees, const float RotationStepDegrees)

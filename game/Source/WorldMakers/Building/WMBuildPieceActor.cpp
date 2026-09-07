@@ -1,5 +1,6 @@
 #include "Building/WMBuildPieceActor.h"
 
+#include "Building/WMBuildCatalogSettings.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -24,6 +25,18 @@ AWMBuildPieceActor::AWMBuildPieceActor()
     }
 }
 
+void AWMBuildPieceActor::ApplyPieceSpec(const FWMBuildPieceSpec& Spec)
+{
+    if (!Spec.IsSane())
+    {
+        return;
+    }
+
+    PieceId = Spec.PieceId;
+    PieceDimensionsCm = Spec.DimensionsCm;
+    Mesh->SetRelativeScale3D(Spec.DimensionsCm / 100.0f);
+}
+
 void AWMBuildPieceActor::SetPreviewState(const bool bPreview)
 {
     bIsPreview = bPreview;
@@ -35,9 +48,20 @@ void AWMBuildPieceActor::SetPreviewState(const bool bPreview)
     if (bPreview)
     {
         Tags.Remove(PlacedBuildTag);
+        SetPreviewValidity(false);
     }
     else if (!Tags.Contains(PlacedBuildTag))
     {
         Tags.Add(PlacedBuildTag);
+    }
+}
+
+void AWMBuildPieceActor::SetPreviewValidity(const bool bValid)
+{
+    bPreviewPlacementValid = bValid;
+    if (bIsPreview)
+    {
+        Mesh->SetRenderCustomDepth(true);
+        Mesh->SetCustomDepthStencilValue(bValid ? 1 : 2);
     }
 }
