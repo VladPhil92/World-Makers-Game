@@ -11,7 +11,8 @@ public class WorldMakers : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
-            "InputCore"
+            "InputCore",
+            "PhysicsCore"
         });
     }
 }

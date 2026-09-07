@@ -31,12 +31,15 @@ See [`docs/repository-tree.md`](docs/repository-tree.md) for the complete commen
 
 ### Unreal game
 
-- Unreal Engine 5.x installed through Epic Games Launcher or a source build.
+- **Unreal Engine 5.8** project association.
+- **Unreal Engine 5.8.2** exact patch for the current certification baseline; see `game/UNREAL_ENGINE_VERSION`.
 - Visual Studio 2022 with Desktop development with C++ and Game development with C++ on Windows.
 - Xcode toolchain on macOS.
 - Git LFS enabled before cloning assets: `git lfs install`.
 
 Open `game/WorldMakers.uproject`. If prompted, generate project files and compile the `WorldMakers` editor target.
+
+The M1 prototype is source-hardened but is not runtime-certified until the native UE build/test and authored-map gates in [`docs/prototype-certification.md`](docs/prototype-certification.md) are satisfied.
 
 ### Parent portal
 
@@ -58,6 +61,8 @@ Legal review is required before production launch for COPPA, GDPR-K where applic
 ## Branching
 
 `main` is the integration trunk. Use short-lived branches such as `feat/...`, `fix/...`, `art/...`, and `content/...`; open a PR early and merge only after automated checks and the required discipline review.
+
+**Governance requirement:** `main` must be protected against direct pushes and must require the repository quality and Unreal source-validation checks. See `docs/prototype-certification.md` for the current enforcement status.
 
 ## License
 

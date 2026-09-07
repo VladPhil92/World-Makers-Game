@@ -2,7 +2,8 @@
 
 ## 1. Technical goals
 
-- Unreal Engine 5 native project with C++ foundations and Blueprint-friendly extension points.
+- Unreal Engine 5.8 native project with C++ foundations and Blueprint-friendly extension points.
+- Certification baseline locked to Unreal Engine 5.8.2 until deliberately upgraded.
 - Scalable quality tiers for desktop and mid-range tablets.
 - Provider-neutral online/backend interfaces until vendor selection.
 - Privacy-first account, progress, telemetry, and parental authorization boundaries.
@@ -86,7 +87,7 @@ Nanite/Lumen are optional high-tier features, not universal assumptions. Establi
 
 ## 9. Save/version compatibility
 
-Persistent save data must carry a schema version and support migration. Do not serialize raw UObject implementation details as the long-term backend contract.
+Persistent save data must carry a schema version and support migration. Do not serialize raw UObject implementation details as the long-term backend contract. Prototype saves enforce bounded piece counts and reject invalid transforms before replacing the active world.
 
 ## 10. Testing
 
@@ -99,11 +100,19 @@ Persistent save data must carry a schema version and support migration. Do not s
 
 ## 11. Build and CI
 
-GitHub-hosted runners validate source/config/content. Unreal compilation is gated behind `UNREAL_SELF_HOSTED_ENABLED=true` and requires a licensed/configured self-hosted runner with the engine/toolchain installed.
+GitHub-hosted runners validate source/config/content and M1.5 hardening gates. Native certification uses a Windows x64 self-hosted runner with Unreal Engine 5.8.2. The runner must compile `WorldMakersEditor` and execute `WorldMakers.Building.*` through `UnrealEditor-Cmd.exe`.
 
-## 12. Open decisions
+A lightweight GitHub check is never sufficient evidence of Unreal runtime certification. See `docs/prototype-certification.md`.
 
-- Exact UE 5.x version lock.
+## 12. Current locked decisions
+
+- Engine family: Unreal Engine 5.8.
+- Certification patch baseline: Unreal Engine 5.8.2.
+- Repository architecture: modular monorepo.
+- Development model: short-lived branches into `main` through PRs.
+
+## 13. Open decisions
+
 - Parent portal production framework.
 - Backend/online provider.
 - Listen vs dedicated multiplayer hosting.

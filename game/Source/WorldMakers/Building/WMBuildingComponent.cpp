@@ -3,10 +3,38 @@
 #include "Building/WMBuildGridLibrary.h"
 #include "Building/WMBuildPieceActor.h"
 #include "Building/WMWorldSaveGame.h"
+#include "CollisionShape.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace
+{
+    bool IsSafeBuildTransform(const FTransform& Transform)
+    {
+        if (Transform.ContainsNaN() || !Transform.GetRotation().IsNormalized())
+        {
+            return false;
+        }
+
+        const FVector Location = Transform.GetLocation();
+        const FVector Scale = Transform.GetScale3D();
+        const bool bFinite =
+            FMath::IsFinite(Location.X) && FMath::IsFinite(Location.Y) && FMath::IsFinite(Location.Z) &&
+            FMath::IsFinite(Scale.X) && FMath::IsFinite(Scale.Y) && FMath::IsFinite(Scale.Z);
+        const bool bScaleReasonable =
+            FMath::Abs(Scale.X) >= 0.01f && FMath::Abs(Scale.X) <= 100.0f &&
+            FMath::Abs(Scale.Y) >= 0.01f && FMath::Abs(Scale.Y) <= 100.0f &&
+            FMath::Abs(Scale.Z) >= 0.01f && FMath::Abs(Scale.Z) <= 100.0f;
+        const bool bLocationReasonable =
+            FMath::Abs(Location.X) <= 10000000.0f &&
+            FMath::Abs(Location.Y) <= 10000000.0f &&
+            FMath::Abs(Location.Z) <= 10000000.0f;
+
+        return bFinite && bScaleReasonable && bLocationReasonable;
+    }
+}
 
 UWMBuildingComponent::UWMBuildingComponent()
 {
@@ -95,6 +123,39 @@ bool UWMBuildingComponent::GetViewTrace(FHitResult& OutHit, const bool bIgnorePr
     return GetWorld()->LineTraceSingleByChannel(OutHit, ViewLocation, TraceEnd, ECC_Visibility, QueryParams);
 }
 
+bool UWMBuildingComponent::IsPlacementValid(const FTransform& CandidateTransform, const AActor* SupportingActor) const
+{
+    if (!GetWorld() || !IsSafeBuildTransform(CandidateTransform))
+    {
+        return false;
+    }
+
+    const float Clearance = FMath::Max(GridSize * FMath::Clamp(PlacementClearanceRatio, 0.10f, 0.49f), 1.0f);
+    const FCollisionShape PlacementShape = FCollisionShape::MakeBox(FVector(Clearance));
+    FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(WorldMakersPlacementOverlap), false, GetOwner());
+
+    if (IsValid(PreviewActor))
+    {
+        QueryParams.AddIgnoredActor(PreviewActor);
+    }
+    if (IsValid(SupportingActor))
+    {
+        QueryParams.AddIgnoredActor(SupportingActor);
+    }
+
+    TArray<FOverlapResult> Overlaps;
+    const bool bHasBlockingOverlap = GetWorld()->OverlapMultiByChannel(
+        Overlaps,
+        CandidateTransform.GetLocation(),
+        CandidateTransform.GetRotation(),
+        ECC_Visibility,
+        PlacementShape,
+        QueryParams,
+        FCollisionResponseParams::DefaultResponseParam);
+
+    return !bHasBlockingOverlap;
+}
+
 bool UWMBuildingComponent::UpdatePreviewTransform()
 {
     EnsurePreviewActor();
@@ -105,24 +166,26 @@ bool UWMBuildingComponent::UpdatePreviewTransform()
     }
 
     FHitResult SurfaceHit;
-    if (!GetViewTrace(SurfaceHit, true))
+    if (!GetViewTrace(SurfaceHit, true) || SurfaceHit.ImpactNormal.Z < MinPlacementSurfaceUpDot)
     {
         bHasPlacementTarget = false;
         PreviewActor->SetActorHiddenInGame(true);
         return false;
     }
 
-    const FVector SnappedLocation = UWMBuildGridLibrary::SnapLocationToGrid(SurfaceHit.ImpactPoint, GridSize, true);
+    const FVector SnappedLocation = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(SurfaceHit.ImpactPoint, GridSize);
     const float SnappedYaw = UWMBuildGridLibrary::SnapYawToStep(CurrentYaw, RotationStepDegrees);
-    PreviewActor->SetActorTransform(FTransform(FRotator(0.0f, SnappedYaw, 0.0f), SnappedLocation));
-    PreviewActor->SetActorHiddenInGame(false);
-    bHasPlacementTarget = true;
-    return true;
+    const FTransform CandidateTransform(FRotator(0.0f, SnappedYaw, 0.0f), SnappedLocation);
+
+    PreviewActor->SetActorTransform(CandidateTransform);
+    bHasPlacementTarget = IsPlacementValid(CandidateTransform, SurfaceHit.GetActor());
+    PreviewActor->SetActorHiddenInGame(!bHasPlacementTarget);
+    return bHasPlacementTarget;
 }
 
 AWMBuildPieceActor* UWMBuildingComponent::SpawnPlacedPiece(const FTransform& Transform, const FName PieceId)
 {
-    if (!GetWorld() || !BuildPieceClass)
+    if (!GetWorld() || !BuildPieceClass || !IsSafeBuildTransform(Transform))
     {
         return nullptr;
     }
@@ -159,6 +222,13 @@ bool UWMBuildingComponent::TryPlaceCurrentPiece()
     }
 
     const FTransform PlacementTransform = PreviewActor->GetActorTransform();
+    if (!IsPlacementValid(PlacementTransform, nullptr))
+    {
+        bHasPlacementTarget = false;
+        PreviewActor->SetActorHiddenInGame(true);
+        return false;
+    }
+
     AWMBuildPieceActor* PlacedPiece = SpawnPlacedPiece(PlacementTransform, PreviewActor->PieceId);
     if (!PlacedPiece)
     {
@@ -300,11 +370,18 @@ bool UWMBuildingComponent::SaveWorld(const FString& SlotName)
         {
             continue;
         }
+        if (SaveData->Pieces.Num() >= MaxSavedPieces)
+        {
+            return false;
+        }
 
         FWMBuildSaveRecord Record;
         Record.PieceId = Piece->PieceId;
         Record.Transform = Piece->GetActorTransform();
-        SaveData->Pieces.Add(Record);
+        if (!Record.PieceId.IsNone() && IsSafeBuildTransform(Record.Transform))
+        {
+            SaveData->Pieces.Add(Record);
+        }
     }
 
     return UGameplayStatics::SaveGameToSlot(SaveData, SlotName, 0);
@@ -332,15 +409,27 @@ bool UWMBuildingComponent::LoadWorld(const FString& SlotName)
     }
 
     UWMWorldSaveGame* SaveData = Cast<UWMWorldSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-    if (!SaveData || SaveData->SaveFormatVersion != 1)
+    if (!SaveData || SaveData->SaveFormatVersion != 1 || SaveData->Pieces.Num() > MaxSavedPieces)
     {
         return false;
+    }
+
+    for (const FWMBuildSaveRecord& Record : SaveData->Pieces)
+    {
+        if (Record.PieceId.IsNone() || !IsSafeBuildTransform(Record.Transform))
+        {
+            return false;
+        }
     }
 
     DestroyAllPlacedPieces();
     for (const FWMBuildSaveRecord& Record : SaveData->Pieces)
     {
-        SpawnPlacedPiece(Record.Transform, Record.PieceId);
+        if (!SpawnPlacedPiece(Record.Transform, Record.PieceId))
+        {
+            DestroyAllPlacedPieces();
+            return false;
+        }
     }
 
     UndoStack.Reset();
