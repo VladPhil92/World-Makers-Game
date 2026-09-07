@@ -25,17 +25,59 @@ namespace
         }
         return !OutValues.IsEmpty();
     }
+
+    bool ReadOptionalNameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FName>& OutValues)
+    {
+        OutValues.Reset();
+        if (!Object.IsValid() || !Object->HasField(Field))
+        {
+            return true;
+        }
+
+        const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+        if (!Object->TryGetArrayField(Field, Values) || !Values)
+        {
+            return false;
+        }
+
+        for (const TSharedPtr<FJsonValue>& Value : *Values)
+        {
+            if (!Value.IsValid() || Value->Type != EJson::String || Value->AsString().IsEmpty())
+            {
+                return false;
+            }
+            OutValues.Add(FName(*Value->AsString()));
+        }
+        return true;
+    }
+
+    void SortNames(TArray<FName>& Values)
+    {
+        Values.Sort([](const FName& A, const FName& B)
+        {
+            return A.ToString() < B.ToString();
+        });
+    }
 }
 
 bool FWMMissionRuntimeDefinition::IsSane() const
 {
-    return !MissionId.IsNone() &&
-        LearningObjectiveIds.Num() >= 2 &&
-        RequiredEvidenceEventIds.Num() >= 2 &&
-        TargetSpanCm >= 50.0f &&
-        ToleranceCm >= 0.0f &&
-        ToleranceCm < TargetSpanCm &&
-        !RewardIds.IsEmpty();
+    if (MissionId.IsNone() || LearningObjectiveIds.Num() < 2 || RequiredEvidenceEventIds.Num() < 2 ||
+        TargetSpanCm < 50.0f || ToleranceCm < 0.0f || ToleranceCm >= TargetSpanCm || RewardIds.IsEmpty())
+    {
+        return false;
+    }
+
+    TSet<FName> UniquePrerequisites;
+    for (const FName PrerequisiteId : PrerequisiteMissionIds)
+    {
+        if (PrerequisiteId.IsNone() || PrerequisiteId == MissionId || UniquePrerequisites.Contains(PrerequisiteId))
+        {
+            return false;
+        }
+        UniquePrerequisites.Add(PrerequisiteId);
+    }
+    return true;
 }
 
 bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRuntimeDefinition& OutDefinition, FString& OutError)
@@ -84,6 +126,7 @@ bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRu
     if (!ReadNameArray(Root, TEXT("learningObjectives"), Candidate.LearningObjectiveIds) ||
         !ReadNameArray(Root, TEXT("evidenceEvents"), Candidate.RequiredEvidenceEventIds) ||
         !ReadNameArray(Runtime, TEXT("rewardIds"), Candidate.RewardIds) ||
+        !ReadOptionalNameArray(Runtime, TEXT("prerequisiteMissionIds"), Candidate.PrerequisiteMissionIds) ||
         !Candidate.IsSane())
     {
         OutError = TEXT("Mission runtime definition failed semantic validation.");
@@ -167,4 +210,77 @@ float FWMMissionProgressModel::GetProgressFraction() const
     if (State == EWMMissionRuntimeState::Completed) return 1.0f;
     if (bMeasurementEvidence) return 0.5f;
     return 0.0f;
+}
+
+bool FWMMissionJourneyModel::ArePrerequisitesSatisfied(const FWMMissionRuntimeDefinition& Definition) const
+{
+    for (const FName PrerequisiteId : Definition.PrerequisiteMissionIds)
+    {
+        if (!CompletedMissionIds.Contains(PrerequisiteId))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool FWMMissionJourneyModel::CanActivate(const FWMMissionRuntimeDefinition& Definition) const
+{
+    return CompletedMissionIds.Contains(Definition.MissionId) || ArePrerequisitesSatisfied(Definition);
+}
+
+EWMJourneyMissionState FWMMissionJourneyModel::ResolveState(
+    const FWMMissionRuntimeDefinition& Definition,
+    const FName ActiveMissionId,
+    const EWMMissionRuntimeState ActiveRuntimeState) const
+{
+    if (ActiveMissionId == Definition.MissionId && ActiveRuntimeState == EWMMissionRuntimeState::Active)
+    {
+        return EWMJourneyMissionState::Active;
+    }
+    if (CompletedMissionIds.Contains(Definition.MissionId))
+    {
+        return EWMJourneyMissionState::Completed;
+    }
+    return ArePrerequisitesSatisfied(Definition) ? EWMJourneyMissionState::Available : EWMJourneyMissionState::Locked;
+}
+
+bool FWMMissionJourneyModel::ApplyCompletion(const FWMMissionRuntimeDefinition& Definition, TArray<FName>& OutNewRewardIds)
+{
+    OutNewRewardIds.Reset();
+    const bool bNewCompletion = !CompletedMissionIds.Contains(Definition.MissionId);
+    CompletedMissionIds.Add(Definition.MissionId);
+
+    for (const FName RewardId : Definition.RewardIds)
+    {
+        if (!GrantedRewardIds.Contains(RewardId))
+        {
+            GrantedRewardIds.Add(RewardId);
+            OutNewRewardIds.Add(RewardId);
+        }
+    }
+    SortNames(OutNewRewardIds);
+    return bNewCompletion;
+}
+
+void FWMMissionJourneyModel::Restore(const TArray<FName>& InCompletedMissionIds, const TArray<FName>& InGrantedRewardIds)
+{
+    CompletedMissionIds.Reset();
+    GrantedRewardIds.Reset();
+    for (const FName MissionId : InCompletedMissionIds)
+    {
+        if (!MissionId.IsNone()) CompletedMissionIds.Add(MissionId);
+    }
+    for (const FName RewardId : InGrantedRewardIds)
+    {
+        if (!RewardId.IsNone()) GrantedRewardIds.Add(RewardId);
+    }
+}
+
+void FWMMissionJourneyModel::Export(TArray<FName>& OutCompletedMissionIds, TArray<FName>& OutGrantedRewardIds) const
+{
+    CompletedMissionIds.GenerateKeyArray(OutCompletedMissionIds);
+    GrantedRewardIds.GenerateKeyArray(OutGrantedRewardIds);
+    SortNames(OutCompletedMissionIds);
+    SortNames(OutGrantedRewardIds);
 }
