@@ -279,8 +279,12 @@ void FWMMissionJourneyModel::Restore(const TArray<FName>& InCompletedMissionIds,
 
 void FWMMissionJourneyModel::Export(TArray<FName>& OutCompletedMissionIds, TArray<FName>& OutGrantedRewardIds) const
 {
-    CompletedMissionIds.GenerateKeyArray(OutCompletedMissionIds);
-    GrantedRewardIds.GenerateKeyArray(OutGrantedRewardIds);
+    OutCompletedMissionIds.Reset();
+    OutGrantedRewardIds.Reset();
+    OutCompletedMissionIds.Reserve(CompletedMissionIds.Num());
+    OutGrantedRewardIds.Reserve(GrantedRewardIds.Num());
+    for (const FName MissionId : CompletedMissionIds) OutCompletedMissionIds.Add(MissionId);
+    for (const FName RewardId : GrantedRewardIds) OutGrantedRewardIds.Add(RewardId);
     SortNames(OutCompletedMissionIds);
     SortNames(OutGrantedRewardIds);
 }
