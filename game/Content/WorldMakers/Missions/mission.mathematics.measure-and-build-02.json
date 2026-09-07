@@ -1,0 +1,45 @@
+{
+  "id": "mission.mathematics.measure-and-build-02",
+  "axis": "mathematics",
+  "ageBand": "7-8",
+  "learningObjectives": [
+    "math.measure.compare-lengths",
+    "math.spatial.plan-to-constraint"
+  ],
+  "playerGoalKey": "mission.math.measure02.goal",
+  "mechanics": [
+    "measure-span",
+    "select-building-pieces",
+    "place-and-adjust-structure"
+  ],
+  "evidenceEvents": [
+    "measurement_used_before_build",
+    "structure_fits_target_span"
+  ],
+  "difficulty": 1,
+  "scaffolds": [
+    "show-measuring-tool-hint",
+    "highlight-overhang"
+  ],
+  "localizationKeys": [
+    "mission.math.measure02.goal",
+    "mission.math.measure02.hint.measure",
+    "mission.math.measure02.success"
+  ],
+  "analyticsClassification": "minimized-learning-evidence",
+  "review": {
+    "pedagogy": "draft",
+    "safety": "draft",
+    "cultural": "not-required"
+  },
+  "runtime": {
+    "evaluator": "measure-and-build",
+    "targetSpanCm": 200,
+    "toleranceCm": 15,
+    "rewardIds": [
+      "reward.math.measurement-tool-01",
+      "reward.math.spatial-builder-badge-01"
+    ],
+    "prototypeOnly": true
+  }
+}
