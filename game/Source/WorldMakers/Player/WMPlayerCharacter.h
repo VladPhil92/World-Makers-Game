@@ -6,6 +6,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UStaticMeshComponent;
 class UWMBuildingComponent;
 
 UCLASS()
@@ -17,6 +18,12 @@ public:
     AWMPlayerCharacter();
 
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeBody;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeHead;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Camera")
     TObjectPtr<USpringArmComponent> CameraBoom;
