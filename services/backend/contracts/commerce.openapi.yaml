@@ -1,0 +1,255 @@
+openapi: 3.1.0
+info:
+  title: World Makers Family Commerce API
+  version: 0.1.0
+  description: Parent-owned commerce and child-safe entitlement contract. Child runtime cannot execute payments.
+paths:
+  /v1/family/catalog:
+    get:
+      summary: List parent-visible commercial offers with localized platform pricing
+      security:
+        - parentAuth: []
+      responses:
+        '200':
+          description: Parent catalog
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [offers]
+                properties:
+                  offers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParentOffer'
+  /v1/family/interests:
+    get:
+      summary: List child-saved offers for parent review
+      security:
+        - parentAuth: []
+      responses:
+        '200':
+          description: Saved interests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interest'
+  /v1/child/interests:
+    post:
+      summary: Save an offer for family review without starting checkout
+      description: Rate-limited child-safe action. Must not send repeated commercial notifications or expose price/payment fields to the child runtime.
+      security:
+        - childSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [offerId]
+              properties:
+                offerId:
+                  type: string
+                sourceSurface:
+                  type: string
+                  enum: [catalog_preview, world_unlock_preview]
+      responses:
+        '202':
+          description: Interest saved if family settings allow it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interest'
+        '403':
+          description: Family disabled child interest requests
+        '429':
+          description: Interest request cooldown/rate limit
+  /v1/family/purchases:
+    post:
+      summary: Begin a parent-authorized purchase
+      description: Parent-only. Server resolves provider/platform checkout; child tokens are never accepted.
+      security:
+        - parentAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [offerId, platform]
+              properties:
+                offerId:
+                  type: string
+                platform:
+                  type: string
+                  enum: [apple, google, desktop, console]
+      responses:
+        '201':
+          description: Purchase session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [purchaseSessionId, provider]
+                properties:
+                  purchaseSessionId:
+                    type: string
+                  provider:
+                    type: string
+                  providerPayload:
+                    type: object
+        '403':
+          description: Parent authorization required or commerce disabled
+  /v1/family/transactions/verify:
+    post:
+      summary: Verify provider transaction server-side and grant/revoke entitlements
+      description: Server/parent trust-zone operation. Never callable with a child session credential.
+      security:
+        - parentAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [provider, transactionToken]
+              properties:
+                provider:
+                  type: string
+                transactionToken:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Normalized verified transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResult'
+  /v1/family/entitlements:
+    get:
+      summary: Read family-owned entitlements
+      security:
+        - parentAuth: []
+      responses:
+        '200':
+          description: Entitlements
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entitlements]
+                properties:
+                  entitlements:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Entitlement'
+  /v1/runtime/entitlements:
+    get:
+      summary: Read authorized entitlement IDs for the signed-in child runtime
+      description: Read-only projection; contains no prices, transaction IDs, parent PII, receipts or checkout controls.
+      security:
+        - childSession: []
+      responses:
+        '200':
+          description: Runtime entitlement projection
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entitlementIds]
+                additionalProperties: false
+                properties:
+                  entitlementIds:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: string
+components:
+  securitySchemes:
+    parentAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: ParentAccessToken
+    childSession:
+      type: http
+      scheme: bearer
+      bearerFormat: ChildSessionToken
+  schemas:
+    ParentOffer:
+      type: object
+      additionalProperties: false
+      required: [offerId, productType, entitlementIds, localizedPrice, currencyCode, randomizedContent, parentAudienceOnly]
+      properties:
+        offerId:
+          type: string
+        productType:
+          type: string
+          enum: [base_game, expansion, creative_pack, cosmetic_pack, family_subscription, institutional_license]
+        entitlementIds:
+          type: array
+          items:
+            type: string
+        localizedPrice:
+          type: string
+          description: Provider/platform localized display price shown only on parent-facing commerce surfaces.
+        currencyCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+        randomizedContent:
+          const: false
+        parentAudienceOnly:
+          const: true
+        childInterestEligible:
+          type: boolean
+    Interest:
+      type: object
+      additionalProperties: false
+      required: [interestId, offerId, status, createdAt]
+      properties:
+        interestId:
+          type: string
+        offerId:
+          type: string
+        status:
+          type: string
+          enum: [saved, dismissed, approved]
+        createdAt:
+          type: string
+          format: date-time
+    Entitlement:
+      type: object
+      additionalProperties: false
+      required: [entitlementId, status, source]
+      properties:
+        entitlementId:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked, expired]
+        source:
+          type: string
+          enum: [purchase, subscription, base_game, institution, support_grant]
+    TransactionResult:
+      type: object
+      additionalProperties: false
+      required: [verified, provider, entitlementChanges]
+      properties:
+        verified:
+          type: boolean
+        provider:
+          type: string
+        entitlementChanges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entitlement'

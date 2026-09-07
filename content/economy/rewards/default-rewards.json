@@ -1,0 +1,54 @@
+[
+  {
+    "rewardId": "reward.math.measurement-tool-01",
+    "type": "tool_unlock",
+    "trigger": {
+      "event": "mission.completed",
+      "missionId": "mission.mathematics.measure-and-build-01",
+      "objectiveId": "math.measure.compare-lengths"
+    },
+    "payload": {
+      "unlockId": "tool.measurement-tape.prototype"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
+  },
+  {
+    "rewardId": "reward.math.spatial-builder-badge-01",
+    "type": "mastery_badge",
+    "trigger": {
+      "event": "learning.objective-demonstrated",
+      "objectiveId": "math.spatial.plan-to-constraint"
+    },
+    "payload": {
+      "badgeId": "badge.spatial-builder.prototype"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
+  },
+  {
+    "rewardId": "reward.caribbean.discovery-canopy-01",
+    "type": "discovery",
+    "trigger": {
+      "event": "exploration.discovery-recorded",
+      "objectiveId": "science.ecosystems.observe-interdependence"
+    },
+    "payload": {
+      "discoveryId": "discovery.caribbean-rainforest.canopy-layer"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
+  }
+]

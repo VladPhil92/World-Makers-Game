@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.example/schemas/reward.schema.json",
+  "title": "World Makers Gameplay Reward",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rewardId",
+    "type",
+    "trigger",
+    "payload",
+    "deterministic",
+    "purchasable",
+    "transferable",
+    "convertibleToMoney"
+  ],
+  "properties": {
+    "rewardId": {
+      "type": "string",
+      "pattern": "^reward\\.[a-z0-9][a-z0-9._-]+$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "creative_unlock",
+        "tool_unlock",
+        "mastery_badge",
+        "narrative_unlock",
+        "discovery"
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event"],
+      "properties": {
+        "event": {"type": "string", "minLength": 1},
+        "objectiveId": {"type": "string", "minLength": 1},
+        "missionId": {"type": "string", "minLength": 1}
+      }
+    },
+    "payload": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "deterministic": {"const": true},
+    "purchasable": {"const": false},
+    "transferable": {"const": false},
+    "convertibleToMoney": {"const": false},
+    "expiresAt": {"type": "null"},
+    "streakRequired": {"const": false}
+  }
+}
