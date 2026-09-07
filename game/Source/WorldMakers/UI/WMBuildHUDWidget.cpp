@@ -148,12 +148,16 @@ void UWMBuildHUDWidget::RefreshStatus()
             }
             else if (!Missions->HasMeasurementEvidence())
             {
-                MissionStatusText->SetText(LOCTEXT("MissionMeasure", "Mission: measure the target span before building."));
+                MissionStatusText->SetText(LOCTEXT("MissionMeasure", "Mission: measure the marked span before building."));
             }
             else
             {
+                const int32 MeasuredCm = FMath::RoundToInt(Missions->GetLastMeasuredSpanCm());
+                const float MeasuredMeters = Missions->GetLastMeasuredSpanCm() / 100.0f;
                 MissionStatusText->SetText(FText::Format(
-                    LOCTEXT("MissionBuildSpan", "Mission: build or adjust a structure to about {0} cm."),
+                    LOCTEXT("MissionMeasuredBuildSpan", "Measured: {0} cm ({1} m). Build or adjust to about {2} cm."),
+                    FText::AsNumber(MeasuredCm),
+                    FText::AsNumber(MeasuredMeters),
                     FText::AsNumber(FMath::RoundToInt(Missions->GetTargetSpanCm()))));
             }
         }
