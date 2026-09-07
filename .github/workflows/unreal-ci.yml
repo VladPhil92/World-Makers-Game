@@ -1,0 +1,44 @@
+name: Unreal CI
+
+on:
+  pull_request:
+    paths:
+      - 'game/**'
+      - 'content/**'
+      - 'scripts/build-unreal.ps1'
+      - '.github/workflows/unreal-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'game/**'
+      - 'content/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  project-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate uproject JSON
+        run: python -m json.tool game/WorldMakers.uproject > /dev/null
+      - name: Validate content source
+        run: python scripts/validate-content.py
+
+  unreal-build:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+      - unreal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Build WorldMakers Editor
+        shell: powershell
+        run: ./scripts/build-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}'

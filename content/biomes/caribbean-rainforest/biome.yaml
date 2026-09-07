@@ -1,0 +1,21 @@
+id: biome.caribbean-rainforest
+status: concept
+nameKey: biome.caribbean-rainforest.name
+learningAxes:
+  - science
+  - history-culture
+learningHooks:
+  - ecosystems-and-interdependence
+  - climate-and-material-choices
+culturalReview:
+  required: true
+  status: draft
+provenance:
+  sources: []
+  expertOrCommunityReview: pending
+artBudget:
+  deviceProfiles: pending
+  foliageStrategy: pending
+  lightingFallback: pending
+notes:
+  - "Selva Caribeña is the initial vertical-slice candidate, not a finalized historical/cultural representation."
