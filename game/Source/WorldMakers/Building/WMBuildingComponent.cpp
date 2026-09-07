@@ -150,7 +150,8 @@ bool UWMBuildingComponent::IsPlacementValid(const FTransform& CandidateTransform
         CandidateTransform.GetRotation(),
         ECC_Visibility,
         PlacementShape,
-        QueryParams);
+        QueryParams,
+        FCollisionResponseParams::DefaultResponseParam);
 
     return !bHasBlockingOverlap;
 }
@@ -224,6 +225,7 @@ bool UWMBuildingComponent::TryPlaceCurrentPiece()
     if (!IsPlacementValid(PlacementTransform, nullptr))
     {
         bHasPlacementTarget = false;
+        PreviewActor->SetActorHiddenInGame(true);
         return false;
     }
 
