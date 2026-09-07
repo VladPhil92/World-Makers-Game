@@ -28,6 +28,18 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
     TObjectPtr<UStaticMeshComponent> PrototypeHead;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeLeftArm;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeRightArm;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeLeftLeg;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    TObjectPtr<UStaticMeshComponent> PrototypeRightLeg;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Camera")
     TObjectPtr<USpringArmComponent> CameraBoom;
 

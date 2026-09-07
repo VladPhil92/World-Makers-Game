@@ -1,5 +1,5 @@
 id: biome.caribbean-rainforest
-status: concept
+status: prototype
 nameKey: biome.caribbean-rainforest.name
 learningAxes:
   - science
@@ -14,8 +14,33 @@ provenance:
   sources: []
   expertOrCommunityReview: pending
 artBudget:
-  deviceProfiles: pending
-  foliageStrategy: pending
-  lightingFallback: pending
+  deviceProfiles:
+    low:
+      targetFps: 30
+      treeClusters: 16
+      rockClusters: 8
+      terrainMounds: 4
+    mid:
+      targetFps: 30
+      treeClusters: 28
+      rockClusters: 14
+      terrainMounds: 6
+    high:
+      targetFps: 60
+      treeClusters: 42
+      rockClusters: 20
+      terrainMounds: 8
+  foliageStrategy: "M1.8 uses HISM proxy clusters; production foliage requires authored LOD/cull/material budgets."
+  lightingFallback: "Tablet profiles must have a scalable non-Lumen fallback; Lumen is never assumed for the minimum device tier."
+visualProof:
+  seed: 17062026
+  buildClearingRadiusCm: 750
+  archetypes:
+    - build-clearing
+    - terrain-mounds
+    - tree-clusters
+    - rock-clusters
+    - water-edge
 notes:
-  - "Selva Caribeña is the initial vertical-slice candidate, not a finalized historical/cultural representation."
+  - "Selva Caribeña is the initial visual/ecosystem slice, not a finalized historical or cultural representation."
+  - "Cultural motifs remain blocked until provenance and expert/community review are documented."
