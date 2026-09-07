@@ -19,7 +19,11 @@ public:
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Prototype")
     bool bSpawnPrototypeGround = false;
 
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Prototype")
+    bool bSpawnPrototypeMissionGeometry = true;
+
 private:
     void EnsurePrototypeEnvironment();
+    void EnsurePrototypeMissionGeometry();
     void EnsurePrototypeGround();
 };
