@@ -12,6 +12,8 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "WorldMakersBuildHUD"
 
@@ -84,12 +86,20 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     CancelButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleCancel);
 
     RefreshStatus();
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().SetTimer(StatusRefreshTimer, this, &UWMBuildHUDWidget::RefreshStatus, StatusRefreshSeconds, true);
+    }
 }
 
-void UWMBuildHUDWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
+void UWMBuildHUDWidget::NativeDestruct()
 {
-    Super::NativeTick(MyGeometry, InDeltaTime);
-    RefreshStatus();
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(StatusRefreshTimer);
+    }
+
+    Super::NativeDestruct();
 }
 
 UButton* UWMBuildHUDWidget::CreateActionButton(UHorizontalBox* Row, const FName WidgetName, const FText& Label)
@@ -185,51 +195,61 @@ void UWMBuildHUDWidget::RefreshStatus()
 void UWMBuildHUDWidget::HandlePreviousPiece()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(-1);
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleNextPiece()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(1);
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleRotateLeft()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(-1.0f);
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleRotateRight()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(1.0f);
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleConfirm()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->TryPlaceCurrentPiece();
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleMove()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->TryBeginMoveTargetPiece();
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleRemove()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->TryRemoveTargetPiece();
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleUndo()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->UndoLastAction();
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleRedo()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->RedoLastAction();
+    RefreshStatus();
 }
 
 void UWMBuildHUDWidget::HandleCancel()
 {
     if (BuildingComponent.IsValid()) BuildingComponent->CancelMove();
+    RefreshStatus();
 }
 
 #undef LOCTEXT_NAMESPACE

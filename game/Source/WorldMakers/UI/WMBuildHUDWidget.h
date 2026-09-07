@@ -19,7 +19,7 @@ public:
 
 protected:
     virtual void NativeOnInitialized() override;
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    virtual void NativeDestruct() override;
 
 private:
     UButton* CreateActionButton(UHorizontalBox* Row, FName WidgetName, const FText& Label);
@@ -57,6 +57,7 @@ private:
     void HandleCancel();
 
     TWeakObjectPtr<UWMBuildingComponent> BuildingComponent;
+    FTimerHandle StatusRefreshTimer;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> StatusText;
@@ -72,4 +73,5 @@ private:
 
     static constexpr float TouchTargetWidth = 112.0f;
     static constexpr float TouchTargetHeight = 72.0f;
+    static constexpr float StatusRefreshSeconds = 0.10f;
 };

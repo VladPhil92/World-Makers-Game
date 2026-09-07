@@ -53,9 +53,13 @@ def main() -> None:
         "HandleNextPiece",
         "SetIsEnabled(bPlacementValid)",
         "IsMoveInProgress",
+        "SetTimer(StatusRefreshTimer",
+        "ClearTimer(StatusRefreshTimer)",
     ):
         if token not in hud:
             fail(f"M1.7 HUD contract missing token: {token}")
+    if "NativeTick" in hud:
+        fail("M1.7 HUD must not rely on UUserWidget native tick; use the explicit status timer")
 
     header = (ROOT / "game/Source/WorldMakers/UI/WMBuildHUDWidget.h").read_text(encoding="utf-8")
     if "TouchTargetWidth = 112.0f" not in header or "TouchTargetHeight = 72.0f" not in header:
