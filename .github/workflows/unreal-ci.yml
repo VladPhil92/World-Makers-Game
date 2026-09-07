@@ -8,6 +8,7 @@ on:
       - 'docs/art-style-guide.md'
       - 'docs/m1-8-visual-proof.md'
       - 'docs/m1-9-runtime-certification.md'
+      - 'docs/m2-mission-runtime.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
@@ -18,6 +19,7 @@ on:
       - 'scripts/validate-m1-tablet-ux.py'
       - 'scripts/validate-m1-visual-proof.py'
       - 'scripts/validate-m1-runtime-cert-infra.py'
+      - 'scripts/validate-m2-mission-runtime.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -28,6 +30,7 @@ on:
       - 'docs/art-style-guide.md'
       - 'docs/m1-8-visual-proof.md'
       - 'docs/m1-9-runtime-certification.md'
+      - 'docs/m2-mission-runtime.md'
       - 'scripts/**'
   workflow_dispatch:
 
@@ -55,6 +58,8 @@ jobs:
         run: python scripts/validate-m1-visual-proof.py
       - name: Validate M1.9 Runtime Certification Infrastructure
         run: python scripts/validate-m1-runtime-cert-infra.py
+      - name: Validate M2 Mission Runtime
+        run: python scripts/validate-m2-mission-runtime.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}

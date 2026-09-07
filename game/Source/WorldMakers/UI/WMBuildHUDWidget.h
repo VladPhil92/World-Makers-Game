@@ -43,6 +43,9 @@ private:
     void HandleConfirm();
 
     UFUNCTION()
+    void HandleMeasure();
+
+    UFUNCTION()
     void HandleMove();
 
     UFUNCTION()
@@ -59,6 +62,9 @@ private:
 
     TWeakObjectPtr<UWMBuildingComponent> BuildingComponent;
     FTimerHandle StatusRefreshTimer;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTextBlock> MissionStatusText;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> StatusText;

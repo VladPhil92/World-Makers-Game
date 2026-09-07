@@ -8,15 +8,13 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Mission/WMMissionRuntimeSubsystem.h"
 
 namespace
 {
     bool IsSafeBuildTransform(const FTransform& Transform)
     {
-        if (Transform.ContainsNaN() || !Transform.GetRotation().IsNormalized())
-        {
-            return false;
-        }
+        if (Transform.ContainsNaN() || !Transform.GetRotation().IsNormalized()) return false;
 
         const FVector Location = Transform.GetLocation();
         const FVector Scale = Transform.GetScale3D();
@@ -31,7 +29,6 @@ namespace
             FMath::Abs(Location.X) <= 10000000.0f &&
             FMath::Abs(Location.Y) <= 10000000.0f &&
             FMath::Abs(Location.Z) <= 10000000.0f;
-
         return bFinite && bScaleReasonable && bLocationReasonable;
     }
 }
@@ -52,18 +49,11 @@ void UWMBuildingComponent::BeginPlay()
 void UWMBuildingComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     CancelMove();
-    if (IsValid(PreviewActor))
-    {
-        PreviewActor->Destroy();
-    }
-
+    if (IsValid(PreviewActor)) PreviewActor->Destroy();
     Super::EndPlay(EndPlayReason);
 }
 
-void UWMBuildingComponent::TickComponent(
-    const float DeltaTime,
-    const ELevelTick TickType,
-    FActorComponentTickFunction* ThisTickFunction)
+void UWMBuildingComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     UpdatePreviewTransform();
@@ -77,15 +67,11 @@ bool UWMBuildingComponent::ResolvePieceSpec(const FName PieceId, FWMBuildPieceSp
 
 void UWMBuildingComponent::EnsurePreviewActor()
 {
-    if (IsValid(PreviewActor) || !GetWorld() || !BuildPieceClass)
-    {
-        return;
-    }
+    if (IsValid(PreviewActor) || !GetWorld() || !BuildPieceClass) return;
 
     FActorSpawnParameters SpawnParameters;
     SpawnParameters.Owner = GetOwner();
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
     PreviewActor = GetWorld()->SpawnActor<AWMBuildPieceActor>(BuildPieceClass, FTransform::Identity, SpawnParameters);
     if (IsValid(PreviewActor))
     {
@@ -96,138 +82,77 @@ void UWMBuildingComponent::EnsurePreviewActor()
 
 bool UWMBuildingComponent::SelectPiece(const FName PieceId)
 {
-    if (IsMoveInProgress())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress()) return false;
     FWMBuildPieceSpec Spec;
-    if (!ResolvePieceSpec(PieceId, Spec))
-    {
-        return false;
-    }
+    if (!ResolvePieceSpec(PieceId, Spec)) return false;
 
     SelectedPieceId = PieceId;
     CurrentYaw = UWMBuildGridLibrary::SnapYawToStep(CurrentYaw, Spec.RotationStepDegrees);
     EnsurePreviewActor();
-    if (IsValid(PreviewActor))
-    {
-        PreviewActor->ApplyPieceSpec(Spec);
-    }
+    if (IsValid(PreviewActor)) PreviewActor->ApplyPieceSpec(Spec);
     UpdatePreviewTransform();
     return true;
 }
 
 bool UWMBuildingComponent::CycleSelectedPiece(const int32 Direction)
 {
-    if (IsMoveInProgress())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress()) return false;
     const UWMBuildCatalogSettings* Catalog = GetDefault<UWMBuildCatalogSettings>();
-    if (!Catalog)
-    {
-        return false;
-    }
+    if (!Catalog) return false;
 
     TArray<FName> PieceIds;
     Catalog->GetPieceIds(PieceIds);
-    if (PieceIds.IsEmpty())
-    {
-        return false;
-    }
+    if (PieceIds.IsEmpty()) return false;
 
     int32 Index = PieceIds.IndexOfByKey(SelectedPieceId);
-    if (Index == INDEX_NONE)
-    {
-        Index = 0;
-    }
+    if (Index == INDEX_NONE) Index = 0;
     else
     {
         const int32 Step = Direction >= 0 ? 1 : -1;
         Index = (Index + Step + PieceIds.Num()) % PieceIds.Num();
     }
-
     return SelectPiece(PieceIds[Index]);
 }
 
 bool UWMBuildingComponent::GetViewTrace(FHitResult& OutHit, const bool bIgnorePreview) const
 {
-    if (!GetWorld())
-    {
-        return false;
-    }
+    if (!GetWorld()) return false;
 
     APlayerController* PlayerController = nullptr;
     if (const APawn* PawnOwner = Cast<APawn>(GetOwner()))
     {
         PlayerController = Cast<APlayerController>(PawnOwner->GetController());
     }
-
-    if (!PlayerController)
-    {
-        PlayerController = GetWorld()->GetFirstPlayerController();
-    }
-
-    if (!PlayerController)
-    {
-        return false;
-    }
+    if (!PlayerController) PlayerController = GetWorld()->GetFirstPlayerController();
+    if (!PlayerController) return false;
 
     FVector ViewLocation;
     FRotator ViewRotation;
     PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
-
     const FVector TraceEnd = ViewLocation + (ViewRotation.Vector() * BuildDistance);
-    FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(WorldMakersBuildTrace), false, GetOwner());
-    if (bIgnorePreview && IsValid(PreviewActor))
-    {
-        QueryParams.AddIgnoredActor(PreviewActor);
-    }
-    if (MovingActor.IsValid())
-    {
-        QueryParams.AddIgnoredActor(MovingActor.Get());
-    }
 
+    FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(WorldMakersBuildTrace), false, GetOwner());
+    if (bIgnorePreview && IsValid(PreviewActor)) QueryParams.AddIgnoredActor(PreviewActor);
+    if (MovingActor.IsValid()) QueryParams.AddIgnoredActor(MovingActor.Get());
     return GetWorld()->LineTraceSingleByChannel(OutHit, ViewLocation, TraceEnd, ECC_Visibility, QueryParams);
 }
 
-bool UWMBuildingComponent::IsPlacementValid(
-    const FTransform& CandidateTransform,
-    const FWMBuildPieceSpec& Spec,
-    const AActor* SupportingActor) const
+bool UWMBuildingComponent::IsPlacementValid(const FTransform& CandidateTransform, const FWMBuildPieceSpec& Spec, const AActor* SupportingActor) const
 {
-    if (!GetWorld() || !IsSafeBuildTransform(CandidateTransform) || !Spec.IsSane())
-    {
-        return false;
-    }
+    if (!GetWorld() || !IsSafeBuildTransform(CandidateTransform) || !Spec.IsSane()) return false;
 
     if (const AWMBuildPieceActor* SupportPiece = Cast<AWMBuildPieceActor>(SupportingActor))
     {
         FWMBuildPieceSpec SupportSpec;
-        if (!ResolvePieceSpec(SupportPiece->PieceId, SupportSpec) || !SupportSpec.bCanBeSupport)
-        {
-            return false;
-        }
+        if (!ResolvePieceSpec(SupportPiece->PieceId, SupportSpec) || !SupportSpec.bCanBeSupport) return false;
     }
 
     const FVector HalfExtent = (Spec.DimensionsCm * 0.5f * FMath::Clamp(PlacementBoundsScale, 0.10f, 1.0f)).ComponentMax(FVector(1.0f));
     const FCollisionShape PlacementShape = FCollisionShape::MakeBox(HalfExtent);
     FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(WorldMakersPlacementOverlap), false, GetOwner());
-
-    if (IsValid(PreviewActor))
-    {
-        QueryParams.AddIgnoredActor(PreviewActor);
-    }
-    if (IsValid(SupportingActor))
-    {
-        QueryParams.AddIgnoredActor(SupportingActor);
-    }
-    if (MovingActor.IsValid())
-    {
-        QueryParams.AddIgnoredActor(MovingActor.Get());
-    }
+    if (IsValid(PreviewActor)) QueryParams.AddIgnoredActor(PreviewActor);
+    if (IsValid(SupportingActor)) QueryParams.AddIgnoredActor(SupportingActor);
+    if (MovingActor.IsValid()) QueryParams.AddIgnoredActor(MovingActor.Get());
 
     TArray<FOverlapResult> Overlaps;
     const bool bHasBlockingOverlap = GetWorld()->OverlapMultiByChannel(
@@ -238,7 +163,6 @@ bool UWMBuildingComponent::IsPlacementValid(
         PlacementShape,
         QueryParams,
         FCollisionResponseParams::DefaultResponseParam);
-
     return !bHasBlockingOverlap;
 }
 
@@ -253,7 +177,6 @@ bool UWMBuildingComponent::UpdatePreviewTransform()
     }
 
     PreviewActor->ApplyPieceSpec(Spec);
-
     FHitResult SurfaceHit;
     const float RequiredUpDot = FMath::Max(MinPlacementSurfaceUpDot, Spec.MinSurfaceUpDot);
     if (!GetViewTrace(SurfaceHit, true) || SurfaceHit.ImpactNormal.Z < RequiredUpDot)
@@ -265,13 +188,9 @@ bool UWMBuildingComponent::UpdatePreviewTransform()
         return false;
     }
 
-    const FVector SnappedLocation = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(
-        SurfaceHit.ImpactPoint,
-        GridSize,
-        Spec.DimensionsCm.Z);
+    const FVector SnappedLocation = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(SurfaceHit.ImpactPoint, GridSize, Spec.DimensionsCm.Z);
     const float SnappedYaw = UWMBuildGridLibrary::SnapYawToStep(CurrentYaw, Spec.RotationStepDegrees);
     const FTransform CandidateTransform(FRotator(0.0f, SnappedYaw, 0.0f), SnappedLocation);
-
     PreviewActor->SetActorTransform(CandidateTransform);
     PreviewSupportingActor = SurfaceHit.GetActor();
     bHasPlacementTarget = IsPlacementValid(CandidateTransform, Spec, PreviewSupportingActor.Get());
@@ -283,47 +202,77 @@ bool UWMBuildingComponent::UpdatePreviewTransform()
 AWMBuildPieceActor* UWMBuildingComponent::SpawnPlacedPiece(const FTransform& Transform, const FName PieceId)
 {
     FWMBuildPieceSpec Spec;
-    if (!GetWorld() || !BuildPieceClass || !IsSafeBuildTransform(Transform) || !ResolvePieceSpec(PieceId, Spec))
-    {
-        return nullptr;
-    }
+    if (!GetWorld() || !BuildPieceClass || !IsSafeBuildTransform(Transform) || !ResolvePieceSpec(PieceId, Spec)) return nullptr;
 
     FActorSpawnParameters SpawnParameters;
     SpawnParameters.Owner = GetOwner();
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
     AWMBuildPieceActor* Piece = GetWorld()->SpawnActor<AWMBuildPieceActor>(BuildPieceClass, Transform, SpawnParameters);
     if (Piece)
     {
         Piece->ApplyPieceSpec(Spec);
         Piece->SetPreviewState(false);
     }
-
     return Piece;
 }
 
 void UWMBuildingComponent::PushCommand(const FWMBuildCommand& Command)
 {
     UndoStack.Add(Command);
-    if (UndoStack.Num() > MaxHistoryEntries)
-    {
-        UndoStack.RemoveAt(0, UndoStack.Num() - MaxHistoryEntries);
-    }
+    if (UndoStack.Num() > MaxHistoryEntries) UndoStack.RemoveAt(0, UndoStack.Num() - MaxHistoryEntries);
     RedoStack.Reset();
+}
+
+float UWMBuildingComponent::CalculatePlacedStructureSpanX() const
+{
+    if (!GetWorld()) return 0.0f;
+
+    TArray<AActor*> BuildActors;
+    UGameplayStatics::GetAllActorsOfClass(this, AWMBuildPieceActor::StaticClass(), BuildActors);
+    float MinX = TNumericLimits<float>::Max();
+    float MaxX = TNumericLimits<float>::Lowest();
+    bool bFoundPiece = false;
+
+    for (AActor* Actor : BuildActors)
+    {
+        const AWMBuildPieceActor* Piece = Cast<AWMBuildPieceActor>(Actor);
+        FWMBuildPieceSpec Spec;
+        if (!IsValid(Piece) || Piece->IsPreview() || !Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) || !ResolvePieceSpec(Piece->PieceId, Spec)) continue;
+
+        const float YawRadians = FMath::DegreesToRadians(Piece->GetActorRotation().Yaw);
+        const float HalfExtentX = 0.5f * (FMath::Abs(FMath::Cos(YawRadians)) * Spec.DimensionsCm.X + FMath::Abs(FMath::Sin(YawRadians)) * Spec.DimensionsCm.Y);
+        MinX = FMath::Min(MinX, Piece->GetActorLocation().X - HalfExtentX);
+        MaxX = FMath::Max(MaxX, Piece->GetActorLocation().X + HalfExtentX);
+        bFoundPiece = true;
+    }
+    return bFoundPiece ? FMath::Max(0.0f, MaxX - MinX) : 0.0f;
+}
+
+void UWMBuildingComponent::NotifyMissionOfStructureChange()
+{
+    if (UWorld* World = GetWorld())
+    {
+        if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
+        {
+            Missions->RecordStructureSpan(CalculatePlacedStructureSpanX());
+        }
+    }
+}
+
+bool UWMBuildingComponent::UseMissionMeasurementTool()
+{
+    if (!GetWorld()) return false;
+    UWMMissionRuntimeSubsystem* Missions = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
+    if (!Missions || Missions->GetMissionState() != EWMMissionRuntimeState::Active || Missions->GetTargetSpanCm() <= 0.0f) return false;
+    return Missions->RecordMeasurement(Missions->GetTargetSpanCm());
 }
 
 bool UWMBuildingComponent::TryPlaceCurrentPiece()
 {
-    if (IsMoveInProgress())
-    {
-        return CommitMove();
-    }
+    if (IsMoveInProgress()) return CommitMove();
 
     FWMBuildPieceSpec Spec;
-    if (!ResolvePieceSpec(SelectedPieceId, Spec) || !UpdatePreviewTransform() || !bHasPlacementTarget || !IsValid(PreviewActor))
-    {
-        return false;
-    }
+    if (!ResolvePieceSpec(SelectedPieceId, Spec) || !UpdatePreviewTransform() || !bHasPlacementTarget || !IsValid(PreviewActor)) return false;
 
     const FTransform PlacementTransform = PreviewActor->GetActorTransform();
     if (!IsPlacementValid(PlacementTransform, Spec, PreviewSupportingActor.Get()))
@@ -334,10 +283,7 @@ bool UWMBuildingComponent::TryPlaceCurrentPiece()
     }
 
     AWMBuildPieceActor* PlacedPiece = SpawnPlacedPiece(PlacementTransform, SelectedPieceId);
-    if (!PlacedPiece)
-    {
-        return false;
-    }
+    if (!PlacedPiece) return false;
 
     FWMBuildCommand Command;
     Command.Type = EWMBuildCommandType::Place;
@@ -345,59 +291,38 @@ bool UWMBuildingComponent::TryPlaceCurrentPiece()
     Command.PieceId = PlacedPiece->PieceId;
     Command.ActiveActor = PlacedPiece;
     PushCommand(Command);
+    NotifyMissionOfStructureChange();
     return true;
 }
 
 bool UWMBuildingComponent::TryRemoveTargetPiece()
 {
-    if (IsMoveInProgress())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress()) return false;
     FHitResult Hit;
-    if (!GetViewTrace(Hit, true))
-    {
-        return false;
-    }
+    if (!GetViewTrace(Hit, true)) return false;
 
     AWMBuildPieceActor* TargetPiece = Cast<AWMBuildPieceActor>(Hit.GetActor());
-    if (!IsValid(TargetPiece) || TargetPiece->IsPreview() || !TargetPiece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag))
-    {
-        return false;
-    }
+    if (!IsValid(TargetPiece) || TargetPiece->IsPreview() || !TargetPiece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag)) return false;
 
     FWMBuildCommand Command;
     Command.Type = EWMBuildCommandType::Remove;
     Command.Transform = TargetPiece->GetActorTransform();
     Command.PieceId = TargetPiece->PieceId;
-
     TargetPiece->Destroy();
     PushCommand(Command);
+    NotifyMissionOfStructureChange();
     return true;
 }
 
 bool UWMBuildingComponent::TryBeginMoveTargetPiece()
 {
-    if (IsMoveInProgress())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress()) return false;
     FHitResult Hit;
-    if (!GetViewTrace(Hit, true))
-    {
-        return false;
-    }
+    if (!GetViewTrace(Hit, true)) return false;
 
     AWMBuildPieceActor* TargetPiece = Cast<AWMBuildPieceActor>(Hit.GetActor());
     FWMBuildPieceSpec Spec;
-    if (!IsValid(TargetPiece) || TargetPiece->IsPreview() ||
-        !TargetPiece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) ||
-        !ResolvePieceSpec(TargetPiece->PieceId, Spec))
-    {
-        return false;
-    }
+    if (!IsValid(TargetPiece) || TargetPiece->IsPreview() || !TargetPiece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) || !ResolvePieceSpec(TargetPiece->PieceId, Spec)) return false;
 
     MovingActor = TargetPiece;
     MoveOriginalTransform = TargetPiece->GetActorTransform();
@@ -405,34 +330,20 @@ bool UWMBuildingComponent::TryBeginMoveTargetPiece()
     CurrentYaw = TargetPiece->GetActorRotation().Yaw;
     TargetPiece->SetActorHiddenInGame(true);
     TargetPiece->SetActorEnableCollision(false);
-
     EnsurePreviewActor();
-    if (IsValid(PreviewActor))
-    {
-        PreviewActor->ApplyPieceSpec(Spec);
-    }
+    if (IsValid(PreviewActor)) PreviewActor->ApplyPieceSpec(Spec);
     UpdatePreviewTransform();
     return true;
 }
 
 bool UWMBuildingComponent::CommitMove()
 {
-    if (!MovingActor.IsValid() || !UpdatePreviewTransform() || !bHasPlacementTarget || !IsValid(PreviewActor))
-    {
-        return false;
-    }
+    if (!MovingActor.IsValid() || !UpdatePreviewTransform() || !bHasPlacementTarget || !IsValid(PreviewActor)) return false;
 
     FWMBuildPieceSpec Spec;
-    if (!ResolvePieceSpec(SelectedPieceId, Spec))
-    {
-        return false;
-    }
-
+    if (!ResolvePieceSpec(SelectedPieceId, Spec)) return false;
     const FTransform NewTransform = PreviewActor->GetActorTransform();
-    if (!IsPlacementValid(NewTransform, Spec, PreviewSupportingActor.Get()))
-    {
-        return false;
-    }
+    if (!IsPlacementValid(NewTransform, Spec, PreviewSupportingActor.Get())) return false;
 
     AWMBuildPieceActor* Actor = MovingActor.Get();
     Actor->SetActorTransform(NewTransform);
@@ -450,16 +361,13 @@ bool UWMBuildingComponent::CommitMove()
     MovingActor.Reset();
     MoveOriginalTransform = FTransform::Identity;
     UpdatePreviewTransform();
+    NotifyMissionOfStructureChange();
     return true;
 }
 
 bool UWMBuildingComponent::CancelMove()
 {
-    if (!MovingActor.IsValid())
-    {
-        return false;
-    }
-
+    if (!MovingActor.IsValid()) return false;
     AWMBuildPieceActor* Actor = MovingActor.Get();
     Actor->SetActorTransform(MoveOriginalTransform);
     Actor->SetActorHiddenInGame(false);
@@ -473,11 +381,7 @@ bool UWMBuildingComponent::CancelMove()
 void UWMBuildingComponent::RotatePreview(const float Direction)
 {
     FWMBuildPieceSpec Spec;
-    if (!ResolvePieceSpec(SelectedPieceId, Spec))
-    {
-        return;
-    }
-
+    if (!ResolvePieceSpec(SelectedPieceId, Spec)) return;
     CurrentYaw += Spec.RotationStepDegrees * FMath::Sign(Direction);
     CurrentYaw = UWMBuildGridLibrary::SnapYawToStep(CurrentYaw, Spec.RotationStepDegrees);
     UpdatePreviewTransform();
@@ -485,11 +389,7 @@ void UWMBuildingComponent::RotatePreview(const float Direction)
 
 bool UWMBuildingComponent::UndoLastAction()
 {
-    if (IsMoveInProgress() || UndoStack.IsEmpty())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress() || UndoStack.IsEmpty()) return false;
     FWMBuildCommand Command = UndoStack.Pop();
     bool bSucceeded = false;
 
@@ -519,22 +419,15 @@ bool UWMBuildingComponent::UndoLastAction()
     if (bSucceeded)
     {
         RedoStack.Add(Command);
+        NotifyMissionOfStructureChange();
     }
-    else
-    {
-        UndoStack.Add(Command);
-    }
-
+    else UndoStack.Add(Command);
     return bSucceeded;
 }
 
 bool UWMBuildingComponent::RedoLastAction()
 {
-    if (IsMoveInProgress() || RedoStack.IsEmpty())
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress() || RedoStack.IsEmpty()) return false;
     FWMBuildCommand Command = RedoStack.Pop();
     bool bSucceeded = false;
 
@@ -564,23 +457,16 @@ bool UWMBuildingComponent::RedoLastAction()
     if (bSucceeded)
     {
         UndoStack.Add(Command);
+        NotifyMissionOfStructureChange();
     }
-    else
-    {
-        RedoStack.Add(Command);
-    }
-
+    else RedoStack.Add(Command);
     return bSucceeded;
 }
 
 bool UWMBuildingComponent::SaveWorld(const FString& SlotName)
 {
-    UWMWorldSaveGame* SaveData = Cast<UWMWorldSaveGame>(
-        UGameplayStatics::CreateSaveGameObject(UWMWorldSaveGame::StaticClass()));
-    if (!SaveData)
-    {
-        return false;
-    }
+    UWMWorldSaveGame* SaveData = Cast<UWMWorldSaveGame>(UGameplayStatics::CreateSaveGameObject(UWMWorldSaveGame::StaticClass()));
+    if (!SaveData) return false;
 
     TArray<AActor*> BuildActors;
     UGameplayStatics::GetAllActorsOfClass(this, AWMBuildPieceActor::StaticClass(), BuildActors);
@@ -588,26 +474,14 @@ bool UWMBuildingComponent::SaveWorld(const FString& SlotName)
     {
         AWMBuildPieceActor* Piece = Cast<AWMBuildPieceActor>(Actor);
         FWMBuildPieceSpec Spec;
-        if (!IsValid(Piece) || Piece->IsPreview() ||
-            !Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) ||
-            !ResolvePieceSpec(Piece->PieceId, Spec))
-        {
-            continue;
-        }
-        if (SaveData->Pieces.Num() >= MaxSavedPieces)
-        {
-            return false;
-        }
+        if (!IsValid(Piece) || Piece->IsPreview() || !Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) || !ResolvePieceSpec(Piece->PieceId, Spec)) continue;
+        if (SaveData->Pieces.Num() >= MaxSavedPieces) return false;
 
         FWMBuildSaveRecord Record;
         Record.PieceId = Piece->PieceId;
         Record.Transform = Piece->GetActorTransform();
-        if (!Record.PieceId.IsNone() && IsSafeBuildTransform(Record.Transform))
-        {
-            SaveData->Pieces.Add(Record);
-        }
+        if (!Record.PieceId.IsNone() && IsSafeBuildTransform(Record.Transform)) SaveData->Pieces.Add(Record);
     }
-
     return UGameplayStatics::SaveGameToSlot(SaveData, SlotName, 0);
 }
 
@@ -618,33 +492,20 @@ void UWMBuildingComponent::DestroyAllPlacedPieces()
     for (AActor* Actor : BuildActors)
     {
         AWMBuildPieceActor* Piece = Cast<AWMBuildPieceActor>(Actor);
-        if (IsValid(Piece) && !Piece->IsPreview() && Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag))
-        {
-            Piece->Destroy();
-        }
+        if (IsValid(Piece) && !Piece->IsPreview() && Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag)) Piece->Destroy();
     }
 }
 
 bool UWMBuildingComponent::LoadWorld(const FString& SlotName)
 {
-    if (IsMoveInProgress() || !UGameplayStatics::DoesSaveGameExist(SlotName, 0))
-    {
-        return false;
-    }
-
+    if (IsMoveInProgress() || !UGameplayStatics::DoesSaveGameExist(SlotName, 0)) return false;
     UWMWorldSaveGame* SaveData = Cast<UWMWorldSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-    if (!SaveData || SaveData->SaveFormatVersion != 1 || SaveData->Pieces.Num() > MaxSavedPieces)
-    {
-        return false;
-    }
+    if (!SaveData || SaveData->SaveFormatVersion != 1 || SaveData->Pieces.Num() > MaxSavedPieces) return false;
 
     for (const FWMBuildSaveRecord& Record : SaveData->Pieces)
     {
         FWMBuildPieceSpec Spec;
-        if (Record.PieceId.IsNone() || !ResolvePieceSpec(Record.PieceId, Spec) || !IsSafeBuildTransform(Record.Transform))
-        {
-            return false;
-        }
+        if (Record.PieceId.IsNone() || !ResolvePieceSpec(Record.PieceId, Spec) || !IsSafeBuildTransform(Record.Transform)) return false;
     }
 
     DestroyAllPlacedPieces();
@@ -659,5 +520,6 @@ bool UWMBuildingComponent::LoadWorld(const FString& SlotName)
 
     UndoStack.Reset();
     RedoStack.Reset();
+    NotifyMissionOfStructureChange();
     return true;
 }
