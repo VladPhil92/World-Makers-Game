@@ -13,6 +13,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Engine/World.h"
+#include "Mission/WMMissionMeasurementComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "TimerManager.h"
 
@@ -21,6 +22,12 @@
 void UWMBuildHUDWidget::BindBuildingComponent(UWMBuildingComponent* InBuildingComponent)
 {
     BuildingComponent = InBuildingComponent;
+    RefreshStatus();
+}
+
+void UWMBuildHUDWidget::BindMissionMeasurementComponent(UWMMissionMeasurementComponent* InMissionMeasurementComponent)
+{
+    MissionMeasurementComponent = InMissionMeasurementComponent;
     RefreshStatus();
 }
 
@@ -60,7 +67,9 @@ void UWMBuildHUDWidget::NativeOnInitialized()
 
     UHorizontalBox* MissionRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionActionRow"));
     ActionStack->AddChildToVerticalBox(MissionRow);
-    UButton* MeasureButton = CreateActionButton(MissionRow, TEXT("MeasureTargetButton"), LOCTEXT("MeasureTarget", "Measure"));
+    UButton* MeasureButton = CreateActionButton(MissionRow, TEXT("MeasureTargetButton"), LOCTEXT("MeasurePoint", "Measure"));
+    UButton* ResetMeasurementButton = CreateActionButton(MissionRow, TEXT("ResetMeasurementButton"), LOCTEXT("ResetMeasurement", "Reset measure"));
+    UButton* NextMissionButton = CreateActionButton(MissionRow, TEXT("NextMissionButton"), LOCTEXT("NextMission", "Next mission"));
 
     UHorizontalBox* PrimaryRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuildPrimaryRow"));
     ActionStack->AddChildToVerticalBox(PrimaryRow);
@@ -80,6 +89,8 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     CancelButton = CreateActionButton(EditRow, TEXT("CancelButton"), LOCTEXT("Cancel", "Cancel"));
 
     MeasureButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleMeasure);
+    ResetMeasurementButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleResetMeasurement);
+    NextMissionButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleNextMission);
     PreviousButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandlePreviousPiece);
     NextButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleNextPiece);
     RotateLeftButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleRotateLeft);
@@ -142,23 +153,43 @@ void UWMBuildHUDWidget::RefreshStatus()
     {
         if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
         {
+            const FText MissionIdText = FText::FromString(Missions->GetActiveMissionId().ToString());
             if (Missions->GetMissionState() == EWMMissionRuntimeState::Completed)
             {
-                MissionStatusText->SetText(LOCTEXT("MissionComplete", "Mission complete — new creative tools unlocked."));
+                MissionStatusText->SetText(FText::Format(
+                    LOCTEXT("MissionComplete", "{0}: mission complete — choose Next mission to continue."),
+                    MissionIdText));
             }
-            else if (!Missions->HasMeasurementEvidence())
+            else if (!MissionMeasurementComponent.IsValid())
             {
-                MissionStatusText->SetText(LOCTEXT("MissionMeasure", "Mission: measure the marked span before building."));
+                MissionStatusText->SetText(LOCTEXT("MissionMeasurementUnavailable", "Mission measurement tools are unavailable."));
             }
             else
             {
-                const int32 MeasuredCm = FMath::RoundToInt(Missions->GetLastMeasuredSpanCm());
-                const float MeasuredMeters = Missions->GetLastMeasuredSpanCm() / 100.0f;
-                MissionStatusText->SetText(FText::Format(
-                    LOCTEXT("MissionMeasuredBuildSpan", "Measured: {0} cm ({1} m). Build or adjust to about {2} cm."),
-                    FText::AsNumber(MeasuredCm),
-                    FText::AsNumber(MeasuredMeters),
-                    FText::AsNumber(FMath::RoundToInt(Missions->GetTargetSpanCm()))));
+                const EWMMissionMeasurementState MeasurementState = MissionMeasurementComponent->GetMeasurementState();
+                if (MeasurementState == EWMMissionMeasurementState::AwaitingSecondPoint)
+                {
+                    MissionStatusText->SetText(FText::Format(
+                        LOCTEXT("MissionMeasureSecond", "{0}: point A selected. Aim at point B inside the mission zone and tap Measure."),
+                        MissionIdText));
+                }
+                else if (MeasurementState == EWMMissionMeasurementState::Complete || Missions->HasMeasurementEvidence())
+                {
+                    const int32 MeasuredCm = FMath::RoundToInt(Missions->GetLastMeasuredSpanCm());
+                    const float MeasuredMeters = Missions->GetLastMeasuredSpanCm() / 100.0f;
+                    MissionStatusText->SetText(FText::Format(
+                        LOCTEXT("MissionMeasuredBuildSpan", "{0} — Measured: {1} cm ({2} m). Build or adjust to about {3} cm."),
+                        MissionIdText,
+                        FText::AsNumber(MeasuredCm),
+                        FText::AsNumber(MeasuredMeters),
+                        FText::AsNumber(FMath::RoundToInt(Missions->GetTargetSpanCm()))));
+                }
+                else
+                {
+                    MissionStatusText->SetText(FText::Format(
+                        LOCTEXT("MissionMeasureFirst", "{0}: aim at point A inside the mission zone and tap Measure."),
+                        MissionIdText));
+                }
             }
         }
     }
@@ -188,7 +219,19 @@ void UWMBuildHUDWidget::HandleNextPiece() { if (BuildingComponent.IsValid()) Bui
 void UWMBuildHUDWidget::HandleRotateLeft() { if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(-1.0f); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleRotateRight() { if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(1.0f); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleConfirm() { if (BuildingComponent.IsValid()) BuildingComponent->TryPlaceCurrentPiece(); RefreshStatus(); }
-void UWMBuildHUDWidget::HandleMeasure() { if (BuildingComponent.IsValid()) BuildingComponent->UseMissionMeasurementTool(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleMeasure() { if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->CapturePointFromView(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleResetMeasurement() { if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->ResetMeasurement(); RefreshStatus(); }
+
+void UWMBuildHUDWidget::HandleNextMission()
+{
+    if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->ResetMeasurement();
+    if (UWorld* World = GetWorld())
+    {
+        if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>()) Missions->CycleMission(1);
+    }
+    RefreshStatus();
+}
+
 void UWMBuildHUDWidget::HandleMove() { if (BuildingComponent.IsValid()) BuildingComponent->TryBeginMoveTargetPiece(); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleRemove() { if (BuildingComponent.IsValid()) BuildingComponent->TryRemoveTargetPiece(); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleUndo() { if (BuildingComponent.IsValid()) BuildingComponent->UndoLastAction(); RefreshStatus(); }

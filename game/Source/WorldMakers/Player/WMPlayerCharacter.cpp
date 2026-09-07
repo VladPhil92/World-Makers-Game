@@ -8,6 +8,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/WMTouchGestureLibrary.h"
+#include "Mission/WMMissionMeasurementComponent.h"
+#include "Mission/WMMissionRuntimeSubsystem.h"
 #include "UI/WMBuildHUDWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -88,6 +90,7 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     FollowCamera->bUsePawnControlRotation = false;
 
     BuildingComponent = CreateDefaultSubobject<UWMBuildingComponent>(TEXT("BuildingComponent"));
+    MissionMeasurementComponent = CreateDefaultSubobject<UWMMissionMeasurementComponent>(TEXT("MissionMeasurementComponent"));
 }
 
 void AWMPlayerCharacter::BeginPlay()
@@ -104,7 +107,7 @@ void AWMPlayerCharacter::PawnClientRestart()
 
 void AWMPlayerCharacter::EnsureBuildHUD()
 {
-    if (BuildHUD || !IsLocallyControlled() || !BuildingComponent)
+    if (BuildHUD || !IsLocallyControlled() || !BuildingComponent || !MissionMeasurementComponent)
     {
         return;
     }
@@ -122,6 +125,7 @@ void AWMPlayerCharacter::EnsureBuildHUD()
     }
 
     BuildHUD->BindBuildingComponent(BuildingComponent);
+    BuildHUD->BindMissionMeasurementComponent(MissionMeasurementComponent);
     BuildHUD->AddToPlayerScreen(10);
 
     FInputModeGameAndUI InputMode;
@@ -151,6 +155,9 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction(TEXT("RedoBuild"), IE_Pressed, this, &AWMPlayerCharacter::RedoBuild);
     PlayerInputComponent->BindAction(TEXT("SaveWorld"), IE_Pressed, this, &AWMPlayerCharacter::SavePrototypeWorld);
     PlayerInputComponent->BindAction(TEXT("LoadWorld"), IE_Pressed, this, &AWMPlayerCharacter::LoadPrototypeWorld);
+    PlayerInputComponent->BindAction(TEXT("MeasureMission"), IE_Pressed, this, &AWMPlayerCharacter::CaptureMissionMeasurementPoint);
+    PlayerInputComponent->BindAction(TEXT("ResetMissionMeasurement"), IE_Pressed, this, &AWMPlayerCharacter::ResetMissionMeasurement);
+    PlayerInputComponent->BindAction(TEXT("CycleMission"), IE_Pressed, this, &AWMPlayerCharacter::CycleMission);
 
     PlayerInputComponent->BindTouch(IE_Pressed, this, &AWMPlayerCharacter::HandleTouchPressed);
     PlayerInputComponent->BindTouch(IE_Repeat, this, &AWMPlayerCharacter::HandleTouchRepeat);
@@ -184,6 +191,23 @@ void AWMPlayerCharacter::UndoBuild() { if (BuildingComponent) BuildingComponent-
 void AWMPlayerCharacter::RedoBuild() { if (BuildingComponent) BuildingComponent->RedoLastAction(); }
 void AWMPlayerCharacter::SavePrototypeWorld() { if (BuildingComponent) BuildingComponent->SaveWorld(); }
 void AWMPlayerCharacter::LoadPrototypeWorld() { if (BuildingComponent) BuildingComponent->LoadWorld(); }
+void AWMPlayerCharacter::CaptureMissionMeasurementPoint() { if (MissionMeasurementComponent) MissionMeasurementComponent->CapturePointFromView(); }
+void AWMPlayerCharacter::ResetMissionMeasurement() { if (MissionMeasurementComponent) MissionMeasurementComponent->ResetMeasurement(); }
+
+void AWMPlayerCharacter::CycleMission()
+{
+    if (MissionMeasurementComponent)
+    {
+        MissionMeasurementComponent->ResetMeasurement();
+    }
+    if (UWorld* World = GetWorld())
+    {
+        if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
+        {
+            Missions->CycleMission(1);
+        }
+    }
+}
 
 void AWMPlayerCharacter::HandleTouchPressed(const ETouchIndex::Type FingerIndex, const FVector Location)
 {

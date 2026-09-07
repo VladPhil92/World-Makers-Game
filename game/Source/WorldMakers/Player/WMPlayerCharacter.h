@@ -9,6 +9,7 @@ class USpringArmComponent;
 class UStaticMeshComponent;
 class UWMBuildingComponent;
 class UWMBuildHUDWidget;
+class UWMMissionMeasurementComponent;
 
 UCLASS()
 class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
@@ -49,6 +50,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Building")
     TObjectPtr<UWMBuildingComponent> BuildingComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
+    TObjectPtr<UWMMissionMeasurementComponent> MissionMeasurementComponent;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
     float TouchDragDeadZonePx = 24.0f;
 
@@ -72,6 +76,9 @@ private:
     void RedoBuild();
     void SavePrototypeWorld();
     void LoadPrototypeWorld();
+    void CaptureMissionMeasurementPoint();
+    void ResetMissionMeasurement();
+    void CycleMission();
     void EnsureBuildHUD();
 
     void HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);

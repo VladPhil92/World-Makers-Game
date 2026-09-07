@@ -88,7 +88,7 @@ def main() -> None:
 
     # M2 established a geometry-derived bridge. M2.1 strengthens it from a global
     # X span to a mission-scoped local-axis span; either implementation name is an
-    # acceptable M2 contract, while M2.1 independently requires the stricter form.
+    # acceptable M2 contract, while later phases independently require stricter forms.
     span_functions = ("CalculatePlacedStructureSpanX", "CalculateMissionScopedStructureSpan")
     active_span_function = next((name for name in span_functions if name in building_h and name in building_cpp), None)
     if not active_span_function:
@@ -97,9 +97,11 @@ def main() -> None:
         fail("Building Core must emit geometry-derived structure span to Mission Runtime")
 
     hud = read("game/Source/WorldMakers/UI/WMBuildHUDWidget.cpp")
-    for token in ("MeasureTargetButton", "UseMissionMeasurementTool", "MissionStatusText", "LOCTEXT"):
+    for token in ("MeasureTargetButton", "MissionStatusText", "LOCTEXT"):
         if token not in hud:
             fail(f"M2 child UI missing mission/measurement affordance: {token}")
+    if "UseMissionMeasurementTool" not in hud and "CapturePointFromView" not in hud:
+        fail("M2 child UI must expose either the original measurement bridge or the interactive measurement path")
 
     tests = read("game/Source/WorldMakers/Private/Tests/WMMissionRuntimeTests.cpp")
     for test_name in (

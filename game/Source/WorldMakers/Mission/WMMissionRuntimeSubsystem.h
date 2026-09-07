@@ -15,12 +15,32 @@ class WORLDMAKERS_API UWMMissionRuntimeSubsystem : public UWorldSubsystem
 public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+    /** Backward-compatible bootstrap for the default prototype mission. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool ReloadAndActivatePrototypeMission();
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    bool ReloadMissionCatalog();
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    bool ActivateMission(FName MissionId);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    bool CycleMission(int32 Direction = 1);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    TArray<FName> GetAvailableMissionIds() const { return AvailableMissionIds; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    int32 GetMissionCount() const { return AvailableMissionIds.Num(); }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    FName GetActiveMissionId() const { return Progress.State == EWMMissionRuntimeState::Inactive ? NAME_None : Progress.Definition.MissionId; }
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool RecordMeasurement(float MeasuredSpanCm);
 
+    /** Legacy source helper retained for M2.1 compatibility; child UI uses the interactive measurement component in M2.2. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool RecordActiveGeometryMeasurement();
 
@@ -62,5 +82,7 @@ public:
 private:
     FWMMissionProgressModel Progress;
     TWeakObjectPtr<AWMMissionGeometryActor> ActiveGeometry;
+    TMap<FName, FWMMissionRuntimeDefinition> MissionCatalog;
+    TArray<FName> AvailableMissionIds;
     float LastMeasuredSpanCm = 0.0f;
 };

@@ -39,11 +39,35 @@ AWMMissionGeometryActor::AWMMissionGeometryActor()
     MeasureEndMarker->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     MeasureEndMarker->SetRelativeScale3D(FVector(0.14f));
 
+    InteractiveStartMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("InteractiveStartMarker"));
+    InteractiveStartMarker->SetupAttachment(SceneRoot);
+    InteractiveStartMarker->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    InteractiveStartMarker->SetWorldScale3D(FVector(0.10f));
+    InteractiveStartMarker->SetHiddenInGame(true);
+
+    InteractiveEndMarker = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("InteractiveEndMarker"));
+    InteractiveEndMarker->SetupAttachment(SceneRoot);
+    InteractiveEndMarker->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    InteractiveEndMarker->SetWorldScale3D(FVector(0.10f));
+    InteractiveEndMarker->SetHiddenInGame(true);
+
+    InteractiveSegment = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("InteractiveSegment"));
+    InteractiveSegment->SetupAttachment(SceneRoot);
+    InteractiveSegment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    InteractiveSegment->SetHiddenInGame(true);
+
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
     if (SphereMesh.Succeeded())
     {
         MeasureStartMarker->SetStaticMesh(SphereMesh.Object);
         MeasureEndMarker->SetStaticMesh(SphereMesh.Object);
+        InteractiveStartMarker->SetStaticMesh(SphereMesh.Object);
+        InteractiveEndMarker->SetStaticMesh(SphereMesh.Object);
+    }
+    if (CubeMesh.Succeeded())
+    {
+        InteractiveSegment->SetStaticMesh(CubeMesh.Object);
     }
 
     ApplyPrototypeLayout();
@@ -59,6 +83,7 @@ void AWMMissionGeometryActor::BeginPlay()
 {
     Super::BeginPlay();
     ApplyPrototypeLayout();
+    ClearInteractiveMeasurement();
     if (UWorld* World = GetWorld())
     {
         if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
@@ -121,4 +146,71 @@ FTransform AWMMissionGeometryActor::GetBuildZoneTransform() const
 FVector AWMMissionGeometryActor::GetBuildZoneHalfExtent() const
 {
     return BuildZone ? BuildZone->GetUnscaledBoxExtent() : BuildZoneHalfExtent;
+}
+
+bool AWMMissionGeometryActor::IsPointInsideBuildZone(const FVector& WorldPoint) const
+{
+    return UWMMissionGeometryLibrary::IsWorldPointInsideBox(WorldPoint, GetBuildZoneTransform(), GetBuildZoneHalfExtent());
+}
+
+void AWMMissionGeometryActor::ConfigureTargetSpanCm(const float TargetSpanCm)
+{
+    AnchorSpanCm = FMath::Max(1.0f, TargetSpanCm);
+    ApplyPrototypeLayout();
+    ClearInteractiveMeasurement();
+}
+
+void AWMMissionGeometryActor::SetInteractiveMeasurementStart(const FVector& WorldPoint)
+{
+    if (!InteractiveStartMarker || !InteractiveEndMarker || !InteractiveSegment)
+    {
+        return;
+    }
+
+    InteractiveStartMarker->SetWorldLocation(WorldPoint);
+    InteractiveStartMarker->SetHiddenInGame(false);
+    InteractiveEndMarker->SetHiddenInGame(true);
+    InteractiveSegment->SetHiddenInGame(true);
+}
+
+void AWMMissionGeometryActor::SetInteractiveMeasurementComplete(const FVector& WorldStart, const FVector& WorldEnd)
+{
+    if (!InteractiveStartMarker || !InteractiveEndMarker || !InteractiveSegment)
+    {
+        return;
+    }
+
+    const FVector Delta = WorldEnd - WorldStart;
+    const float DistanceCm = Delta.Size();
+    if (!FMath::IsFinite(DistanceCm) || DistanceCm <= KINDA_SMALL_NUMBER)
+    {
+        ClearInteractiveMeasurement();
+        return;
+    }
+
+    InteractiveStartMarker->SetWorldLocation(WorldStart);
+    InteractiveEndMarker->SetWorldLocation(WorldEnd);
+    InteractiveStartMarker->SetHiddenInGame(false);
+    InteractiveEndMarker->SetHiddenInGame(false);
+
+    InteractiveSegment->SetWorldLocation((WorldStart + WorldEnd) * 0.5f);
+    InteractiveSegment->SetWorldRotation(Delta.Rotation());
+    InteractiveSegment->SetWorldScale3D(FVector(DistanceCm / 100.0f, 0.035f, 0.035f));
+    InteractiveSegment->SetHiddenInGame(false);
+}
+
+void AWMMissionGeometryActor::ClearInteractiveMeasurement()
+{
+    if (InteractiveStartMarker)
+    {
+        InteractiveStartMarker->SetHiddenInGame(true);
+    }
+    if (InteractiveEndMarker)
+    {
+        InteractiveEndMarker->SetHiddenInGame(true);
+    }
+    if (InteractiveSegment)
+    {
+        InteractiveSegment->SetHiddenInGame(true);
+    }
 }

@@ -27,6 +27,8 @@ jobs:
         run: python scripts/validate-m2-mission-runtime.py
       - name: Validate M2.1 Spatial Measurement
         run: python scripts/validate-m2-1-spatial-measurement.py
+      - name: Validate M2.2 Interactive Measurement
+        run: python scripts/validate-m2-2-interactive-measurement.py
 
   parent-portal:
     runs-on: ubuntu-latest

@@ -1,8 +1,14 @@
 #include "Mission/WMMissionRuntimeSubsystem.h"
 
+#include "HAL/FileManager.h"
 #include "Mission/WMMissionGeometryActor.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+
+namespace
+{
+    const FName DefaultPrototypeMissionId(TEXT("mission.mathematics.measure-and-build-01"));
+}
 
 void UWMMissionRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -10,31 +16,107 @@ void UWMMissionRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection
     ReloadAndActivatePrototypeMission();
 }
 
+bool UWMMissionRuntimeSubsystem::ReloadMissionCatalog()
+{
+    MissionCatalog.Reset();
+    AvailableMissionIds.Reset();
+
+    const FString MissionDirectory = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("WorldMakers/Missions"));
+    TArray<FString> MissionFiles;
+    IFileManager::Get().FindFiles(MissionFiles, *FPaths::Combine(MissionDirectory, TEXT("*.json")), true, false);
+    MissionFiles.Sort();
+
+    for (const FString& MissionFile : MissionFiles)
+    {
+        FString Json;
+        if (!FFileHelper::LoadFileToString(Json, *FPaths::Combine(MissionDirectory, MissionFile)))
+        {
+            continue;
+        }
+
+        FWMMissionRuntimeDefinition Definition;
+        FString Error;
+        if (!FWMMissionRuntimeDefinition::TryParseJson(Json, Definition, Error) || Definition.MissionId.IsNone())
+        {
+            continue;
+        }
+
+        if (MissionCatalog.Contains(Definition.MissionId))
+        {
+            MissionCatalog.Reset();
+            AvailableMissionIds.Reset();
+            return false;
+        }
+
+        AvailableMissionIds.Add(Definition.MissionId);
+        MissionCatalog.Add(Definition.MissionId, Definition);
+    }
+
+    AvailableMissionIds.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString() < B.ToString();
+    });
+
+    return !AvailableMissionIds.IsEmpty();
+}
+
+bool UWMMissionRuntimeSubsystem::ActivateMission(const FName MissionId)
+{
+    const FWMMissionRuntimeDefinition* Definition = MissionCatalog.Find(MissionId);
+    if (!Definition)
+    {
+        return false;
+    }
+
+    Progress = FWMMissionProgressModel();
+    LastMeasuredSpanCm = 0.0f;
+    if (!Progress.Begin(*Definition))
+    {
+        return false;
+    }
+
+    if (ActiveGeometry.IsValid())
+    {
+        ActiveGeometry->ConfigureTargetSpanCm(Definition->TargetSpanCm);
+    }
+    return true;
+}
+
+bool UWMMissionRuntimeSubsystem::CycleMission(const int32 Direction)
+{
+    if (AvailableMissionIds.IsEmpty())
+    {
+        return false;
+    }
+
+    int32 Index = AvailableMissionIds.IndexOfByKey(GetActiveMissionId());
+    if (Index == INDEX_NONE)
+    {
+        Index = 0;
+    }
+    else
+    {
+        const int32 Step = Direction >= 0 ? 1 : -1;
+        Index = (Index + Step + AvailableMissionIds.Num()) % AvailableMissionIds.Num();
+    }
+
+    return ActivateMission(AvailableMissionIds[Index]);
+}
+
 bool UWMMissionRuntimeSubsystem::ReloadAndActivatePrototypeMission()
 {
-    const FString MissionPath = FPaths::Combine(
-        FPaths::ProjectContentDir(),
-        TEXT("WorldMakers/Missions/mission.mathematics.measure-and-build-01.json"));
-
-    FString Json;
-    if (!FFileHelper::LoadFileToString(Json, *MissionPath))
+    if (!ReloadMissionCatalog())
     {
         Progress = FWMMissionProgressModel();
         LastMeasuredSpanCm = 0.0f;
         return false;
     }
 
-    FWMMissionRuntimeDefinition Definition;
-    FString Error;
-    if (!FWMMissionRuntimeDefinition::TryParseJson(Json, Definition, Error))
+    if (MissionCatalog.Contains(DefaultPrototypeMissionId))
     {
-        Progress = FWMMissionProgressModel();
-        LastMeasuredSpanCm = 0.0f;
-        return false;
+        return ActivateMission(DefaultPrototypeMissionId);
     }
-
-    LastMeasuredSpanCm = 0.0f;
-    return Progress.Begin(Definition);
+    return ActivateMission(AvailableMissionIds[0]);
 }
 
 bool UWMMissionRuntimeSubsystem::RecordMeasurement(const float MeasuredSpanCm)
@@ -66,6 +148,10 @@ void UWMMissionRuntimeSubsystem::RegisterMissionGeometry(AWMMissionGeometryActor
     if (IsValid(GeometryActor))
     {
         ActiveGeometry = GeometryActor;
+        if (Progress.State != EWMMissionRuntimeState::Inactive && Progress.Definition.TargetSpanCm > 0.0f)
+        {
+            GeometryActor->ConfigureTargetSpanCm(Progress.Definition.TargetSpanCm);
+        }
     }
 }
 

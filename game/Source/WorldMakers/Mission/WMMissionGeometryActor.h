@@ -37,6 +37,21 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Geometry")
     FVector GetBuildZoneHalfExtent() const;
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Geometry")
+    bool IsPointInsideBuildZone(const FVector& WorldPoint) const;
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Geometry")
+    void ConfigureTargetSpanCm(float TargetSpanCm);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Geometry")
+    void SetInteractiveMeasurementStart(const FVector& WorldPoint);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Geometry")
+    void SetInteractiveMeasurementComplete(const FVector& WorldStart, const FVector& WorldEnd);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Geometry")
+    void ClearInteractiveMeasurement();
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Geometry", meta = (ClampMin = "1.0"))
     float AnchorSpanCm = 300.0f;
 
@@ -66,4 +81,13 @@ private:
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> MeasureEndMarker;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> InteractiveStartMarker;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> InteractiveEndMarker;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> InteractiveSegment;
 };
