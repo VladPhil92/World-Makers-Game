@@ -9,6 +9,7 @@ class UButton;
 class UHorizontalBox;
 class UTextBlock;
 class UWMBuildingComponent;
+class UWMMissionMeasurementComponent;
 
 UCLASS()
 class WORLDMAKERS_API UWMBuildHUDWidget : public UUserWidget
@@ -17,6 +18,7 @@ class WORLDMAKERS_API UWMBuildHUDWidget : public UUserWidget
 
 public:
     void BindBuildingComponent(UWMBuildingComponent* InBuildingComponent);
+    void BindMissionMeasurementComponent(UWMMissionMeasurementComponent* InMissionMeasurementComponent);
 
 protected:
     virtual void NativeOnInitialized() override;
@@ -46,6 +48,12 @@ private:
     void HandleMeasure();
 
     UFUNCTION()
+    void HandleResetMeasurement();
+
+    UFUNCTION()
+    void HandleNextMission();
+
+    UFUNCTION()
     void HandleMove();
 
     UFUNCTION()
@@ -61,6 +69,7 @@ private:
     void HandleCancel();
 
     TWeakObjectPtr<UWMBuildingComponent> BuildingComponent;
+    TWeakObjectPtr<UWMMissionMeasurementComponent> MissionMeasurementComponent;
     FTimerHandle StatusRefreshTimer;
 
     UPROPERTY(Transient)
