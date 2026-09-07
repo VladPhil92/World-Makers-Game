@@ -6,6 +6,8 @@ on:
       - 'game/**'
       - 'content/**'
       - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'scripts/validate-m1-prototype.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -13,6 +15,7 @@ on:
     paths:
       - 'game/**'
       - 'content/**'
+      - 'scripts/**'
   workflow_dispatch:
 
 permissions:
@@ -25,10 +28,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate uproject JSON
         run: python -m json.tool game/WorldMakers.uproject > /dev/null
-      - name: Validate content source
+      - name: Validate pedagogical content source
         run: python scripts/validate-content.py
+      - name: Validate M1 building prototype structure
+        run: python scripts/validate-m1-prototype.py
 
-  unreal-build:
+  unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
     runs-on:
       - self-hosted
@@ -42,3 +47,6 @@ jobs:
       - name: Build WorldMakers Editor
         shell: powershell
         run: ./scripts/build-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}'
+      - name: Run World Makers automation tests
+        shell: powershell
+        run: ./scripts/test-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}'
