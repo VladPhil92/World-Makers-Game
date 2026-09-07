@@ -21,6 +21,8 @@ jobs:
           python-version: '3.12'
       - name: Validate pedagogical content
         run: python scripts/validate-content.py
+      - name: Validate M1.10 Trust Economy
+        run: python scripts/validate-trust-economy.py
 
   parent-portal:
     runs-on: ubuntu-latest

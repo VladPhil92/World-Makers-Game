@@ -1,0 +1,38 @@
+[
+  {
+    "offerId": "offer.expansion.caribbean-explorer-01",
+    "productType": "expansion",
+    "entitlementIds": [
+      "entitlement.expansion.caribbean-explorer-01"
+    ],
+    "platformSkus": {
+      "apple": "wm.caribbean.explorer.01",
+      "google": "wm_caribbean_explorer_01",
+      "desktop": "wm-caribbean-explorer-01"
+    },
+    "parentAudienceOnly": true,
+    "randomizedContent": false,
+    "manipulativeUrgency": false,
+    "consumableCurrency": false,
+    "childInterestEligible": true,
+    "descriptionKey": "commerce.offer.caribbean-explorer-01.description"
+  },
+  {
+    "offerId": "offer.creative.builder-studio-01",
+    "productType": "creative_pack",
+    "entitlementIds": [
+      "entitlement.creative.builder-studio-01"
+    ],
+    "platformSkus": {
+      "apple": "wm.builder.studio.01",
+      "google": "wm_builder_studio_01",
+      "desktop": "wm-builder-studio-01"
+    },
+    "parentAudienceOnly": true,
+    "randomizedContent": false,
+    "manipulativeUrgency": false,
+    "consumableCurrency": false,
+    "childInterestEligible": true,
+    "descriptionKey": "commerce.offer.builder-studio-01.description"
+  }
+]
