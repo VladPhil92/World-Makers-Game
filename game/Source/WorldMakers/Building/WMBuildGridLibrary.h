@@ -14,5 +14,8 @@ public:
     static FVector SnapLocationToGrid(const FVector& Location, float GridSize, bool bOffsetHalfCellZ = true);
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Building")
+    static FVector SnapLocationToSurfaceGrid(const FVector& SurfaceImpactPoint, float GridSize);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Building")
     static float SnapYawToStep(float YawDegrees, float RotationStepDegrees);
 };

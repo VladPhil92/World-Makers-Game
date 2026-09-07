@@ -39,6 +39,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
     bool LoadWorld(const FString& SlotName = TEXT("WorldMakersPrototype"));
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Building")
+    bool IsPreviewPlacementValid() const { return bHasPlacementTarget; }
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "25.0"))
     float GridSize = 100.0f;
 
@@ -47,6 +50,12 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "200.0"))
     float BuildDistance = 1500.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.10", ClampMax = "0.49"))
+    float PlacementClearanceRatio = 0.45f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float MinPlacementSurfaceUpDot = 0.65f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building")
     TSubclassOf<AWMBuildPieceActor> BuildPieceClass;
@@ -72,6 +81,7 @@ private:
 
     bool UpdatePreviewTransform();
     bool GetViewTrace(FHitResult& OutHit, bool bIgnorePreview) const;
+    bool IsPlacementValid(const FTransform& CandidateTransform, const AActor* SupportingActor) const;
     AWMBuildPieceActor* SpawnPlacedPiece(const FTransform& Transform, FName PieceId);
     void EnsurePreviewActor();
     void PushCommand(const FWMBuildCommand& Command);
@@ -82,4 +92,5 @@ private:
     TArray<FWMBuildCommand> UndoStack;
     TArray<FWMBuildCommand> RedoStack;
     static constexpr int32 MaxHistoryEntries = 50;
+    static constexpr int32 MaxSavedPieces = 5000;
 };
