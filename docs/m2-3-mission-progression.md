@@ -13,7 +13,7 @@ Every mission resolves to one of four child-facing states:
 - `Active` — the mission is the current runtime activity;
 - `Completed` — the mission has been demonstrated at least once.
 
-Completion never decays. There are no streaks, daily reset mechanics or penalties for returning later.
+Completion never decays. There are no daily streaks, daily reset mechanics or penalties for returning later.
 
 ## Data-driven prerequisites
 
@@ -51,7 +51,9 @@ At startup the runtime:
 4. resumes a previously active unfinished mission when still valid, otherwise selects the first unlocked incomplete mission;
 5. falls back to an activatable completed mission only when the current journey has no incomplete unlocked mission.
 
-`CycleMission` now iterates only missions that are unlocked (or already completed and replayable). Locked missions remain visible through the journey read model but cannot be activated.
+`CycleMission` now iterates only missions that are unlocked (or already completed and replayable). If the current mission is the only activatable mission, the action is a no-op instead of restarting progress. Locked missions remain visible through the journey read model but cannot be activated.
+
+Saved completion data is sanitized against the current prerequisite graph. A dependent mission is not restored as completed when its required predecessor is absent from the persisted completion set.
 
 ## Read model
 
