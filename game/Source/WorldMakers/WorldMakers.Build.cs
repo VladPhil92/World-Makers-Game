@@ -12,7 +12,14 @@ public class WorldMakers : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "PhysicsCore"
+            "PhysicsCore",
+            "UMG"
+        });
+
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "Slate",
+            "SlateCore"
         });
     }
 }
