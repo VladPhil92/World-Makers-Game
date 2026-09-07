@@ -28,19 +28,50 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     PrototypeBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeBody"));
     PrototypeBody->SetupAttachment(RootComponent);
     PrototypeBody->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    PrototypeBody->SetRelativeScale3D(FVector(0.45f, 0.45f, 0.85f));
+    PrototypeBody->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f));
+    PrototypeBody->SetRelativeScale3D(FVector(0.34f, 0.30f, 0.62f));
 
     PrototypeHead = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeHead"));
     PrototypeHead->SetupAttachment(RootComponent);
     PrototypeHead->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    PrototypeHead->SetRelativeLocation(FVector(0.0f, 0.0f, 82.0f));
-    PrototypeHead->SetRelativeScale3D(FVector(0.38f));
+    PrototypeHead->SetRelativeLocation(FVector(0.0f, 0.0f, 62.0f));
+    PrototypeHead->SetRelativeScale3D(FVector(0.40f));
 
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> BodyMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+    PrototypeLeftArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeLeftArm"));
+    PrototypeLeftArm->SetupAttachment(RootComponent);
+    PrototypeLeftArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeLeftArm->SetRelativeLocation(FVector(0.0f, -24.0f, 12.0f));
+    PrototypeLeftArm->SetRelativeRotation(FRotator(0.0f, 0.0f, -7.0f));
+    PrototypeLeftArm->SetRelativeScale3D(FVector(0.11f, 0.11f, 0.46f));
+
+    PrototypeRightArm = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeRightArm"));
+    PrototypeRightArm->SetupAttachment(RootComponent);
+    PrototypeRightArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeRightArm->SetRelativeLocation(FVector(0.0f, 24.0f, 12.0f));
+    PrototypeRightArm->SetRelativeRotation(FRotator(0.0f, 0.0f, 7.0f));
+    PrototypeRightArm->SetRelativeScale3D(FVector(0.11f, 0.11f, 0.46f));
+
+    PrototypeLeftLeg = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeLeftLeg"));
+    PrototypeLeftLeg->SetupAttachment(RootComponent);
+    PrototypeLeftLeg->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeLeftLeg->SetRelativeLocation(FVector(0.0f, -10.0f, -45.0f));
+    PrototypeLeftLeg->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.50f));
+
+    PrototypeRightLeg = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeRightLeg"));
+    PrototypeRightLeg->SetupAttachment(RootComponent);
+    PrototypeRightLeg->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeRightLeg->SetRelativeLocation(FVector(0.0f, 10.0f, -45.0f));
+    PrototypeRightLeg->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.50f));
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> HeadMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-    if (BodyMesh.Succeeded())
+    if (CylinderMesh.Succeeded())
     {
-        PrototypeBody->SetStaticMesh(BodyMesh.Object);
+        PrototypeBody->SetStaticMesh(CylinderMesh.Object);
+        PrototypeLeftArm->SetStaticMesh(CylinderMesh.Object);
+        PrototypeRightArm->SetStaticMesh(CylinderMesh.Object);
+        PrototypeLeftLeg->SetStaticMesh(CylinderMesh.Object);
+        PrototypeRightLeg->SetStaticMesh(CylinderMesh.Object);
     }
     if (HeadMesh.Succeeded())
     {
@@ -128,100 +159,35 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AWMPlayerCharacter::MoveForward(const float Value)
 {
-    if (!Controller || FMath::IsNearlyZero(Value))
-    {
-        return;
-    }
-
-    const FRotator ControlRotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0.0f, ControlRotation.Yaw, 0.0f);
+    if (!Controller || FMath::IsNearlyZero(Value)) return;
+    const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
     AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X), Value);
 }
 
 void AWMPlayerCharacter::MoveRight(const float Value)
 {
-    if (!Controller || FMath::IsNearlyZero(Value))
-    {
-        return;
-    }
-
-    const FRotator ControlRotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0.0f, ControlRotation.Yaw, 0.0f);
+    if (!Controller || FMath::IsNearlyZero(Value)) return;
+    const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
     AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y), Value);
 }
 
-void AWMPlayerCharacter::Turn(const float Value)
-{
-    AddControllerYawInput(Value);
-}
-
-void AWMPlayerCharacter::LookUp(const float Value)
-{
-    AddControllerPitchInput(Value);
-}
-
-void AWMPlayerCharacter::PlaceBuild()
-{
-    if (BuildingComponent) BuildingComponent->TryPlaceCurrentPiece();
-}
-
-void AWMPlayerCharacter::RotateBuildClockwise()
-{
-    if (BuildingComponent) BuildingComponent->RotatePreview(1.0f);
-}
-
-void AWMPlayerCharacter::RotateBuildCounterClockwise()
-{
-    if (BuildingComponent) BuildingComponent->RotatePreview(-1.0f);
-}
-
-void AWMPlayerCharacter::RemoveBuild()
-{
-    if (BuildingComponent) BuildingComponent->TryRemoveTargetPiece();
-}
-
-void AWMPlayerCharacter::MoveBuild()
-{
-    if (BuildingComponent) BuildingComponent->TryBeginMoveTargetPiece();
-}
-
-void AWMPlayerCharacter::CycleBuildPiece()
-{
-    if (BuildingComponent) BuildingComponent->CycleSelectedPiece(1);
-}
-
-void AWMPlayerCharacter::CancelBuildEdit()
-{
-    if (BuildingComponent) BuildingComponent->CancelMove();
-}
-
-void AWMPlayerCharacter::UndoBuild()
-{
-    if (BuildingComponent) BuildingComponent->UndoLastAction();
-}
-
-void AWMPlayerCharacter::RedoBuild()
-{
-    if (BuildingComponent) BuildingComponent->RedoLastAction();
-}
-
-void AWMPlayerCharacter::SavePrototypeWorld()
-{
-    if (BuildingComponent) BuildingComponent->SaveWorld();
-}
-
-void AWMPlayerCharacter::LoadPrototypeWorld()
-{
-    if (BuildingComponent) BuildingComponent->LoadWorld();
-}
+void AWMPlayerCharacter::Turn(const float Value) { AddControllerYawInput(Value); }
+void AWMPlayerCharacter::LookUp(const float Value) { AddControllerPitchInput(Value); }
+void AWMPlayerCharacter::PlaceBuild() { if (BuildingComponent) BuildingComponent->TryPlaceCurrentPiece(); }
+void AWMPlayerCharacter::RotateBuildClockwise() { if (BuildingComponent) BuildingComponent->RotatePreview(1.0f); }
+void AWMPlayerCharacter::RotateBuildCounterClockwise() { if (BuildingComponent) BuildingComponent->RotatePreview(-1.0f); }
+void AWMPlayerCharacter::RemoveBuild() { if (BuildingComponent) BuildingComponent->TryRemoveTargetPiece(); }
+void AWMPlayerCharacter::MoveBuild() { if (BuildingComponent) BuildingComponent->TryBeginMoveTargetPiece(); }
+void AWMPlayerCharacter::CycleBuildPiece() { if (BuildingComponent) BuildingComponent->CycleSelectedPiece(1); }
+void AWMPlayerCharacter::CancelBuildEdit() { if (BuildingComponent) BuildingComponent->CancelMove(); }
+void AWMPlayerCharacter::UndoBuild() { if (BuildingComponent) BuildingComponent->UndoLastAction(); }
+void AWMPlayerCharacter::RedoBuild() { if (BuildingComponent) BuildingComponent->RedoLastAction(); }
+void AWMPlayerCharacter::SavePrototypeWorld() { if (BuildingComponent) BuildingComponent->SaveWorld(); }
+void AWMPlayerCharacter::LoadPrototypeWorld() { if (BuildingComponent) BuildingComponent->LoadWorld(); }
 
 void AWMPlayerCharacter::HandleTouchPressed(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
-    if (bTouchTracking)
-    {
-        return;
-    }
-
+    if (bTouchTracking) return;
     bTouchTracking = true;
     bTouchDragging = false;
     ActiveTouchFinger = FingerIndex;
@@ -231,10 +197,7 @@ void AWMPlayerCharacter::HandleTouchPressed(const ETouchIndex::Type FingerIndex,
 
 void AWMPlayerCharacter::HandleTouchRepeat(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
-    if (!bTouchTracking || FingerIndex != ActiveTouchFinger)
-    {
-        return;
-    }
+    if (!bTouchTracking || FingerIndex != ActiveTouchFinger) return;
 
     const FVector2D CurrentScreen(Location.X, Location.Y);
     if (!bTouchDragging && UWMTouchGestureLibrary::HasExceededDragDeadZone(TouchStartScreen, CurrentScreen, TouchDragDeadZonePx))
@@ -250,21 +213,15 @@ void AWMPlayerCharacter::HandleTouchRepeat(const ETouchIndex::Type FingerIndex, 
         {
             Delta = Delta.GetSafeNormal() * MaxTouchDeltaPx;
         }
-
         AddControllerYawInput(Delta.X * TouchLookDegreesPerPixel);
         AddControllerPitchInput(-Delta.Y * TouchLookDegreesPerPixel);
     }
-
     TouchLastScreen = CurrentScreen;
 }
 
 void AWMPlayerCharacter::HandleTouchReleased(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
-    if (!bTouchTracking || FingerIndex != ActiveTouchFinger)
-    {
-        return;
-    }
-
+    if (!bTouchTracking || FingerIndex != ActiveTouchFinger) return;
     bTouchTracking = false;
     bTouchDragging = false;
     TouchStartScreen = FVector2D::ZeroVector;
