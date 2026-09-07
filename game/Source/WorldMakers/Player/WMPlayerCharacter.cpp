@@ -5,7 +5,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Input/WMTouchGestureLibrary.h"
+#include "UI/WMBuildHUDWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
 AWMPlayerCharacter::AWMPlayerCharacter()
@@ -56,6 +59,46 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     BuildingComponent = CreateDefaultSubobject<UWMBuildingComponent>(TEXT("BuildingComponent"));
 }
 
+void AWMPlayerCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+    EnsureBuildHUD();
+}
+
+void AWMPlayerCharacter::PawnClientRestart()
+{
+    Super::PawnClientRestart();
+    EnsureBuildHUD();
+}
+
+void AWMPlayerCharacter::EnsureBuildHUD()
+{
+    if (BuildHUD || !IsLocallyControlled() || !BuildingComponent)
+    {
+        return;
+    }
+
+    APlayerController* PlayerController = Cast<APlayerController>(GetController());
+    if (!PlayerController)
+    {
+        return;
+    }
+
+    BuildHUD = CreateWidget<UWMBuildHUDWidget>(PlayerController, UWMBuildHUDWidget::StaticClass());
+    if (!BuildHUD)
+    {
+        return;
+    }
+
+    BuildHUD->BindBuildingComponent(BuildingComponent);
+    BuildHUD->AddToPlayerScreen(10);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetHideCursorDuringCapture(false);
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    PlayerController->SetInputMode(InputMode);
+}
+
 void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -79,6 +122,8 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction(TEXT("LoadWorld"), IE_Pressed, this, &AWMPlayerCharacter::LoadPrototypeWorld);
 
     PlayerInputComponent->BindTouch(IE_Pressed, this, &AWMPlayerCharacter::HandleTouchPressed);
+    PlayerInputComponent->BindTouch(IE_Repeat, this, &AWMPlayerCharacter::HandleTouchRepeat);
+    PlayerInputComponent->BindTouch(IE_Released, this, &AWMPlayerCharacter::HandleTouchReleased);
 }
 
 void AWMPlayerCharacter::MoveForward(const float Value)
@@ -117,93 +162,111 @@ void AWMPlayerCharacter::LookUp(const float Value)
 
 void AWMPlayerCharacter::PlaceBuild()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->TryPlaceCurrentPiece();
-    }
+    if (BuildingComponent) BuildingComponent->TryPlaceCurrentPiece();
 }
 
 void AWMPlayerCharacter::RotateBuildClockwise()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->RotatePreview(1.0f);
-    }
+    if (BuildingComponent) BuildingComponent->RotatePreview(1.0f);
 }
 
 void AWMPlayerCharacter::RotateBuildCounterClockwise()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->RotatePreview(-1.0f);
-    }
+    if (BuildingComponent) BuildingComponent->RotatePreview(-1.0f);
 }
 
 void AWMPlayerCharacter::RemoveBuild()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->TryRemoveTargetPiece();
-    }
+    if (BuildingComponent) BuildingComponent->TryRemoveTargetPiece();
 }
 
 void AWMPlayerCharacter::MoveBuild()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->TryBeginMoveTargetPiece();
-    }
+    if (BuildingComponent) BuildingComponent->TryBeginMoveTargetPiece();
 }
 
 void AWMPlayerCharacter::CycleBuildPiece()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->CycleSelectedPiece(1);
-    }
+    if (BuildingComponent) BuildingComponent->CycleSelectedPiece(1);
 }
 
 void AWMPlayerCharacter::CancelBuildEdit()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->CancelMove();
-    }
+    if (BuildingComponent) BuildingComponent->CancelMove();
 }
 
 void AWMPlayerCharacter::UndoBuild()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->UndoLastAction();
-    }
+    if (BuildingComponent) BuildingComponent->UndoLastAction();
 }
 
 void AWMPlayerCharacter::RedoBuild()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->RedoLastAction();
-    }
+    if (BuildingComponent) BuildingComponent->RedoLastAction();
 }
 
 void AWMPlayerCharacter::SavePrototypeWorld()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->SaveWorld();
-    }
+    if (BuildingComponent) BuildingComponent->SaveWorld();
 }
 
 void AWMPlayerCharacter::LoadPrototypeWorld()
 {
-    if (BuildingComponent)
-    {
-        BuildingComponent->LoadWorld();
-    }
+    if (BuildingComponent) BuildingComponent->LoadWorld();
 }
 
-void AWMPlayerCharacter::HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location)
+void AWMPlayerCharacter::HandleTouchPressed(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
-    PlaceBuild();
+    if (bTouchTracking)
+    {
+        return;
+    }
+
+    bTouchTracking = true;
+    bTouchDragging = false;
+    ActiveTouchFinger = FingerIndex;
+    TouchStartScreen = FVector2D(Location.X, Location.Y);
+    TouchLastScreen = TouchStartScreen;
+}
+
+void AWMPlayerCharacter::HandleTouchRepeat(const ETouchIndex::Type FingerIndex, const FVector Location)
+{
+    if (!bTouchTracking || FingerIndex != ActiveTouchFinger)
+    {
+        return;
+    }
+
+    const FVector2D CurrentScreen(Location.X, Location.Y);
+    if (!bTouchDragging && UWMTouchGestureLibrary::HasExceededDragDeadZone(TouchStartScreen, CurrentScreen, TouchDragDeadZonePx))
+    {
+        bTouchDragging = true;
+    }
+
+    if (bTouchDragging)
+    {
+        FVector2D Delta = CurrentScreen - TouchLastScreen;
+        constexpr float MaxTouchDeltaPx = 96.0f;
+        if (Delta.SizeSquared() > FMath::Square(MaxTouchDeltaPx))
+        {
+            Delta = Delta.GetSafeNormal() * MaxTouchDeltaPx;
+        }
+
+        AddControllerYawInput(Delta.X * TouchLookDegreesPerPixel);
+        AddControllerPitchInput(-Delta.Y * TouchLookDegreesPerPixel);
+    }
+
+    TouchLastScreen = CurrentScreen;
+}
+
+void AWMPlayerCharacter::HandleTouchReleased(const ETouchIndex::Type FingerIndex, const FVector Location)
+{
+    if (!bTouchTracking || FingerIndex != ActiveTouchFinger)
+    {
+        return;
+    }
+
+    bTouchTracking = false;
+    bTouchDragging = false;
+    TouchStartScreen = FVector2D::ZeroVector;
+    TouchLastScreen = FVector2D::ZeroVector;
 }

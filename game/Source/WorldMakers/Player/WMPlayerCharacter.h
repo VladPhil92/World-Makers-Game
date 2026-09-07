@@ -8,6 +8,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UStaticMeshComponent;
 class UWMBuildingComponent;
+class UWMBuildHUDWidget;
 
 UCLASS()
 class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
@@ -17,6 +18,8 @@ class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
 public:
     AWMPlayerCharacter();
 
+    virtual void BeginPlay() override;
+    virtual void PawnClientRestart() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
@@ -33,6 +36,12 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Building")
     TObjectPtr<UWMBuildingComponent> BuildingComponent;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
+    float TouchDragDeadZonePx = 24.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+    float TouchLookDegreesPerPixel = 0.08f;
 
 private:
     void MoveForward(float Value);
@@ -51,5 +60,18 @@ private:
     void RedoBuild();
     void SavePrototypeWorld();
     void LoadPrototypeWorld();
+    void EnsureBuildHUD();
+
     void HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
+    void HandleTouchRepeat(ETouchIndex::Type FingerIndex, FVector Location);
+    void HandleTouchReleased(ETouchIndex::Type FingerIndex, FVector Location);
+
+    UPROPERTY(Transient)
+    TObjectPtr<UWMBuildHUDWidget> BuildHUD;
+
+    bool bTouchTracking = false;
+    bool bTouchDragging = false;
+    ETouchIndex::Type ActiveTouchFinger = ETouchIndex::Touch1;
+    FVector2D TouchStartScreen = FVector2D::ZeroVector;
+    FVector2D TouchLastScreen = FVector2D::ZeroVector;
 };
