@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: World Makers Parent Progress API
-  version: 0.1.0
+  version: 0.2.0
   description: >-
     Provider-neutral contract sketch. Authorization must verify that the authenticated
     parent/guardian is allowed to access the requested pseudonymous child profile.
@@ -76,3 +76,34 @@ components:
                   - introduced
                   - practicing
                   - demonstrated
+        missionJourney:
+          type: array
+          description: Privacy-minimized mission read model; stable IDs and progress state only.
+          items:
+            $ref: '#/components/schemas/MissionJourneyEntry'
+    MissionJourneyEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - missionId
+        - state
+        - progressFraction
+      properties:
+        missionId:
+          type: string
+          pattern: '^mission\\.[a-z0-9._-]+$'
+        state:
+          type: string
+          enum:
+            - locked
+            - available
+            - active
+            - completed
+        progressFraction:
+          type: number
+          minimum: 0
+          maximum: 1
+        learningObjectiveIds:
+          type: array
+          items:
+            type: string

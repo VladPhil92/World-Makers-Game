@@ -40,6 +40,9 @@
       "reward.math.measurement-tool-01",
       "reward.math.spatial-builder-badge-01"
     ],
+    "prerequisiteMissionIds": [
+      "mission.mathematics.measure-and-build-01"
+    ],
     "prototypeOnly": true
   }
 }

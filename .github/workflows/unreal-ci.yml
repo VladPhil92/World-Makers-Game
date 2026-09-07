@@ -11,6 +11,7 @@ on:
       - 'docs/m2-mission-runtime.md'
       - 'docs/m2-1-spatial-measurement.md'
       - 'docs/m2-2-interactive-measurement.md'
+      - 'docs/m2-3-mission-progression.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
@@ -24,6 +25,7 @@ on:
       - 'scripts/validate-m2-mission-runtime.py'
       - 'scripts/validate-m2-1-spatial-measurement.py'
       - 'scripts/validate-m2-2-interactive-measurement.py'
+      - 'scripts/validate-m2-3-mission-progression.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -37,6 +39,7 @@ on:
       - 'docs/m2-mission-runtime.md'
       - 'docs/m2-1-spatial-measurement.md'
       - 'docs/m2-2-interactive-measurement.md'
+      - 'docs/m2-3-mission-progression.md'
       - 'scripts/**'
   workflow_dispatch:
 
@@ -70,6 +73,8 @@ jobs:
         run: python scripts/validate-m2-1-spatial-measurement.py
       - name: Validate M2.2 Interactive Measurement
         run: python scripts/validate-m2-2-interactive-measurement.py
+      - name: Validate M2.3 Mission Progression
+        run: python scripts/validate-m2-3-mission-progression.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}

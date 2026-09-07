@@ -28,14 +28,36 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool CycleMission(int32 Direction = 1);
 
+    /** Legacy M2.2 catalog ordering. Includes locked definitions; use journey read model for state. */
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     TArray<FName> GetAvailableMissionIds() const { return AvailableMissionIds; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    TArray<FName> GetActivatableMissionIds() const;
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     int32 GetMissionCount() const { return AvailableMissionIds.Num(); }
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    int32 GetCompletedMissionCount() const { return Journey.CompletedMissionIds.Num(); }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     FName GetActiveMissionId() const { return Progress.State == EWMMissionRuntimeState::Inactive ? NAME_None : Progress.Definition.MissionId; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Learning Journey")
+    EWMJourneyMissionState GetJourneyMissionState(FName MissionId) const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Learning Journey")
+    TArray<FWMJourneyMissionReadModel> GetJourneyReadModel() const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Learning Journey")
+    TArray<FName> GetGrantedRewardIds() const;
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Learning Journey")
+    bool LoadJourneyProgress();
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Learning Journey")
+    bool SaveJourneyProgress() const;
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool RecordMeasurement(float MeasuredSpanCm);
@@ -74,15 +96,22 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     float GetProgressFraction() const { return Progress.GetProgressFraction(); }
 
+    /** New rewards from the current completion only; lifetime grants are exposed by GetGrantedRewardIds. */
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     TArray<FName> GetEarnedRewardIds() const { return Progress.EarnedRewardIds; }
 
     const TArray<FWMLearningEvidenceRecord>& GetEvidence() const { return Progress.Evidence; }
 
 private:
+    bool ValidateCatalogDependencies() const;
+    bool ActivateBestStartupMission();
+    void FinalizeMissionCompletion();
+
     FWMMissionProgressModel Progress;
+    FWMMissionJourneyModel Journey;
     TWeakObjectPtr<AWMMissionGeometryActor> ActiveGeometry;
     TMap<FName, FWMMissionRuntimeDefinition> MissionCatalog;
     TArray<FName> AvailableMissionIds;
+    FName LastSavedActiveMissionId;
     float LastMeasuredSpanCm = 0.0f;
 };

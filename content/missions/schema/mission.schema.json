@@ -40,6 +40,10 @@
           "minItems": 1,
           "items": { "type": "string", "pattern": "^reward\\.[a-z0-9._-]+$" }
         },
+        "prerequisiteMissionIds": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^mission\\.[a-z0-9._-]+$" }
+        },
         "prototypeOnly": { "type": "boolean" }
       }
     }
