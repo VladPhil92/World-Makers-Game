@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+CERTIFICATION_MAP = ROOT / "game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap"
 
 
 def fail(message: str) -> None:
@@ -49,12 +50,14 @@ def main() -> None:
         if test_name not in tests:
             fail(f"Missing Unreal automation test: {test_name}")
 
-    maps = sorted((ROOT / "game/Content/WorldMakers").rglob("*.umap"))
-    if args.require_authored_map and not maps:
-        fail("Runtime certification requires at least one authored .umap under game/Content/WorldMakers")
+    if args.require_authored_map and not CERTIFICATION_MAP.is_file():
+        fail(
+            "Runtime certification requires the exact authored map "
+            "game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap"
+        )
 
-    status = "present" if maps else "BLOCKED: authored .umap not yet generated in Unreal Editor"
-    print(f"M1.5 source hardening passed. Authored map: {status}")
+    status = "present" if CERTIFICATION_MAP.is_file() else "BLOCKED: exact certification .umap not yet authored in Unreal Editor"
+    print(f"M1.5 source hardening passed. Certification map: {status}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "testedAtUtc": null,
+  "tester": "[ROLE_OR_ALIAS_NO_PII]",
+  "platform": "Windows",
+  "unrealVersion": "5.8.2",
+  "commit": "[GIT_SHA]",
+  "map": "game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap",
+  "checks": {
+    "playerSpawn": "pending",
+    "movement": "pending",
+    "camera": "pending",
+    "validPlacement": "pending",
+    "overlapRejected": "pending",
+    "pieceCycleAndRotate": "pending",
+    "moveConfirmAndCancel": "pending",
+    "remove": "pending",
+    "undoRedo": "pending",
+    "saveLoad": "pending",
+    "buildHudState": "pending"
+  },
+  "notes": "Do not include child/user PII, account identifiers, recordings, or secrets."
+}
