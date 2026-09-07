@@ -23,6 +23,8 @@ jobs:
         run: python scripts/validate-content.py
       - name: Validate M1.10 Trust Economy
         run: python scripts/validate-trust-economy.py
+      - name: Validate M2 Mission Runtime
+        run: python scripts/validate-m2-mission-runtime.py
 
   parent-portal:
     runs-on: ubuntu-latest

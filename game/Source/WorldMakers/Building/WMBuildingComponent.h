@@ -40,6 +40,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
     void RotatePreview(float Direction = 1.0f);
 
+    /** Prototype mission tool: measures the active mission target span without exposing commerce or identity state. */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Learning")
+    bool UseMissionMeasurementTool();
+
     UFUNCTION(BlueprintCallable, Category = "World Makers|Building")
     bool UndoLastAction();
 
@@ -109,6 +113,8 @@ private:
     void EnsurePreviewActor();
     void PushCommand(const FWMBuildCommand& Command);
     void DestroyAllPlacedPieces();
+    float CalculatePlacedStructureSpanX() const;
+    void NotifyMissionOfStructureChange();
 
     float CurrentYaw = 0.0f;
     bool bHasPlacementTarget = false;

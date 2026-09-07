@@ -19,7 +19,8 @@ public class WorldMakers : ModuleRules
         PrivateDependencyModuleNames.AddRange(new string[]
         {
             "Slate",
-            "SlateCore"
+            "SlateCore",
+            "Json"
         });
     }
 }

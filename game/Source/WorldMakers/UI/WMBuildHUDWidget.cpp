@@ -13,6 +13,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Engine/World.h"
+#include "Mission/WMMissionRuntimeSubsystem.h"
 #include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "WorldMakersBuildHUD"
@@ -26,11 +27,7 @@ void UWMBuildHUDWidget::BindBuildingComponent(UWMBuildingComponent* InBuildingCo
 void UWMBuildHUDWidget::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
-
-    if (!WidgetTree)
-    {
-        return;
-    }
+    if (!WidgetTree) return;
 
     UCanvasPanel* RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("BuildHUDRoot"));
     WidgetTree->RootWidget = RootCanvas;
@@ -43,6 +40,15 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     StackSlot->SetAutoSize(true);
     StackSlot->SetZOrder(10);
 
+    MissionStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MissionStatus"));
+    MissionStatusText->SetJustification(ETextJustify::Center);
+    MissionStatusText->SetAutoWrapText(true);
+    if (UVerticalBoxSlot* MissionStatusSlot = ActionStack->AddChildToVerticalBox(MissionStatusText))
+    {
+        MissionStatusSlot->SetHorizontalAlignment(HAlign_Fill);
+        MissionStatusSlot->SetPadding(FMargin(8.0f, 4.0f, 8.0f, 4.0f));
+    }
+
     StatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("BuildStatus"));
     StatusText->SetJustification(ETextJustify::Center);
     StatusText->SetAutoWrapText(true);
@@ -52,9 +58,12 @@ void UWMBuildHUDWidget::NativeOnInitialized()
         StatusSlot->SetPadding(FMargin(8.0f, 4.0f, 8.0f, 8.0f));
     }
 
+    UHorizontalBox* MissionRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MissionActionRow"));
+    ActionStack->AddChildToVerticalBox(MissionRow);
+    UButton* MeasureButton = CreateActionButton(MissionRow, TEXT("MeasureTargetButton"), LOCTEXT("MeasureTarget", "Measure"));
+
     UHorizontalBox* PrimaryRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuildPrimaryRow"));
     ActionStack->AddChildToVerticalBox(PrimaryRow);
-
     UButton* PreviousButton = CreateActionButton(PrimaryRow, TEXT("PreviousPieceButton"), LOCTEXT("PreviousPiece", "Previous"));
     UButton* NextButton = CreateActionButton(PrimaryRow, TEXT("NextPieceButton"), LOCTEXT("NextPiece", "Next"));
     UButton* RotateLeftButton = CreateActionButton(PrimaryRow, TEXT("RotateLeftButton"), LOCTEXT("RotateLeft", "Rotate left"));
@@ -63,17 +72,14 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     ConfirmText = Cast<UTextBlock>(ConfirmButton ? ConfirmButton->GetChildAt(0) : nullptr);
 
     UHorizontalBox* EditRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuildEditRow"));
-    if (UVerticalBoxSlot* EditRowSlot = ActionStack->AddChildToVerticalBox(EditRow))
-    {
-        EditRowSlot->SetPadding(FMargin(0.0f, 4.0f, 0.0f, 0.0f));
-    }
-
+    if (UVerticalBoxSlot* EditRowSlot = ActionStack->AddChildToVerticalBox(EditRow)) EditRowSlot->SetPadding(FMargin(0.0f, 4.0f, 0.0f, 0.0f));
     UButton* MoveButton = CreateActionButton(EditRow, TEXT("MoveButton"), LOCTEXT("Move", "Move"));
     UButton* RemoveButton = CreateActionButton(EditRow, TEXT("RemoveButton"), LOCTEXT("Remove", "Remove"));
     UButton* UndoButton = CreateActionButton(EditRow, TEXT("UndoButton"), LOCTEXT("Undo", "Undo"));
     UButton* RedoButton = CreateActionButton(EditRow, TEXT("RedoButton"), LOCTEXT("Redo", "Redo"));
     CancelButton = CreateActionButton(EditRow, TEXT("CancelButton"), LOCTEXT("Cancel", "Cancel"));
 
+    MeasureButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleMeasure);
     PreviousButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandlePreviousPiece);
     NextButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleNextPiece);
     RotateLeftButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleRotateLeft);
@@ -86,86 +92,71 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     CancelButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleCancel);
 
     RefreshStatus();
-    if (UWorld* World = GetWorld())
-    {
-        World->GetTimerManager().SetTimer(StatusRefreshTimer, this, &UWMBuildHUDWidget::RefreshStatus, StatusRefreshSeconds, true);
-    }
+    if (UWorld* World = GetWorld()) World->GetTimerManager().SetTimer(StatusRefreshTimer, this, &UWMBuildHUDWidget::RefreshStatus, StatusRefreshSeconds, true);
 }
 
 void UWMBuildHUDWidget::NativeDestruct()
 {
-    if (UWorld* World = GetWorld())
-    {
-        World->GetTimerManager().ClearTimer(StatusRefreshTimer);
-    }
-
+    if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(StatusRefreshTimer);
     Super::NativeDestruct();
 }
 
 UButton* UWMBuildHUDWidget::CreateActionButton(UHorizontalBox* Row, const FName WidgetName, const FText& Label)
 {
-    if (!WidgetTree || !Row)
-    {
-        return nullptr;
-    }
-
+    if (!WidgetTree || !Row) return nullptr;
     USizeBox* TouchTarget = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), FName(*(WidgetName.ToString() + TEXT("Target"))));
     TouchTarget->SetWidthOverride(TouchTargetWidth);
     TouchTarget->SetHeightOverride(TouchTargetHeight);
-
     UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), WidgetName);
     Button->IsFocusable = false;
-
     UTextBlock* LabelText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), FName(*(WidgetName.ToString() + TEXT("Label"))));
     LabelText->SetText(Label);
     LabelText->SetJustification(ETextJustify::Center);
-
     Button->AddChild(LabelText);
     TouchTarget->AddChild(Button);
-
     if (UHorizontalBoxSlot* Slot = Row->AddChildToHorizontalBox(TouchTarget))
     {
         Slot->SetPadding(FMargin(4.0f));
         Slot->SetHorizontalAlignment(HAlign_Center);
         Slot->SetVerticalAlignment(VAlign_Center);
     }
-
     return Button;
 }
 
 FText UWMBuildHUDWidget::ResolveSelectedPieceLabel() const
 {
-    if (!BuildingComponent.IsValid())
-    {
-        return LOCTEXT("PieceUnavailable", "Building piece");
-    }
-
+    if (!BuildingComponent.IsValid()) return LOCTEXT("PieceUnavailable", "Building piece");
     const FName PieceId = BuildingComponent->GetSelectedPieceId();
-    if (PieceId == TEXT("prototype.cube"))
-    {
-        return LOCTEXT("PieceCube", "Cube");
-    }
-    if (PieceId == TEXT("prototype.floor"))
-    {
-        return LOCTEXT("PieceFloor", "Floor");
-    }
-    if (PieceId == TEXT("prototype.wall"))
-    {
-        return LOCTEXT("PieceWall", "Wall");
-    }
-    if (PieceId == TEXT("prototype.pillar"))
-    {
-        return LOCTEXT("PiecePillar", "Pillar");
-    }
-
+    if (PieceId == TEXT("prototype.cube")) return LOCTEXT("PieceCube", "Cube");
+    if (PieceId == TEXT("prototype.floor")) return LOCTEXT("PieceFloor", "Floor");
+    if (PieceId == TEXT("prototype.wall")) return LOCTEXT("PieceWall", "Wall");
+    if (PieceId == TEXT("prototype.pillar")) return LOCTEXT("PiecePillar", "Pillar");
     return LOCTEXT("PieceGeneric", "Building piece");
 }
 
 void UWMBuildHUDWidget::RefreshStatus()
 {
-    if (!StatusText || !ConfirmButton || !CancelButton)
+    if (!StatusText || !MissionStatusText || !ConfirmButton || !CancelButton) return;
+
+    if (UWorld* World = GetWorld())
     {
-        return;
+        if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
+        {
+            if (Missions->GetMissionState() == EWMMissionRuntimeState::Completed)
+            {
+                MissionStatusText->SetText(LOCTEXT("MissionComplete", "Mission complete — new creative tools unlocked."));
+            }
+            else if (!Missions->HasMeasurementEvidence())
+            {
+                MissionStatusText->SetText(LOCTEXT("MissionMeasure", "Mission: measure the target span before building."));
+            }
+            else
+            {
+                MissionStatusText->SetText(FText::Format(
+                    LOCTEXT("MissionBuildSpan", "Mission: build or adjust a structure to about {0} cm."),
+                    FText::AsNumber(FMath::RoundToInt(Missions->GetTargetSpanCm()))));
+            }
+        }
     }
 
     if (!BuildingComponent.IsValid())
@@ -185,71 +176,19 @@ void UWMBuildHUDWidget::RefreshStatus()
     StatusText->SetText(FText::Format(LOCTEXT("BuildStatusFormat", "{0} — {1}"), ResolveSelectedPieceLabel(), StateText));
     ConfirmButton->SetIsEnabled(bPlacementValid);
     CancelButton->SetVisibility(bMoveInProgress ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-
-    if (ConfirmText)
-    {
-        ConfirmText->SetText(bMoveInProgress ? LOCTEXT("ConfirmMove", "Move here") : LOCTEXT("ConfirmBuild", "Build"));
-    }
+    if (ConfirmText) ConfirmText->SetText(bMoveInProgress ? LOCTEXT("ConfirmMove", "Move here") : LOCTEXT("ConfirmBuild", "Build"));
 }
 
-void UWMBuildHUDWidget::HandlePreviousPiece()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(-1);
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleNextPiece()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(1);
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleRotateLeft()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(-1.0f);
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleRotateRight()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(1.0f);
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleConfirm()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->TryPlaceCurrentPiece();
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleMove()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->TryBeginMoveTargetPiece();
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleRemove()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->TryRemoveTargetPiece();
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleUndo()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->UndoLastAction();
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleRedo()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->RedoLastAction();
-    RefreshStatus();
-}
-
-void UWMBuildHUDWidget::HandleCancel()
-{
-    if (BuildingComponent.IsValid()) BuildingComponent->CancelMove();
-    RefreshStatus();
-}
+void UWMBuildHUDWidget::HandlePreviousPiece() { if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(-1); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleNextPiece() { if (BuildingComponent.IsValid()) BuildingComponent->CycleSelectedPiece(1); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleRotateLeft() { if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(-1.0f); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleRotateRight() { if (BuildingComponent.IsValid()) BuildingComponent->RotatePreview(1.0f); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleConfirm() { if (BuildingComponent.IsValid()) BuildingComponent->TryPlaceCurrentPiece(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleMeasure() { if (BuildingComponent.IsValid()) BuildingComponent->UseMissionMeasurementTool(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleMove() { if (BuildingComponent.IsValid()) BuildingComponent->TryBeginMoveTargetPiece(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleRemove() { if (BuildingComponent.IsValid()) BuildingComponent->TryRemoveTargetPiece(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleUndo() { if (BuildingComponent.IsValid()) BuildingComponent->UndoLastAction(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleRedo() { if (BuildingComponent.IsValid()) BuildingComponent->RedoLastAction(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleCancel() { if (BuildingComponent.IsValid()) BuildingComponent->CancelMove(); RefreshStatus(); }
 
 #undef LOCTEXT_NAMESPACE
