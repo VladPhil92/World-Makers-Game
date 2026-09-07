@@ -2,9 +2,11 @@
 
 #include "Building/WMBuildingComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 AWMPlayerCharacter::AWMPlayerCharacter()
 {
@@ -19,6 +21,28 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     GetCharacterMovement()->JumpZVelocity = 500.0f;
     GetCharacterMovement()->AirControl = 0.25f;
     GetCharacterMovement()->MaxWalkSpeed = 450.0f;
+
+    PrototypeBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeBody"));
+    PrototypeBody->SetupAttachment(RootComponent);
+    PrototypeBody->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeBody->SetRelativeScale3D(FVector(0.45f, 0.45f, 0.85f));
+
+    PrototypeHead = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeHead"));
+    PrototypeHead->SetupAttachment(RootComponent);
+    PrototypeHead->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    PrototypeHead->SetRelativeLocation(FVector(0.0f, 0.0f, 82.0f));
+    PrototypeHead->SetRelativeScale3D(FVector(0.38f));
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> BodyMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> HeadMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    if (BodyMesh.Succeeded())
+    {
+        PrototypeBody->SetStaticMesh(BodyMesh.Object);
+    }
+    if (HeadMesh.Succeeded())
+    {
+        PrototypeHead->SetStaticMesh(HeadMesh.Object);
+    }
 
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
