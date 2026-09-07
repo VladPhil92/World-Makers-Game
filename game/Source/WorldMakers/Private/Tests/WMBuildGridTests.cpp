@@ -24,10 +24,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FWMBuildSurfaceGridSnapTest::RunTest(const FString& Parameters)
 {
-    const FVector Snapped = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(FVector(149.0, 251.0, -50.0), 100.0f);
-    TestEqual(TEXT("Surface X snaps to nearest cell"), Snapped.X, 100.0);
-    TestEqual(TEXT("Surface Y snaps to nearest cell"), Snapped.Y, 300.0);
-    TestEqual(TEXT("Piece rests directly on traced surface"), Snapped.Z, 0.0);
+    const FVector CubeSnapped = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(FVector(149.0, 251.0, -50.0), 100.0f, 100.0f);
+    TestEqual(TEXT("Surface X snaps to nearest cell"), CubeSnapped.X, 100.0);
+    TestEqual(TEXT("Surface Y snaps to nearest cell"), CubeSnapped.Y, 300.0);
+    TestEqual(TEXT("100cm cube rests directly on traced surface"), CubeSnapped.Z, 0.0);
+
+    const FVector FloorSnapped = UWMBuildGridLibrary::SnapLocationToSurfaceGrid(FVector(149.0, 251.0, 0.0), 100.0f, 25.0f);
+    TestEqual(TEXT("25cm floor uses its own half-height"), FloorSnapped.Z, 12.5);
     return true;
 }
 

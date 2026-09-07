@@ -44,6 +44,9 @@ private:
     void RotateBuildClockwise();
     void RotateBuildCounterClockwise();
     void RemoveBuild();
+    void MoveBuild();
+    void CycleBuildPiece();
+    void CancelBuildEdit();
     void UndoBuild();
     void RedoBuild();
     void SavePrototypeWorld();
