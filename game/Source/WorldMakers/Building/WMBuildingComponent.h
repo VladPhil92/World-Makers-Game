@@ -55,7 +55,7 @@ public:
     float PlacementClearanceRatio = 0.45f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-    float MinPlacementSurfaceUpDot = 0.65f;
+    float MinPlacementSurfaceUpDot = 0.90f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Building")
     TSubclassOf<AWMBuildPieceActor> BuildPieceClass;
