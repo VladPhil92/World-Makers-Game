@@ -8,6 +8,8 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Mission/WMMissionGeometryActor.h"
+#include "Mission/WMMissionGeometryLibrary.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 
 namespace
@@ -223,15 +225,18 @@ void UWMBuildingComponent::PushCommand(const FWMBuildCommand& Command)
     RedoStack.Reset();
 }
 
-float UWMBuildingComponent::CalculatePlacedStructureSpanX() const
+float UWMBuildingComponent::CalculateMissionScopedStructureSpan() const
 {
     if (!GetWorld()) return 0.0f;
 
+    const UWMMissionRuntimeSubsystem* Missions = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
+    const AWMMissionGeometryActor* Geometry = Missions ? Missions->GetActiveMissionGeometry() : nullptr;
+    if (!Geometry) return 0.0f;
+
     TArray<AActor*> BuildActors;
     UGameplayStatics::GetAllActorsOfClass(this, AWMBuildPieceActor::StaticClass(), BuildActors);
-    float MinX = TNumericLimits<float>::Max();
-    float MaxX = TNumericLimits<float>::Lowest();
-    bool bFoundPiece = false;
+    TArray<FWMMissionPieceGeometrySample> Samples;
+    Samples.Reserve(BuildActors.Num());
 
     for (AActor* Actor : BuildActors)
     {
@@ -239,13 +244,17 @@ float UWMBuildingComponent::CalculatePlacedStructureSpanX() const
         FWMBuildPieceSpec Spec;
         if (!IsValid(Piece) || Piece->IsPreview() || !Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) || !ResolvePieceSpec(Piece->PieceId, Spec)) continue;
 
-        const float YawRadians = FMath::DegreesToRadians(Piece->GetActorRotation().Yaw);
-        const float HalfExtentX = 0.5f * (FMath::Abs(FMath::Cos(YawRadians)) * Spec.DimensionsCm.X + FMath::Abs(FMath::Sin(YawRadians)) * Spec.DimensionsCm.Y);
-        MinX = FMath::Min(MinX, Piece->GetActorLocation().X - HalfExtentX);
-        MaxX = FMath::Max(MaxX, Piece->GetActorLocation().X + HalfExtentX);
-        bFoundPiece = true;
+        FWMMissionPieceGeometrySample Sample;
+        Sample.Center = Piece->GetActorLocation();
+        Sample.DimensionsCm = Spec.DimensionsCm;
+        Sample.YawDegrees = Piece->GetActorRotation().Yaw;
+        Samples.Add(Sample);
     }
-    return bFoundPiece ? FMath::Max(0.0f, MaxX - MinX) : 0.0f;
+
+    return UWMMissionGeometryLibrary::CalculateScopedSpanAlongZoneX(
+        Samples,
+        Geometry->GetBuildZoneTransform(),
+        Geometry->GetBuildZoneHalfExtent());
 }
 
 void UWMBuildingComponent::NotifyMissionOfStructureChange()
@@ -254,7 +263,7 @@ void UWMBuildingComponent::NotifyMissionOfStructureChange()
     {
         if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
         {
-            Missions->RecordStructureSpan(CalculatePlacedStructureSpanX());
+            Missions->RecordStructureSpan(CalculateMissionScopedStructureSpan());
         }
     }
 }
@@ -263,8 +272,7 @@ bool UWMBuildingComponent::UseMissionMeasurementTool()
 {
     if (!GetWorld()) return false;
     UWMMissionRuntimeSubsystem* Missions = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
-    if (!Missions || Missions->GetMissionState() != EWMMissionRuntimeState::Active || Missions->GetTargetSpanCm() <= 0.0f) return false;
-    return Missions->RecordMeasurement(Missions->GetTargetSpanCm());
+    return Missions && Missions->RecordActiveGeometryMeasurement();
 }
 
 bool UWMBuildingComponent::TryPlaceCurrentPiece()

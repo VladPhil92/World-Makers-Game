@@ -5,6 +5,8 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "WMMissionRuntimeSubsystem.generated.h"
 
+class AWMMissionGeometryActor;
+
 UCLASS()
 class WORLDMAKERS_API UWMMissionRuntimeSubsystem : public UWorldSubsystem
 {
@@ -20,7 +22,16 @@ public:
     bool RecordMeasurement(float MeasuredSpanCm);
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    bool RecordActiveGeometryMeasurement();
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
     bool RecordStructureSpan(float StructureSpanCm);
+
+    void RegisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);
+    void UnregisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    AWMMissionGeometryActor* GetActiveMissionGeometry() const { return ActiveGeometry.Get(); }
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     EWMMissionRuntimeState GetMissionState() const { return Progress.State; }
@@ -38,6 +49,9 @@ public:
     float GetToleranceCm() const { return Progress.Definition.ToleranceCm; }
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    float GetLastMeasuredSpanCm() const { return LastMeasuredSpanCm; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     float GetProgressFraction() const { return Progress.GetProgressFraction(); }
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
@@ -47,4 +61,6 @@ public:
 
 private:
     FWMMissionProgressModel Progress;
+    TWeakObjectPtr<AWMMissionGeometryActor> ActiveGeometry;
+    float LastMeasuredSpanCm = 0.0f;
 };

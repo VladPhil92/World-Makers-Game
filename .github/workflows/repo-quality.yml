@@ -25,6 +25,8 @@ jobs:
         run: python scripts/validate-trust-economy.py
       - name: Validate M2 Mission Runtime
         run: python scripts/validate-m2-mission-runtime.py
+      - name: Validate M2.1 Spatial Measurement
+        run: python scripts/validate-m2-1-spatial-measurement.py
 
   parent-portal:
     runs-on: ubuntu-latest
