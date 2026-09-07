@@ -5,6 +5,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Environment/WMCaribbeanRainforestPrototype.h"
 #include "Kismet/GameplayStatics.h"
+#include "Mission/WMMissionGeometryActor.h"
 #include "Player/WMPlayerCharacter.h"
 
 namespace
@@ -21,6 +22,7 @@ void AWMGameMode::BeginPlay()
 {
     Super::BeginPlay();
     EnsurePrototypeEnvironment();
+    EnsurePrototypeMissionGeometry();
     EnsurePrototypeGround();
 }
 
@@ -42,6 +44,29 @@ void AWMGameMode::EnsurePrototypeEnvironment()
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     GetWorld()->SpawnActor<AWMCaribbeanRainforestPrototype>(
         AWMCaribbeanRainforestPrototype::StaticClass(),
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        SpawnParameters);
+}
+
+void AWMGameMode::EnsurePrototypeMissionGeometry()
+{
+    if (!bSpawnPrototypeMissionGeometry || !GetWorld())
+    {
+        return;
+    }
+
+    TArray<AActor*> ExistingGeometry;
+    UGameplayStatics::GetAllActorsWithTag(this, AWMMissionGeometryActor::PrototypeMissionGeometryTag, ExistingGeometry);
+    if (!ExistingGeometry.IsEmpty())
+    {
+        return;
+    }
+
+    FActorSpawnParameters SpawnParameters;
+    SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    GetWorld()->SpawnActor<AWMMissionGeometryActor>(
+        AWMMissionGeometryActor::StaticClass(),
         FVector::ZeroVector,
         FRotator::ZeroRotator,
         SpawnParameters);
