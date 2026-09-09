@@ -3,6 +3,7 @@
 #include "Building/WMBuildingComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Environment/WMExplorationComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/PlayerController.h"
@@ -91,6 +92,7 @@ AWMPlayerCharacter::AWMPlayerCharacter()
 
     BuildingComponent = CreateDefaultSubobject<UWMBuildingComponent>(TEXT("BuildingComponent"));
     MissionMeasurementComponent = CreateDefaultSubobject<UWMMissionMeasurementComponent>(TEXT("MissionMeasurementComponent"));
+    ExplorationComponent = CreateDefaultSubobject<UWMExplorationComponent>(TEXT("ExplorationComponent"));
 }
 
 void AWMPlayerCharacter::BeginPlay()

@@ -10,6 +10,7 @@ class UStaticMeshComponent;
 class UWMBuildingComponent;
 class UWMBuildHUDWidget;
 class UWMMissionMeasurementComponent;
+class UWMExplorationComponent;
 
 UCLASS()
 class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
@@ -52,6 +53,9 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     TObjectPtr<UWMMissionMeasurementComponent> MissionMeasurementComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Exploration")
+    TObjectPtr<UWMExplorationComponent> ExplorationComponent;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
     float TouchDragDeadZonePx = 24.0f;
