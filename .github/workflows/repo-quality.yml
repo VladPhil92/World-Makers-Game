@@ -31,6 +31,8 @@ jobs:
         run: python scripts/validate-m2-2-interactive-measurement.py
       - name: Validate M2.3 Mission Progression
         run: python scripts/validate-m2-3-mission-progression.py
+      - name: Validate M3.1 Biome Runtime
+        run: python scripts/validate-m3-1-biome-runtime.py
 
   parent-portal:
     runs-on: ubuntu-latest

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "biome.caribbean-rainforest",
+  "prototypeOnly": true,
+  "originCm": [0, 0, 0],
+  "zones": [
+    {
+      "id": "zone.rainforest.build-clearing",
+      "kind": "build-clearing",
+      "centerCm": [0, 0, 0],
+      "extentCm": [750, 750, 250],
+      "buildAllowed": true,
+      "missionIds": [
+        "mission.mathematics.measure-and-build-01",
+        "mission.mathematics.measure-and-build-02"
+      ]
+    },
+    {
+      "id": "zone.rainforest.canopy-trail",
+      "kind": "exploration",
+      "centerCm": [1500, 1000, 0],
+      "extentCm": [450, 450, 300],
+      "buildAllowed": false,
+      "missionIds": []
+    },
+    {
+      "id": "zone.rainforest.understory-west",
+      "kind": "exploration",
+      "centerCm": [-1500, 650, 0],
+      "extentCm": [500, 500, 300],
+      "buildAllowed": false,
+      "missionIds": []
+    },
+    {
+      "id": "zone.rainforest.water-edge",
+      "kind": "water-edge",
+      "centerCm": [0, -2450, 0],
+      "extentCm": [2400, 350, 250],
+      "buildAllowed": false,
+      "missionIds": []
+    }
+  ],
+  "pointsOfInterest": [
+    {
+      "id": "poi.rainforest.ceiba",
+      "zoneId": "zone.rainforest.canopy-trail",
+      "category": "tree",
+      "locationCm": [1450, 1050, 0],
+      "discoveryRadiusCm": 325,
+      "discoveryId": "discovery.rainforest.ceiba"
+    },
+    {
+      "id": "poi.rainforest.bromeliad-cluster",
+      "zoneId": "zone.rainforest.understory-west",
+      "category": "plant",
+      "locationCm": [-1450, 700, 0],
+      "discoveryRadiusCm": 275,
+      "discoveryId": "discovery.rainforest.bromeliad-cluster"
+    },
+    {
+      "id": "poi.rainforest.water-edge",
+      "zoneId": "zone.rainforest.water-edge",
+      "category": "water",
+      "locationCm": [450, -2400, 0],
+      "discoveryRadiusCm": 350,
+      "discoveryId": "discovery.rainforest.water-edge"
+    }
+  ]
+}
