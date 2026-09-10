@@ -27,12 +27,13 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Visual|Authored")
     bool IsAuthoredEnvironmentActive() const { return bAuthoredEnvironmentActive; }
 
+    /** True when a conforming authored Skeletal Mesh has been loaded into the production mesh slot. V4 still decides whether it is visible. */
     UFUNCTION(BlueprintPure, Category = "World Makers|Visual|Authored")
-    bool IsAuthoredAvatarActive() const { return bAuthoredAvatarActive; }
+    bool IsAuthoredAvatarReady() const { return bAuthoredAvatarReady; }
 
 private:
     UWMAuthoredAssetSubsystem* GetAssetSubsystem() const;
-    bool TryApplyAuthoredAvatar(AWMPlayerCharacter* Character, UWMAuthoredAssetSubsystem* Assets);
+    bool TryPrepareAuthoredAvatar(AWMPlayerCharacter* Character, UWMAuthoredAssetSubsystem* Assets);
     bool TryApplyAuthoredEnvironment(AWMCaribbeanRainforestPrototype* Biome, UWMAuthoredAssetSubsystem* Assets);
     UHierarchicalInstancedStaticMeshComponent* CreateRenderFamily(
         AWMCaribbeanRainforestPrototype* Biome,
@@ -44,5 +45,5 @@ private:
     float RetryRemainingSeconds = 0.0f;
     float RetryAccumulatorSeconds = 0.0f;
     bool bAuthoredEnvironmentActive = false;
-    bool bAuthoredAvatarActive = false;
+    bool bAuthoredAvatarReady = false;
 };
