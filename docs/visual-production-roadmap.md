@@ -123,18 +123,45 @@ See `docs/v5-character-interaction-animation.md` and `content/visual/character/c
 
 ## V6 — VFX & Fantastic/Scientific Feedback
 
-Goal: communicate causality and wonder visually without obscuring the learning signal.
+V6 status: source-complete causal VFX pass.
 
-- Niagara effect language for discovery, construction, rewards and transitions;
-- chemistry state/reaction feedback tied to simulation outcomes rather than fake spectacle;
-- forces, circuits, energy and wave visualization;
-- biological/cellular and botanical state visualization;
-- ecology recovery/stress cues;
-- fantasy portals, runes, story transformations and environmental magic;
-- accessibility-safe flash/contrast/duration limits;
-- VFX LOD, overdraw and particle budgets.
+Status: **source-complete on `feat/v6-vfx-scientific-fantastic-feedback`; authored Niagara systems and native/device VFX certification pending.**
 
-Exit: important world-system changes have a readable visual consequence and scalable VFX tier.
+Goal: communicate causality and wonder visually without allowing spectacle to become a substitute for gameplay or scientific truth.
+
+Implemented source/runtime contract:
+
+- `FWMVFXRuntime` with stable semantics, style resolution and Low/Mid/High acceptance budgets;
+- 17 semantic effects across gameplay, chemistry, physics, biology, ecology and fantasy;
+- procedural source fallback using original ring, halo, burst and directional-chevron geometry;
+- collision-free short-lived `AWMProceduralVFXActor` instances;
+- `UWMVFXSubsystem` with active-effect and events-per-second limits;
+- reduced-motion mode that preserves meaning while clamping effect travel to at most 35%;
+- neutral subscription to `UWMBuildWorldStateSubsystem::OnBuildWorldChanged` and snapshot classification for place/remove/move feedback;
+- neutral subscription to `UWMEnvironmentStateSubsystem::OnEnvironmentStateChanged` for recovery/stress feedback;
+- `FWMScienceVFXAdapter` mapping accepted dissolution, filtration, reaction, force, circuit, cell, plant and environment results into bounded visual events;
+- scientific intensity/direction derived from upstream quantities instead of arbitrary spectacle;
+- distinct saturation semantics rather than treating all dissolution identically;
+- explicit semantic hooks for measurement/observation and fantasy portal/rune feedback;
+- canonical/staged `vfx-feedback-v6.json` manifest with reserved `/Game/WorldMakers/VFX/NS_WM_*` authored targets;
+- no reward/progression authority, no evidence authority, no child-authored payload and no real-world chemistry procedure;
+- no required flash, camera shake or commerce feedback loops;
+- five Unreal Automation tests plus dedicated Repository Quality V6 gate.
+
+Authored production target:
+
+- create Niagara systems for the 17 stable semantic IDs without changing their causal meaning;
+- preserve normalized intensity and direction as inputs from the V6 runtime;
+- keep saturation visually distinct from ordinary dissolution;
+- provide shape/contrast redundancy for ecology recovery/stress rather than hue alone;
+- keep a lightweight procedural or Niagara fallback for Low tier;
+- cap translucent overdraw and particle counts by visual tier;
+- implement reduced-motion variants before accessibility certification;
+- profile GPU cost, overdraw and concurrent effect bursts on representative tablets.
+
+Exit: important construction/ecology events already have source-visible causal feedback, science systems have a deterministic adapter into the same vocabulary, and Niagara production has a stable handoff contract. Final VFX-art certification still requires authored binary systems, native Unreal review and representative-device evidence.
+
+See `docs/v6-vfx-scientific-fantastic-feedback.md` and `content/visual/vfx/vfx-feedback-v6.json`.
 
 ## V7 — Camera, Cinematics & UI Motion
 
