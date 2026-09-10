@@ -17,12 +17,15 @@ bool FWMVisualCertificationBudget::IsSane() const
 
 bool FWMVisualCertificationSample::IsSane() const
 {
+    const bool bHasRenderedSample = FrameSamples > 0;
     return FrameSamples >= 0 &&
         FMath::IsFinite(P95FrameTimeMs) && P95FrameTimeMs >= 0.0f &&
         FMath::IsFinite(GameThreadP95Ms) && GameThreadP95Ms >= 0.0f &&
         FMath::IsFinite(RenderThreadP95Ms) && RenderThreadP95Ms >= 0.0f &&
         FMath::IsFinite(GpuP95Ms) && GpuP95Ms >= 0.0f &&
-        PeakDrawCalls >= 0 && PeakVisibleTriangles >= 0 && PeakResidentTextureMB >= 0 && PeakActiveVfx >= 0;
+        PeakDrawCalls >= 0 && PeakVisibleTriangles >= 0 && PeakResidentTextureMB >= 0 && PeakActiveVfx >= 0 &&
+        (!bHasRenderedSample || (P95FrameTimeMs > 0.0f && GameThreadP95Ms > 0.0f && RenderThreadP95Ms > 0.0f &&
+            GpuP95Ms > 0.0f && PeakDrawCalls > 0 && PeakVisibleTriangles > 0 && PeakResidentTextureMB > 0));
 }
 
 FWMVisualCertificationVerdict FWMVisualCertificationEvaluator::Evaluate(
