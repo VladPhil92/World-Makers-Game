@@ -31,6 +31,8 @@ Exit: representative proxy and first authored meshes can share a coherent surfac
 
 ## V3 — Environment Art / Biome Production
 
+V3 status: source-complete procedural art pass.
+
 Status: **source-complete in PR #51; authored DCC mesh replacement and native/device art certification pending.**
 
 - procedural render-only art for ground, terrain, bark/roots, foliage, stone and water;
