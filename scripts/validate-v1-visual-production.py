@@ -49,6 +49,7 @@ def main() -> None:
         "USkyAtmosphereComponent",
         "UExponentialHeightFogComponent",
         "ApplyLookDevelopmentProfile",
+        "SetAtmosphereSunLight",
         "SetFogDensity",
         "SetFogHeightFalloff",
     )
@@ -122,7 +123,7 @@ def main() -> None:
 
     foundation = require_tokens(
         "docs/v1-visual-production-foundation.md",
-        "atmospheric sun",
+        "primary warm sunlight",
         "Temporary procedural avatar motion",
         "does **not** claim",
         "authored master materials",
