@@ -55,6 +55,16 @@ Where developmentally appropriate, the mission exposes formal notation, equation
 
 Age bands therefore control scaffolding, interface density, reading load and formal notation — **not which ideas a child is allowed to encounter**.
 
+## Runtime foundations
+
+M5.2 introduces a composable evidence runtime. Missions can require reusable primitives such as `construct-to-constraint`, `predict-test-revise`, `model-system`, `communicate-in-language`, `interpret-text-world`, `reason-through-dilemma` and `argue-and-revise` instead of creating a hard-coded evaluator for every school subject.
+
+M5.3 introduces deterministic science truth: matter, reactions, mechanics, circuits, cellular state, plant lifecycle and ecological coupling.
+
+M5.4 introduces deterministic structured language and thought: bilingual contextual communication, provenance-aware narrative graphs, ethical reasoning and philosophy argument revision. The initial thought baseline uses stable semantic/reasoning IDs and does not retain child-authored free text or voice transcripts.
+
+These layers are intentionally separate. Domain runtimes decide whether a scientific, linguistic, narrative or reasoning action is semantically valid; Mission Runtime decides which learning objective receives evidence, how much evidence is required, when a mission completes and which deterministic rewards are granted.
+
 ## Fantastic mission families
 
 ### Mathematics — The Vault of the Infinite Staircase
@@ -73,109 +83,90 @@ Learning evidence: constructions satisfy geometric constraints instead of answer
 
 A multilingual dragon can no longer activate ancient machines because inscriptions have fragmented. Players use contextual vocabulary, syntax, listening, inference and dialogue to restore meaning. English can be progressively used as an interface and problem-solving language rather than merely a subject screen.
 
+M5.4 foundation: a communication action succeeds only when target language, intended meaning and acceptable register align. Wrong-language or wrong-intent responses cannot satisfy the same challenge merely because they contain familiar tokens.
+
 Learning evidence: meaningful comprehension and production in context.
 
 ### Spanish — La Biblioteca de las Palabras Perdidas
 
-A living library changes when words are used precisely. Players reconstruct sentences, distinguish meanings, identify relationships between words, interpret figurative language and write or assemble short texts that alter the environment.
+A living library changes when words are used precisely. Players reconstruct sentences, distinguish meanings, identify relationships between words, interpret figurative language and assemble short texts that alter the environment.
 
-Learning evidence: semantic, grammatical and communicative choices with visible consequences.
+M5.4 foundation: Spanish is a first-class target language in the same semantic challenge model as English rather than a translation afterthought.
+
+Learning evidence: semantic precision, syntax, inference and contextually appropriate expression.
 
 ### Literature — The Labyrinth of Stories
 
-Universal myths and legends become explorable worlds rather than static readings. Missions can draw from Greek, African, Asian, Indigenous American, Middle Eastern, European and Latin American traditions with documented provenance and cultural review.
+A shifting labyrinth is built from myths and legends from many traditions. Players compare versions, infer motives, distinguish narrators, interpret symbols and notice recurring structures without flattening culturally distinct stories into one universal template.
 
-Players may enter the Labyrinth of the Minotaur, follow Anansi's stories, encounter flood myths comparatively, investigate heroic journeys, or rebuild a legend from contradictory narrators.
+M5.4 foundation: narrative content is a graph with point-of-view nodes, inference edges, source classification (`retelling`, `adaptation`, `historical-source`), provenance keys and cultural-review state. The first prototype uses a Minotaur-labyrinth retelling context only as a systems proof.
 
-Learning evidence: plot reconstruction, archetype recognition, point of view, symbolism, comparison, inference and interpretation. The game must distinguish retelling, adaptation and historical source.
+Learning evidence: interpretation changes what the world reveals or which path becomes available.
 
 ### Biology — The City Inside a Cell
 
-The player is miniaturized into a living cell whose systems have stopped cooperating. Organelles become functional districts: energy production, transport, information, membranes and waste processing. Later missions can explore tissues, organs, heredity, adaptation and microbial life.
+The player is miniaturized into a living cell where organelles and cellular processes become functional districts. Energy, transport, membrane integrity, information, nutrients, oxygen and waste must remain in balance.
 
-Learning evidence: restoring biological function by correctly understanding relationships among systems.
+Learning evidence: system repair and causal modeling rather than organelle-name recall alone.
 
 ### Chemistry — The Alchemist's Archipelago
 
-An archipelago is powered by matter transformations. Players investigate atoms and molecules through manipulable models, states of matter, mixtures, solutions, solubility, acids/bases, reaction evidence, conservation of mass, reaction rate and energy change.
+Islands are governed by material properties and transformations. Players investigate states of matter, mixtures, solutions, saturation, separation, reaction evidence, stoichiometric relationships and conservation of mass.
 
-The chemistry layer must teach authentic concepts while keeping child safety boundaries: virtual experiments may represent hazardous phenomena, but the game should not provide actionable real-world procedures for dangerous reactions.
-
-Learning evidence: predictions, controlled variable changes, substance classification, conservation relationships and interpretation of reaction evidence.
+Learning evidence: predictions and successful manipulation of a deterministic virtual chemistry model. Canonical chemistry content remains virtual-only and contains no child-facing hazardous real-world procedures.
 
 ### Physics — The Moonforge
 
-An ancient forge orbiting a small moon can only be repaired by understanding forces and energy. Players build levers, pulleys, counterweights, projectiles, circuits, mirrors and resonant devices. Later missions introduce vectors, momentum, buoyancy, electricity, waves, optics and orbital reasoning.
+A forge on a broken moon can only be restored by making machines actually work. Players reason with forces, motion, momentum, energy, circuits, mirrors, waves and eventually orbital relationships.
 
-Learning evidence: the constructed system physically works under simulated constraints.
+Learning evidence: physical systems behave according to the model rather than accepting detached answers.
 
 ### Ecology — The Forest of a Thousand Voices
 
-A biome reacts persistently to player actions. The child must understand food webs, biodiversity, water and nutrient cycles, carrying capacity, habitat fragmentation, succession and trade-offs between construction and environmental health.
+A living forest reacts to water, plant growth, habitat quality, biodiversity pressures and player construction. The player must see the ecosystem as a coupled system rather than a collection of decorative animals and plants.
 
-Learning evidence: restoring or intentionally redesigning ecosystem conditions and predicting secondary effects.
+Learning evidence: observation, prediction, intervention and revision in a persistent environment.
 
 ### Ethics — The Bridge Between Two Villages
 
-Two communities need the same limited resources after a storm. There is no single hidden 'correct' moral answer. Players must consider fairness, equality, need, promises, consent, stewardship and consequences, then live with the outcomes and revisit their reasoning.
+Two communities need scarce rebuilding resources after a storm. Options may prioritize urgency, equal division, participation, promises or other defensible considerations.
 
-Learning evidence: consistency, perspective-taking, reasons offered and willingness to revise — never ideological conformity.
+M5.4 foundation: there is no hidden moral-answer key. The runtime evaluates whether the player gives a reason relevant to the chosen option, considers multiple affected perspectives and acknowledges a tradeoff. Different options can satisfy the same reasoning standard.
 
-### Philosophy for Children — The Ship That Was Never the Same
+Learning evidence: reasoned choice, perspective-taking and explicit tradeoff recognition.
 
-Players rebuild a legendary vessel piece by piece until none of its original material remains. Characters disagree over whether it is still the same ship. The mission introduces identity, persistence, language, evidence and argument through exploration and dialogue.
+### Philosophy — The Ship That Was Never the Same
 
-Other philosophy adventures can draw on the Cave of Shadows, the Liar's Door, the Machine That Predicts Tomorrow, the Island of Perfect Copies and the City Where Nobody Can Lie.
+A magical ship is repaired piece by piece until none of its original material remains. Players must decide what makes something the same thing through change and confront the rebuilt-original-parts counterexample.
 
-Learning evidence: identifying assumptions, distinguishing reasons from claims, comparing positions, finding contradictions, generating counterexamples and revising an argument.
+M5.4 foundation: both "same ship" and "different ship" positions may succeed. The runtime evaluates whether reasons target the selected claim, assumptions are surfaced, a counterexample is considered and the argument is revised.
 
-## Cross-disciplinary adventures
+Additional future problems include the Cave of Shadows, the Liar's Door, the Machine That Predicts Tomorrow, the Island of Perfect Copies and the City Where Nobody Can Lie.
 
-The strongest adventures should combine disciplines rather than isolate them.
-
-Example: **The Eclipse Engine** may require geometry to align mirrors, physics to understand light, mathematics to calculate timing, literature to decode a mythic astronomical text, English or Spanish to communicate with characters, and philosophy to question whether prediction is the same as knowledge.
-
-Example: **The Garden at the End of Winter** may combine botany/biology, chemistry of soil and nutrients, ecology, ratios for irrigation, ethics of resource allocation and a myth about seasonal cycles.
+Learning evidence: argument quality, contradiction detection, assumptions, counterexamples and reason revision rather than ideological conformity.
 
 ## Mission design contract
 
-A production mission should eventually declare:
+Every production adventure should define:
 
 - primary and secondary disciplines;
 - concepts and formal vocabulary;
 - age/scaffold profile;
-- experiential, conceptual and formal depth layers;
-- fantasy premise and narrative stakes;
+- Experience → Concept → Formalization depth layers;
+- fantastic premise and stakes;
 - required world systems;
-- player actions that demonstrate understanding;
-- observable evidence events;
-- misconceptions that can produce meaningful alternate outcomes;
-- non-punitive retry/iteration behavior;
+- player actions that count as evidence;
+- stable evidence events and learning objectives;
+- misconceptions and alternate outcomes;
+- non-punitive retry path;
 - cross-disciplinary links;
 - localization/read-aloud requirements;
-- pedagogy, safety and cultural review status.
+- pedagogy, safety and cultural review state where relevant.
 
-## Runtime implication
-
-The current Mission Runtime supports `measure-and-build` and `observe-ecosystem`. M5 requires a composable evaluator architecture rather than one evaluator per school subject.
-
-Recommended evaluator primitives:
-
-- `construct-to-constraint`
-- `observe-and-classify`
-- `predict-test-revise`
-- `sequence-and-infer`
-- `communicate-in-language`
-- `model-system`
-- `solve-spatial-system`
-- `interpret-text-world`
-- `reason-through-dilemma`
-- `argue-and-revise`
-
-Subjects compose these primitives. Chemistry and physics, for example, can both use `predict-test-revise`; literature and philosophy can both use `interpret-text-world`, while generating different evidence.
+A mission fails the World Makers quality bar if the academic idea can be removed without materially changing how the mission is played.
 
 ## Quality bar
 
-A World Makers learning mission fails design review if the learning could be removed without materially changing how the mission is played.
+World Makers should not be "educational content attached to a game." It should be **a game world whose most interesting problems are solved by thinking**.
 
-The target is not 'educational content inside a game'. The target is **a game world whose most interesting problems are solved by thinking**.
+M5.5 begins converting these foundations into the first playable Fantastic Adventure Pack. M5.6 then composes them into larger cross-disciplinary adventures such as The Eclipse Engine and The Garden at the End of Winter.
