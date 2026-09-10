@@ -12,13 +12,18 @@ namespace
     const FName ArgumentPrimitive(TEXT("argue-and-revise"));
     const FName StableIdsPrivacyModel(TEXT("stable-ids-no-child-free-text"));
 
-    bool ReadNameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, TArray<FName>& OutValues, const bool bAllowEmpty = false)
+    bool ReadName(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FName& OutValue)
+    {
+        FString Value;
+        if (!Object.IsValid() || !Object->TryGetStringField(Field, Value) || Value.IsEmpty()) return false;
+        OutValue = FName(*Value);
+        return !OutValue.IsNone();
+    }
+
+    bool ReadNames(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FName>& OutValues)
     {
         const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-        if (!Object.IsValid() || !Object->TryGetArrayField(FieldName, Values) || !Values)
-        {
-            return false;
-        }
+        if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values) || !Values || Values->IsEmpty()) return false;
         OutValues.Reset();
         TSet<FName> Seen;
         for (const TSharedPtr<FJsonValue>& Value : *Values)
@@ -28,23 +33,6 @@ namespace
             if (Name.IsNone() || Seen.Contains(Name)) return false;
             Seen.Add(Name);
             OutValues.Add(Name);
-        }
-        return bAllowEmpty || !OutValues.IsEmpty();
-    }
-
-    bool ReadRequiredName(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, FName& OutValue)
-    {
-        FString Value;
-        if (!Object.IsValid() || !Object->TryGetStringField(FieldName, Value) || Value.IsEmpty()) return false;
-        OutValue = FName(*Value);
-        return !OutValue.IsNone();
-    }
-
-    bool IsSubset(const TArray<FName>& Candidate, const TArray<FName>& Allowed)
-    {
-        for (const FName Value : Candidate)
-        {
-            if (!Allowed.Contains(Value)) return false;
         }
         return true;
     }
@@ -60,7 +48,13 @@ namespace
         return true;
     }
 
-    int32 CountUniqueValid(const TArray<FName>& Values, const TArray<FName>& Allowed)
+    bool IsSubset(const TArray<FName>& Values, const TArray<FName>& Allowed)
+    {
+        for (const FName Value : Values) if (!Allowed.Contains(Value)) return false;
+        return true;
+    }
+
+    int32 CountUniqueAllowed(const TArray<FName>& Values, const TArray<FName>& Allowed)
     {
         TSet<FName> Seen;
         for (const FName Value : Values)
@@ -71,147 +65,129 @@ namespace
         return Seen.Num();
     }
 
-    bool ParseCommunicationChallenge(const TSharedPtr<FJsonObject>& Object, FWMCommunicationChallengeDefinition& OutChallenge)
+    bool ParseCommunication(const TSharedPtr<FJsonObject>& Object, FWMCommunicationChallengeDefinition& Out)
     {
-        if (!ReadRequiredName(Object, TEXT("challengeId"), OutChallenge.ChallengeId) ||
-            !ReadRequiredName(Object, TEXT("targetLanguageId"), OutChallenge.TargetLanguageId) ||
-            !ReadRequiredName(Object, TEXT("contextId"), OutChallenge.ContextId) ||
-            !ReadRequiredName(Object, TEXT("requiredMeaningId"), OutChallenge.RequiredMeaningId) ||
-            !ReadNameArray(Object, TEXT("acceptedRegisterIds"), OutChallenge.AcceptedRegisterIds))
-        {
-            return false;
-        }
+        if (!ReadName(Object, TEXT("challengeId"), Out.ChallengeId) ||
+            !ReadName(Object, TEXT("targetLanguageId"), Out.TargetLanguageId) ||
+            !ReadName(Object, TEXT("contextId"), Out.ContextId) ||
+            !ReadName(Object, TEXT("requiredMeaningId"), Out.RequiredMeaningId) ||
+            !ReadNames(Object, TEXT("acceptedRegisterIds"), Out.AcceptedRegisterIds)) return false;
 
-        const TArray<TSharedPtr<FJsonValue>>* Options = nullptr;
-        if (!Object->TryGetArrayField(TEXT("options"), Options) || !Options || Options->IsEmpty()) return false;
-        for (const TSharedPtr<FJsonValue>& Value : *Options)
+        const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+        if (!Object->TryGetArrayField(TEXT("options"), Values) || !Values || Values->IsEmpty()) return false;
+        for (const TSharedPtr<FJsonValue>& Value : *Values)
         {
-            const TSharedPtr<FJsonObject>* OptionObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(OptionObject) || !OptionObject || !OptionObject->IsValid()) return false;
+            const TSharedPtr<FJsonObject>* Item = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(Item) || !Item || !Item->IsValid()) return false;
             FWMCommunicationOptionDefinition Option;
-            if (!ReadRequiredName(*OptionObject, TEXT("choiceId"), Option.ChoiceId) ||
-                !ReadRequiredName(*OptionObject, TEXT("languageId"), Option.LanguageId) ||
-                !ReadRequiredName(*OptionObject, TEXT("meaningId"), Option.MeaningId) ||
-                !ReadRequiredName(*OptionObject, TEXT("registerId"), Option.RegisterId) ||
-                !ReadRequiredName(*OptionObject, TEXT("syntaxPatternId"), Option.SyntaxPatternId) ||
-                !ReadRequiredName(*OptionObject, TEXT("evidenceEventId"), Option.EvidenceEventId))
-            {
-                return false;
-            }
-            OutChallenge.Options.Add(MoveTemp(Option));
+            if (!ReadName(*Item, TEXT("choiceId"), Option.ChoiceId) ||
+                !ReadName(*Item, TEXT("languageId"), Option.LanguageId) ||
+                !ReadName(*Item, TEXT("meaningId"), Option.MeaningId) ||
+                !ReadName(*Item, TEXT("registerId"), Option.RegisterId) ||
+                !ReadName(*Item, TEXT("syntaxPatternId"), Option.SyntaxPatternId) ||
+                !ReadName(*Item, TEXT("evidenceEventId"), Option.EvidenceEventId)) return false;
+            Out.Options.Add(MoveTemp(Option));
         }
-        return OutChallenge.IsSane();
+        return Out.IsSane();
     }
 
-    bool ParseNarrativeStory(const TSharedPtr<FJsonObject>& Object, FWMNarrativeStoryDefinition& OutStory)
+    bool ParseStory(const TSharedPtr<FJsonObject>& Object, FWMNarrativeStoryDefinition& Out)
     {
-        if (!ReadRequiredName(Object, TEXT("storyId"), OutStory.StoryId) ||
-            !ReadRequiredName(Object, TEXT("traditionId"), OutStory.TraditionId) ||
-            !ReadRequiredName(Object, TEXT("sourceClassId"), OutStory.SourceClassId) ||
-            !ReadRequiredName(Object, TEXT("provenanceKey"), OutStory.ProvenanceKey) ||
-            !ReadRequiredName(Object, TEXT("culturalReviewState"), OutStory.CulturalReviewState) ||
-            !ReadRequiredName(Object, TEXT("startNodeId"), OutStory.StartNodeId))
-        {
-            return false;
-        }
+        if (!ReadName(Object, TEXT("storyId"), Out.StoryId) ||
+            !ReadName(Object, TEXT("traditionId"), Out.TraditionId) ||
+            !ReadName(Object, TEXT("sourceClassId"), Out.SourceClassId) ||
+            !ReadName(Object, TEXT("provenanceKey"), Out.ProvenanceKey) ||
+            !ReadName(Object, TEXT("culturalReviewState"), Out.CulturalReviewState) ||
+            !ReadName(Object, TEXT("startNodeId"), Out.StartNodeId)) return false;
 
         const TArray<TSharedPtr<FJsonValue>>* Nodes = nullptr;
         const TArray<TSharedPtr<FJsonValue>>* Choices = nullptr;
         if (!Object->TryGetArrayField(TEXT("nodes"), Nodes) || !Nodes || Nodes->IsEmpty() ||
-            !Object->TryGetArrayField(TEXT("choices"), Choices) || !Choices || Choices->IsEmpty())
-        {
-            return false;
-        }
+            !Object->TryGetArrayField(TEXT("choices"), Choices) || !Choices || Choices->IsEmpty()) return false;
 
         for (const TSharedPtr<FJsonValue>& Value : *Nodes)
         {
-            const TSharedPtr<FJsonObject>* NodeObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(NodeObject) || !NodeObject || !NodeObject->IsValid()) return false;
+            const TSharedPtr<FJsonObject>* Item = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(Item) || !Item || !Item->IsValid()) return false;
             FWMNarrativeNodeDefinition Node;
-            if (!ReadRequiredName(*NodeObject, TEXT("nodeId"), Node.NodeId) ||
-                !ReadRequiredName(*NodeObject, TEXT("passageKey"), Node.PassageKey) ||
-                !ReadRequiredName(*NodeObject, TEXT("pointOfViewId"), Node.PointOfViewId)) return false;
-            OutStory.Nodes.Add(MoveTemp(Node));
+            if (!ReadName(*Item, TEXT("nodeId"), Node.NodeId) ||
+                !ReadName(*Item, TEXT("passageKey"), Node.PassageKey) ||
+                !ReadName(*Item, TEXT("pointOfViewId"), Node.PointOfViewId)) return false;
+            Out.Nodes.Add(MoveTemp(Node));
         }
 
         for (const TSharedPtr<FJsonValue>& Value : *Choices)
         {
-            const TSharedPtr<FJsonObject>* ChoiceObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(ChoiceObject) || !ChoiceObject || !ChoiceObject->IsValid()) return false;
+            const TSharedPtr<FJsonObject>* Item = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(Item) || !Item || !Item->IsValid()) return false;
             FWMNarrativeChoiceDefinition Choice;
-            if (!ReadRequiredName(*ChoiceObject, TEXT("choiceId"), Choice.ChoiceId) ||
-                !ReadRequiredName(*ChoiceObject, TEXT("fromNodeId"), Choice.FromNodeId) ||
-                !ReadRequiredName(*ChoiceObject, TEXT("toNodeId"), Choice.ToNodeId) ||
-                !ReadRequiredName(*ChoiceObject, TEXT("inferenceTag"), Choice.InferenceTag) ||
-                !ReadRequiredName(*ChoiceObject, TEXT("evidenceEventId"), Choice.EvidenceEventId)) return false;
-            OutStory.Choices.Add(MoveTemp(Choice));
+            if (!ReadName(*Item, TEXT("choiceId"), Choice.ChoiceId) ||
+                !ReadName(*Item, TEXT("fromNodeId"), Choice.FromNodeId) ||
+                !ReadName(*Item, TEXT("toNodeId"), Choice.ToNodeId) ||
+                !ReadName(*Item, TEXT("inferenceTag"), Choice.InferenceTag) ||
+                !ReadName(*Item, TEXT("evidenceEventId"), Choice.EvidenceEventId)) return false;
+            Out.Choices.Add(MoveTemp(Choice));
         }
-        return OutStory.IsSane();
+        return Out.IsSane();
     }
 
-    bool ParseEthicalDilemma(const TSharedPtr<FJsonObject>& Object, FWMEthicalDilemmaDefinition& OutDilemma)
+    bool ParseDilemma(const TSharedPtr<FJsonObject>& Object, FWMEthicalDilemmaDefinition& Out)
     {
-        if (!ReadRequiredName(Object, TEXT("dilemmaId"), OutDilemma.DilemmaId) ||
-            !ReadNameArray(Object, TEXT("perspectiveIds"), OutDilemma.PerspectiveIds) ||
-            !Object->TryGetNumberField(TEXT("requiredPerspectiveCount"), OutDilemma.RequiredPerspectiveCount))
-        {
-            return false;
-        }
+        if (!ReadName(Object, TEXT("dilemmaId"), Out.DilemmaId) ||
+            !ReadNames(Object, TEXT("perspectiveIds"), Out.PerspectiveIds) ||
+            !Object->TryGetNumberField(TEXT("requiredPerspectiveCount"), Out.RequiredPerspectiveCount)) return false;
 
         const TArray<TSharedPtr<FJsonValue>>* Options = nullptr;
         if (!Object->TryGetArrayField(TEXT("options"), Options) || !Options || Options->Num() < 2) return false;
         for (const TSharedPtr<FJsonValue>& Value : *Options)
         {
-            const TSharedPtr<FJsonObject>* OptionObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(OptionObject) || !OptionObject || !OptionObject->IsValid()) return false;
+            const TSharedPtr<FJsonObject>* Item = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(Item) || !Item || !Item->IsValid()) return false;
             FWMEthicalOptionDefinition Option;
-            if (!ReadRequiredName(*OptionObject, TEXT("optionId"), Option.OptionId) ||
-                !ReadNameArray(*OptionObject, TEXT("supportedReasonIds"), Option.SupportedReasonIds) ||
-                !ReadNameArray(*OptionObject, TEXT("affectedPerspectiveIds"), Option.AffectedPerspectiveIds) ||
-                !ReadNameArray(*OptionObject, TEXT("tradeoffTags"), Option.TradeoffTags) ||
-                !ReadRequiredName(*OptionObject, TEXT("evidenceEventId"), Option.EvidenceEventId)) return false;
+            if (!ReadName(*Item, TEXT("optionId"), Option.OptionId) ||
+                !ReadNames(*Item, TEXT("supportedReasonIds"), Option.SupportedReasonIds) ||
+                !ReadNames(*Item, TEXT("affectedPerspectiveIds"), Option.AffectedPerspectiveIds) ||
+                !ReadNames(*Item, TEXT("tradeoffTags"), Option.TradeoffTags) ||
+                !ReadName(*Item, TEXT("evidenceEventId"), Option.EvidenceEventId)) return false;
 
             const TSharedPtr<FJsonObject>* Consequences = nullptr;
-            if (!(*OptionObject)->TryGetObjectField(TEXT("consequenceProfile"), Consequences) || !Consequences || !Consequences->IsValid()) return false;
-            for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*Consequences)->Get()->Values)
+            if (!(*Item)->TryGetObjectField(TEXT("consequenceProfile"), Consequences) || !Consequences || !Consequences->IsValid()) return false;
+            for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*Consequences)->Values)
             {
                 if (!Pair.Value.IsValid() || Pair.Value->Type != EJson::Number) return false;
                 Option.ConsequenceProfile.Add(FName(*Pair.Key), static_cast<float>(Pair.Value->AsNumber()));
             }
-            OutDilemma.Options.Add(MoveTemp(Option));
+            Out.Options.Add(MoveTemp(Option));
         }
-        return OutDilemma.IsSane();
+        return Out.IsSane();
     }
 
-    bool ParsePhilosophyProblem(const TSharedPtr<FJsonObject>& Object, FWMPhilosophyProblemDefinition& OutProblem)
+    bool ParseProblem(const TSharedPtr<FJsonObject>& Object, FWMPhilosophyProblemDefinition& Out)
     {
-        if (!ReadRequiredName(Object, TEXT("problemId"), OutProblem.ProblemId) ||
-            !ReadNameArray(Object, TEXT("claimIds"), OutProblem.ClaimIds) ||
-            !ReadNameArray(Object, TEXT("assumptionIds"), OutProblem.AssumptionIds) ||
-            !ReadNameArray(Object, TEXT("counterexampleIds"), OutProblem.CounterexampleIds) ||
-            !ReadRequiredName(Object, TEXT("evidenceEventId"), OutProblem.EvidenceEventId) ||
-            !Object->TryGetNumberField(TEXT("minReasonLinks"), OutProblem.MinReasonLinks) ||
-            !Object->TryGetNumberField(TEXT("minAssumptions"), OutProblem.MinAssumptions) ||
-            !Object->TryGetNumberField(TEXT("minCounterexamples"), OutProblem.MinCounterexamples) ||
-            !Object->TryGetNumberField(TEXT("minRevisions"), OutProblem.MinRevisions))
-        {
-            return false;
-        }
+        if (!ReadName(Object, TEXT("problemId"), Out.ProblemId) ||
+            !ReadNames(Object, TEXT("claimIds"), Out.ClaimIds) ||
+            !ReadNames(Object, TEXT("assumptionIds"), Out.AssumptionIds) ||
+            !ReadNames(Object, TEXT("counterexampleIds"), Out.CounterexampleIds) ||
+            !ReadName(Object, TEXT("evidenceEventId"), Out.EvidenceEventId) ||
+            !Object->TryGetNumberField(TEXT("minReasonLinks"), Out.MinReasonLinks) ||
+            !Object->TryGetNumberField(TEXT("minAssumptions"), Out.MinAssumptions) ||
+            !Object->TryGetNumberField(TEXT("minCounterexamples"), Out.MinCounterexamples) ||
+            !Object->TryGetNumberField(TEXT("minRevisions"), Out.MinRevisions)) return false;
 
         const TArray<TSharedPtr<FJsonValue>>* Links = nullptr;
         if (!Object->TryGetArrayField(TEXT("reasonLinks"), Links) || !Links || Links->IsEmpty()) return false;
         for (const TSharedPtr<FJsonValue>& Value : *Links)
         {
-            const TSharedPtr<FJsonObject>* LinkObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(LinkObject) || !LinkObject || !LinkObject->IsValid()) return false;
+            const TSharedPtr<FJsonObject>* Item = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(Item) || !Item || !Item->IsValid()) return false;
             FWMArgumentLinkDefinition Link;
-            if (!ReadRequiredName(*LinkObject, TEXT("linkId"), Link.LinkId) ||
-                !ReadRequiredName(*LinkObject, TEXT("fromPropositionId"), Link.FromPropositionId) ||
-                !ReadRequiredName(*LinkObject, TEXT("toPropositionId"), Link.ToPropositionId) ||
-                !ReadRequiredName(*LinkObject, TEXT("relationId"), Link.RelationId)) return false;
-            OutProblem.ReasonLinks.Add(MoveTemp(Link));
+            if (!ReadName(*Item, TEXT("linkId"), Link.LinkId) ||
+                !ReadName(*Item, TEXT("fromPropositionId"), Link.FromPropositionId) ||
+                !ReadName(*Item, TEXT("toPropositionId"), Link.ToPropositionId) ||
+                !ReadName(*Item, TEXT("relationId"), Link.RelationId)) return false;
+            Out.ReasonLinks.Add(MoveTemp(Link));
         }
-        return OutProblem.IsSane();
+        return Out.IsSane();
     }
 }
 
@@ -231,14 +207,14 @@ bool FWMCommunicationChallengeDefinition::IsSane() const
     if (ChallengeId.IsNone() || TargetLanguageId.IsNone() || ContextId.IsNone() || RequiredMeaningId.IsNone() ||
         AcceptedRegisterIds.IsEmpty() || Options.Num() < 2 || !HasUniqueNames(AcceptedRegisterIds)) return false;
     TSet<FName> ChoiceIds;
-    bool bHasSuccessfulChoice = false;
+    bool bHasPassingOption = false;
     for (const FWMCommunicationOptionDefinition& Option : Options)
     {
         if (!Option.IsSane() || ChoiceIds.Contains(Option.ChoiceId)) return false;
         ChoiceIds.Add(Option.ChoiceId);
-        bHasSuccessfulChoice |= Option.LanguageId == TargetLanguageId && Option.MeaningId == RequiredMeaningId && AcceptedRegisterIds.Contains(Option.RegisterId);
+        bHasPassingOption |= Option.LanguageId == TargetLanguageId && Option.MeaningId == RequiredMeaningId && AcceptedRegisterIds.Contains(Option.RegisterId);
     }
-    return bHasSuccessfulChoice;
+    return bHasPassingOption;
 }
 
 bool FWMNarrativeNodeDefinition::IsSane() const
@@ -266,10 +242,10 @@ const FWMNarrativeChoiceDefinition* FWMNarrativeStoryDefinition::FindChoice(cons
 
 bool FWMNarrativeStoryDefinition::IsSane() const
 {
-    static const TSet<FName> AllowedSourceClasses = { TEXT("retelling"), TEXT("adaptation"), TEXT("historical-source") };
-    static const TSet<FName> AllowedReviewStates = { TEXT("draft"), TEXT("approved"), TEXT("changes-requested") };
-    if (StoryId.IsNone() || TraditionId.IsNone() || ProvenanceKey.IsNone() || !AllowedSourceClasses.Contains(SourceClassId) ||
-        !AllowedReviewStates.Contains(CulturalReviewState) || StartNodeId.IsNone() || Nodes.Num() < 2 || Choices.IsEmpty()) return false;
+    const TSet<FName> SourceClasses = { FName(TEXT("retelling")), FName(TEXT("adaptation")), FName(TEXT("historical-source")) };
+    const TSet<FName> ReviewStates = { FName(TEXT("draft")), FName(TEXT("approved")), FName(TEXT("changes-requested")) };
+    if (StoryId.IsNone() || TraditionId.IsNone() || ProvenanceKey.IsNone() || !SourceClasses.Contains(SourceClassId) ||
+        !ReviewStates.Contains(CulturalReviewState) || StartNodeId.IsNone() || Nodes.Num() < 2 || Choices.IsEmpty()) return false;
 
     TSet<FName> NodeIds;
     for (const FWMNarrativeNodeDefinition& Node : Nodes)
@@ -322,8 +298,8 @@ bool FWMEthicalDilemmaDefinition::IsSane() const
 
 bool FWMArgumentLinkDefinition::IsSane() const
 {
-    static const TSet<FName> AllowedRelations = { TEXT("supports"), TEXT("challenges"), TEXT("clarifies") };
-    return !LinkId.IsNone() && !FromPropositionId.IsNone() && !ToPropositionId.IsNone() && AllowedRelations.Contains(RelationId);
+    const TSet<FName> Relations = { FName(TEXT("supports")), FName(TEXT("challenges")), FName(TEXT("clarifies")) };
+    return !LinkId.IsNone() && !FromPropositionId.IsNone() && !ToPropositionId.IsNone() && Relations.Contains(RelationId);
 }
 
 bool FWMPhilosophyProblemDefinition::IsSane() const
@@ -341,38 +317,19 @@ bool FWMPhilosophyProblemDefinition::IsSane() const
     return true;
 }
 
-const FWMCommunicationChallengeDefinition* FWMLanguageThoughtCatalog::FindCommunicationChallenge(const FName ChallengeId) const
-{
-    return CommunicationChallenges.Find(ChallengeId);
-}
-
-const FWMNarrativeStoryDefinition* FWMLanguageThoughtCatalog::FindNarrativeStory(const FName StoryId) const
-{
-    return NarrativeStories.Find(StoryId);
-}
-
-const FWMEthicalDilemmaDefinition* FWMLanguageThoughtCatalog::FindEthicalDilemma(const FName DilemmaId) const
-{
-    return EthicalDilemmas.Find(DilemmaId);
-}
-
-const FWMPhilosophyProblemDefinition* FWMLanguageThoughtCatalog::FindPhilosophyProblem(const FName ProblemId) const
-{
-    return PhilosophyProblems.Find(ProblemId);
-}
+const FWMCommunicationChallengeDefinition* FWMLanguageThoughtCatalog::FindCommunicationChallenge(const FName ChallengeId) const { return CommunicationChallenges.Find(ChallengeId); }
+const FWMNarrativeStoryDefinition* FWMLanguageThoughtCatalog::FindNarrativeStory(const FName StoryId) const { return NarrativeStories.Find(StoryId); }
+const FWMEthicalDilemmaDefinition* FWMLanguageThoughtCatalog::FindEthicalDilemma(const FName DilemmaId) const { return EthicalDilemmas.Find(DilemmaId); }
+const FWMPhilosophyProblemDefinition* FWMLanguageThoughtCatalog::FindPhilosophyProblem(const FName ProblemId) const { return PhilosophyProblems.Find(ProblemId); }
 
 bool FWMLanguageThoughtCatalog::IsSane() const
 {
     if (SchemaVersion != 1 || PrivacyModel != StableIdsPrivacyModel || CommunicationChallenges.IsEmpty() || NarrativeStories.IsEmpty() ||
         EthicalDilemmas.IsEmpty() || PhilosophyProblems.IsEmpty()) return false;
-    for (const TPair<FName, FWMCommunicationChallengeDefinition>& Pair : CommunicationChallenges)
-        if (Pair.Key != Pair.Value.ChallengeId || !Pair.Value.IsSane()) return false;
-    for (const TPair<FName, FWMNarrativeStoryDefinition>& Pair : NarrativeStories)
-        if (Pair.Key != Pair.Value.StoryId || !Pair.Value.IsSane()) return false;
-    for (const TPair<FName, FWMEthicalDilemmaDefinition>& Pair : EthicalDilemmas)
-        if (Pair.Key != Pair.Value.DilemmaId || !Pair.Value.IsSane()) return false;
-    for (const TPair<FName, FWMPhilosophyProblemDefinition>& Pair : PhilosophyProblems)
-        if (Pair.Key != Pair.Value.ProblemId || !Pair.Value.IsSane()) return false;
+    for (const TPair<FName, FWMCommunicationChallengeDefinition>& Pair : CommunicationChallenges) if (Pair.Key != Pair.Value.ChallengeId || !Pair.Value.IsSane()) return false;
+    for (const TPair<FName, FWMNarrativeStoryDefinition>& Pair : NarrativeStories) if (Pair.Key != Pair.Value.StoryId || !Pair.Value.IsSane()) return false;
+    for (const TPair<FName, FWMEthicalDilemmaDefinition>& Pair : EthicalDilemmas) if (Pair.Key != Pair.Value.DilemmaId || !Pair.Value.IsSane()) return false;
+    for (const TPair<FName, FWMPhilosophyProblemDefinition>& Pair : PhilosophyProblems) if (Pair.Key != Pair.Value.ProblemId || !Pair.Value.IsSane()) return false;
     return true;
 }
 
@@ -387,14 +344,14 @@ bool FWMLanguageThoughtCatalog::TryParseJson(const FString& Json, FWMLanguageTho
     }
 
     FWMLanguageThoughtCatalog Candidate;
-    FString PrivacyModelString;
+    FString Privacy;
     const TArray<TSharedPtr<FJsonValue>>* Challenges = nullptr;
     const TArray<TSharedPtr<FJsonValue>>* Stories = nullptr;
     const TArray<TSharedPtr<FJsonValue>>* Dilemmas = nullptr;
     const TArray<TSharedPtr<FJsonValue>>* Problems = nullptr;
     if (!Root->TryGetNumberField(TEXT("schemaVersion"), Candidate.SchemaVersion) ||
         !Root->TryGetBoolField(TEXT("prototypeOnly"), Candidate.bPrototypeOnly) ||
-        !Root->TryGetStringField(TEXT("privacyModel"), PrivacyModelString) || PrivacyModelString.IsEmpty() ||
+        !Root->TryGetStringField(TEXT("privacyModel"), Privacy) || Privacy.IsEmpty() ||
         !Root->TryGetArrayField(TEXT("communicationChallenges"), Challenges) || !Challenges ||
         !Root->TryGetArrayField(TEXT("narrativeStories"), Stories) || !Stories ||
         !Root->TryGetArrayField(TEXT("ethicalDilemmas"), Dilemmas) || !Dilemmas ||
@@ -403,58 +360,39 @@ bool FWMLanguageThoughtCatalog::TryParseJson(const FString& Json, FWMLanguageTho
         OutError = TEXT("Language/thought catalog header is invalid.");
         return false;
     }
-    Candidate.PrivacyModel = FName(*PrivacyModelString);
+    Candidate.PrivacyModel = FName(*Privacy);
 
     for (const TSharedPtr<FJsonValue>& Value : *Challenges)
     {
         const TSharedPtr<FJsonObject>* Object = nullptr;
-        FWMCommunicationChallengeDefinition Challenge;
-        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseCommunicationChallenge(*Object, Challenge) ||
-            Candidate.CommunicationChallenges.Contains(Challenge.ChallengeId))
-        {
-            OutError = TEXT("Communication challenge failed validation.");
-            return false;
-        }
-        Candidate.CommunicationChallenges.Add(Challenge.ChallengeId, MoveTemp(Challenge));
+        FWMCommunicationChallengeDefinition Item;
+        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseCommunication(*Object, Item) || Candidate.CommunicationChallenges.Contains(Item.ChallengeId))
+        { OutError = TEXT("Communication challenge failed validation."); return false; }
+        Candidate.CommunicationChallenges.Add(Item.ChallengeId, MoveTemp(Item));
     }
-
     for (const TSharedPtr<FJsonValue>& Value : *Stories)
     {
         const TSharedPtr<FJsonObject>* Object = nullptr;
-        FWMNarrativeStoryDefinition Story;
-        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseNarrativeStory(*Object, Story) ||
-            Candidate.NarrativeStories.Contains(Story.StoryId))
-        {
-            OutError = TEXT("Narrative story failed validation.");
-            return false;
-        }
-        Candidate.NarrativeStories.Add(Story.StoryId, MoveTemp(Story));
+        FWMNarrativeStoryDefinition Item;
+        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseStory(*Object, Item) || Candidate.NarrativeStories.Contains(Item.StoryId))
+        { OutError = TEXT("Narrative story failed validation."); return false; }
+        Candidate.NarrativeStories.Add(Item.StoryId, MoveTemp(Item));
     }
-
     for (const TSharedPtr<FJsonValue>& Value : *Dilemmas)
     {
         const TSharedPtr<FJsonObject>* Object = nullptr;
-        FWMEthicalDilemmaDefinition Dilemma;
-        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseEthicalDilemma(*Object, Dilemma) ||
-            Candidate.EthicalDilemmas.Contains(Dilemma.DilemmaId))
-        {
-            OutError = TEXT("Ethical dilemma failed validation.");
-            return false;
-        }
-        Candidate.EthicalDilemmas.Add(Dilemma.DilemmaId, MoveTemp(Dilemma));
+        FWMEthicalDilemmaDefinition Item;
+        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseDilemma(*Object, Item) || Candidate.EthicalDilemmas.Contains(Item.DilemmaId))
+        { OutError = TEXT("Ethical dilemma failed validation."); return false; }
+        Candidate.EthicalDilemmas.Add(Item.DilemmaId, MoveTemp(Item));
     }
-
     for (const TSharedPtr<FJsonValue>& Value : *Problems)
     {
         const TSharedPtr<FJsonObject>* Object = nullptr;
-        FWMPhilosophyProblemDefinition Problem;
-        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParsePhilosophyProblem(*Object, Problem) ||
-            Candidate.PhilosophyProblems.Contains(Problem.ProblemId))
-        {
-            OutError = TEXT("Philosophy problem failed validation.");
-            return false;
-        }
-        Candidate.PhilosophyProblems.Add(Problem.ProblemId, MoveTemp(Problem));
+        FWMPhilosophyProblemDefinition Item;
+        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid() || !ParseProblem(*Object, Item) || Candidate.PhilosophyProblems.Contains(Item.ProblemId))
+        { OutError = TEXT("Philosophy problem failed validation."); return false; }
+        Candidate.PhilosophyProblems.Add(Item.ProblemId, MoveTemp(Item));
     }
 
     if (!Candidate.IsSane())
@@ -467,28 +405,19 @@ bool FWMLanguageThoughtCatalog::TryParseJson(const FString& Json, FWMLanguageTho
     return true;
 }
 
-bool FWMLanguageThoughtRuntime::EvaluateCommunication(
-    const FWMCommunicationChallengeDefinition& Challenge,
-    const FName ChoiceId,
-    FWMThoughtEvidenceResult& OutResult)
+bool FWMLanguageThoughtRuntime::EvaluateCommunication(const FWMCommunicationChallengeDefinition& Challenge, const FName ChoiceId, FWMThoughtEvidenceResult& OutResult)
 {
     OutResult = FWMThoughtEvidenceResult();
     if (!Challenge.IsSane()) return false;
     const FWMCommunicationOptionDefinition* Option = Challenge.FindOption(ChoiceId);
-    if (!Option || Option->LanguageId != Challenge.TargetLanguageId || Option->MeaningId != Challenge.RequiredMeaningId ||
-        !Challenge.AcceptedRegisterIds.Contains(Option->RegisterId)) return false;
+    if (!Option || Option->LanguageId != Challenge.TargetLanguageId || Option->MeaningId != Challenge.RequiredMeaningId || !Challenge.AcceptedRegisterIds.Contains(Option->RegisterId)) return false;
     OutResult.bAccepted = true;
     OutResult.PrimitiveId = CommunicatePrimitive;
     OutResult.EvidenceEventId = Option->EvidenceEventId;
-    OutResult.NumericValue = 1.0f;
     return true;
 }
 
-bool FWMLanguageThoughtRuntime::TraverseNarrative(
-    const FWMNarrativeStoryDefinition& Story,
-    const FName CurrentNodeId,
-    const FName ChoiceId,
-    FWMThoughtEvidenceResult& OutResult)
+bool FWMLanguageThoughtRuntime::TraverseNarrative(const FWMNarrativeStoryDefinition& Story, const FName CurrentNodeId, const FName ChoiceId, FWMThoughtEvidenceResult& OutResult)
 {
     OutResult = FWMThoughtEvidenceResult();
     if (!Story.IsSane() || !Story.FindNode(CurrentNodeId)) return false;
@@ -498,7 +427,6 @@ bool FWMLanguageThoughtRuntime::TraverseNarrative(
     OutResult.PrimitiveId = InterpretPrimitive;
     OutResult.EvidenceEventId = Choice->EvidenceEventId;
     OutResult.NextNodeId = Choice->ToNodeId;
-    OutResult.NumericValue = 1.0f;
     return true;
 }
 
@@ -513,12 +441,10 @@ bool FWMLanguageThoughtRuntime::EvaluateEthicalReasoning(
     OutResult = FWMThoughtEvidenceResult();
     if (!Dilemma.IsSane() || !bAcknowledgedTradeoff) return false;
     const FWMEthicalOptionDefinition* Option = Dilemma.FindOption(OptionId);
-    if (!Option || CountUniqueValid(ReasonIds, Option->SupportedReasonIds) < 1 ||
-        CountUniqueValid(PerspectiveIds, Dilemma.PerspectiveIds) < Dilemma.RequiredPerspectiveCount) return false;
+    if (!Option || CountUniqueAllowed(ReasonIds, Option->SupportedReasonIds) < 1 || CountUniqueAllowed(PerspectiveIds, Dilemma.PerspectiveIds) < Dilemma.RequiredPerspectiveCount) return false;
     OutResult.bAccepted = true;
     OutResult.PrimitiveId = EthicsPrimitive;
     OutResult.EvidenceEventId = Option->EvidenceEventId;
-    OutResult.NumericValue = 1.0f;
     return true;
 }
 
@@ -533,27 +459,22 @@ bool FWMLanguageThoughtRuntime::EvaluatePhilosophicalArgument(
 {
     OutResult = FWMThoughtEvidenceResult();
     if (!Problem.IsSane() || !Problem.ClaimIds.Contains(ClaimId) || RevisionCount < Problem.MinRevisions) return false;
+    TArray<FName> AllowedLinks;
+    for (const FWMArgumentLinkDefinition& Link : Problem.ReasonLinks) AllowedLinks.Add(Link.LinkId);
+    if (CountUniqueAllowed(ReasonLinkIds, AllowedLinks) < Problem.MinReasonLinks ||
+        CountUniqueAllowed(AssumptionIds, Problem.AssumptionIds) < Problem.MinAssumptions ||
+        CountUniqueAllowed(CounterexampleIds, Problem.CounterexampleIds) < Problem.MinCounterexamples) return false;
 
-    TArray<FName> AllowedLinkIds;
-    for (const FWMArgumentLinkDefinition& Link : Problem.ReasonLinks) AllowedLinkIds.Add(Link.LinkId);
-    if (CountUniqueValid(ReasonLinkIds, AllowedLinkIds) < Problem.MinReasonLinks ||
-        CountUniqueValid(AssumptionIds, Problem.AssumptionIds) < Problem.MinAssumptions ||
-        CountUniqueValid(CounterexampleIds, Problem.CounterexampleIds) < Problem.MinCounterexamples) return false;
-
-    bool bConnectsToClaim = false;
+    bool bReasonTargetsClaim = false;
     for (const FName LinkId : ReasonLinkIds)
     {
-        const FWMArgumentLinkDefinition* Link = Problem.ReasonLinks.FindByPredicate([LinkId](const FWMArgumentLinkDefinition& Candidate)
-        {
-            return Candidate.LinkId == LinkId;
-        });
-        if (Link && Link->ToPropositionId == ClaimId) bConnectsToClaim = true;
+        const FWMArgumentLinkDefinition* Link = Problem.ReasonLinks.FindByPredicate([LinkId](const FWMArgumentLinkDefinition& Candidate) { return Candidate.LinkId == LinkId; });
+        if (Link && Link->ToPropositionId == ClaimId) bReasonTargetsClaim = true;
     }
-    if (!bConnectsToClaim) return false;
+    if (!bReasonTargetsClaim) return false;
 
     OutResult.bAccepted = true;
     OutResult.PrimitiveId = ArgumentPrimitive;
     OutResult.EvidenceEventId = Problem.EvidenceEventId;
-    OutResult.NumericValue = 1.0f;
     return true;
 }
