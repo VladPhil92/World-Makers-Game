@@ -24,6 +24,7 @@ public:
     virtual void BeginPlay() override;
     virtual void PawnClientRestart() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void Tick(float DeltaSeconds) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
     TObjectPtr<UStaticMeshComponent> PrototypeBody;
@@ -89,6 +90,8 @@ private:
     void CycleMission();
     void ObserveWorld();
     void EnsureBuildHUD();
+    void ApplyVisualProfileToCamera();
+    void UpdatePrototypeMotion(float DeltaSeconds);
 
     void HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
     void HandleTouchRepeat(ETouchIndex::Type FingerIndex, FVector Location);
@@ -97,6 +100,7 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UWMBuildHUDWidget> BuildHUD;
 
+    float PrototypeMotionPhase = 0.0f;
     bool bTouchTracking = false;
     bool bTouchDragging = false;
     ETouchIndex::Type ActiveTouchFinger = ETouchIndex::Touch1;
