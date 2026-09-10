@@ -22,6 +22,7 @@ namespace WMAuthoredBridge
             return false;
         }
 
+        Destination->ClearInstances();
         const int32 Count = FMath::Min(Source->GetInstanceCount(), MaxCount);
         for (int32 Index = 0; Index < Count; ++Index)
         {
@@ -49,7 +50,30 @@ namespace WMAuthoredBridge
 void UWMAuthoredVisualBridgeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
+    RetryRemainingSeconds = 3.0f;
+    RetryAccumulatorSeconds = 0.0f;
     RefreshAuthoredVisuals();
+}
+
+void UWMAuthoredVisualBridgeSubsystem::Tick(const float DeltaTime)
+{
+    if (!FMath::IsFinite(DeltaTime) || DeltaTime <= 0.0f || RetryRemainingSeconds <= 0.0f)
+    {
+        return;
+    }
+
+    RetryRemainingSeconds = FMath::Max(0.0f, RetryRemainingSeconds - DeltaTime);
+    RetryAccumulatorSeconds += DeltaTime;
+    if (RetryAccumulatorSeconds >= 0.25f)
+    {
+        RetryAccumulatorSeconds = 0.0f;
+        RefreshAuthoredVisuals();
+    }
+}
+
+TStatId UWMAuthoredVisualBridgeSubsystem::GetStatId() const
+{
+    RETURN_QUICK_DECLARE_CYCLE_STAT(UWMAuthoredVisualBridgeSubsystem, STATGROUP_Tickables);
 }
 
 UWMAuthoredAssetSubsystem* UWMAuthoredVisualBridgeSubsystem::GetAssetSubsystem() const
@@ -69,6 +93,22 @@ UHierarchicalInstancedStaticMeshComponent* UWMAuthoredVisualBridgeSubsystem::Cre
         return nullptr;
     }
 
+    TInlineComponentArray<UHierarchicalInstancedStaticMeshComponent*> ExistingComponents;
+    Biome->GetComponents(ExistingComponents);
+    for (UHierarchicalInstancedStaticMeshComponent* Existing : ExistingComponents)
+    {
+        if (Existing && Existing->GetFName() == ComponentName)
+        {
+            Existing->ClearInstances();
+            Existing->SetStaticMesh(Mesh);
+            Existing->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Existing->SetCanEverAffectNavigation(false);
+            Existing->SetVisibility(false, true);
+            Existing->SetHiddenInGame(true, true);
+            return Existing;
+        }
+    }
+
     UHierarchicalInstancedStaticMeshComponent* Component = NewObject<UHierarchicalInstancedStaticMeshComponent>(Biome, ComponentName);
     if (!Component)
     {
@@ -80,8 +120,52 @@ UHierarchicalInstancedStaticMeshComponent* UWMAuthoredVisualBridgeSubsystem::Cre
     Component->SetStaticMesh(Mesh);
     Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Component->SetCanEverAffectNavigation(false);
+    Component->SetVisibility(false, true);
+    Component->SetHiddenInGame(true, true);
     Component->RegisterComponent();
     return Component;
+}
+
+void UWMAuthoredVisualBridgeSubsystem::SetAuthoredEnvironmentVisible(
+    AWMCaribbeanRainforestPrototype* Biome,
+    const bool bVisible) const
+{
+    if (!Biome)
+    {
+        return;
+    }
+
+    TInlineComponentArray<UHierarchicalInstancedStaticMeshComponent*> Components;
+    Biome->GetComponents(Components);
+    for (UHierarchicalInstancedStaticMeshComponent* Component : Components)
+    {
+        if (Component && Component->GetName().StartsWith(TEXT("Authored")))
+        {
+            Component->SetVisibility(bVisible, true);
+            Component->SetHiddenInGame(!bVisible, true);
+        }
+    }
+}
+
+void UWMAuthoredVisualBridgeSubsystem::SetProceduralEnvironmentVisible(
+    AWMCaribbeanRainforestPrototype* Biome,
+    const bool bVisible) const
+{
+    if (!Biome)
+    {
+        return;
+    }
+
+    for (UProceduralMeshComponent* Procedural : TArray<UProceduralMeshComponent*>{
+        Biome->GroundArt,
+        Biome->TerrainArt,
+        Biome->BarkAndRootsArt,
+        Biome->FoliageArt,
+        Biome->StoneArt,
+        Biome->WaterArt})
+    {
+        WMAuthoredBridge::SetProceduralFamilyVisible(Procedural, bVisible);
+    }
 }
 
 bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredAvatar(
@@ -129,33 +213,43 @@ bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredEnvironment(
         return false;
     }
 
-    UHierarchicalInstancedStaticMeshComponent* GroundArt = CreateRenderFamily(Biome, TEXT("AuthoredGroundArt"), Ground);
-    UHierarchicalInstancedStaticMeshComponent* TerrainArt = CreateRenderFamily(Biome, TEXT("AuthoredTerrainArt"), Terrain);
+    UHierarchicalInstancedStaticMeshComponent* GroundAuthored = CreateRenderFamily(Biome, TEXT("AuthoredGroundArt"), Ground);
+    UHierarchicalInstancedStaticMeshComponent* TerrainAuthored = CreateRenderFamily(Biome, TEXT("AuthoredTerrainArt"), Terrain);
     UHierarchicalInstancedStaticMeshComponent* TreeArtA = CreateRenderFamily(Biome, TEXT("AuthoredTreeArtA"), TreeA);
     UHierarchicalInstancedStaticMeshComponent* TreeArtB = CreateRenderFamily(Biome, TEXT("AuthoredTreeArtB"), TreeB);
     UHierarchicalInstancedStaticMeshComponent* TreeArtC = CreateRenderFamily(Biome, TEXT("AuthoredTreeArtC"), TreeC);
     UHierarchicalInstancedStaticMeshComponent* UnderstoryArt = CreateRenderFamily(Biome, TEXT("AuthoredUnderstoryArt"), Understory);
-    UHierarchicalInstancedStaticMeshComponent* RockArt = CreateRenderFamily(Biome, TEXT("AuthoredRockArt"), Rock);
-    UHierarchicalInstancedStaticMeshComponent* WaterArt = CreateRenderFamily(Biome, TEXT("AuthoredWaterEdgeArt"), WaterEdge);
+    UHierarchicalInstancedStaticMeshComponent* RockAuthored = CreateRenderFamily(Biome, TEXT("AuthoredRockArt"), Rock);
+    UHierarchicalInstancedStaticMeshComponent* WaterAuthored = CreateRenderFamily(Biome, TEXT("AuthoredWaterEdgeArt"), WaterEdge);
     UHierarchicalInstancedStaticMeshComponent* HeroArt = CreateRenderFamily(Biome, TEXT("AuthoredHeroCeibaArt"), HeroCeiba);
 
-    const bool bComponentsReady = GroundArt && TerrainArt && TreeArtA && TreeArtB && TreeArtC && UnderstoryArt && RockArt && WaterArt && HeroArt;
+    const bool bComponentsReady = GroundAuthored && TerrainAuthored && TreeArtA && TreeArtB && TreeArtC &&
+        UnderstoryArt && RockAuthored && WaterAuthored && HeroArt;
     if (!bComponentsReady)
     {
+        SetAuthoredEnvironmentVisible(Biome, false);
         return false;
     }
 
-    if (!WMAuthoredBridge::CopyInstances(Biome->GroundTiles, GroundArt) ||
-        !WMAuthoredBridge::CopyInstances(Biome->TerrainMounds, TerrainArt) ||
-        !WMAuthoredBridge::CopyInstances(Biome->Rocks, RockArt) ||
-        !WMAuthoredBridge::CopyInstances(Biome->WaterEdgeMarkers, WaterArt))
+    if (!WMAuthoredBridge::CopyInstances(Biome->GroundTiles, GroundAuthored) ||
+        !WMAuthoredBridge::CopyInstances(Biome->TerrainMounds, TerrainAuthored) ||
+        !WMAuthoredBridge::CopyInstances(Biome->Rocks, RockAuthored) ||
+        !WMAuthoredBridge::CopyInstances(Biome->WaterEdgeMarkers, WaterAuthored))
     {
+        SetAuthoredEnvironmentVisible(Biome, false);
         return false;
     }
+
+    TreeArtA->ClearInstances();
+    TreeArtB->ClearInstances();
+    TreeArtC->ClearInstances();
+    UnderstoryArt->ClearInstances();
+    HeroArt->ClearInstances();
 
     const int32 TreeCount = Biome->TreeTrunks ? Biome->TreeTrunks->GetInstanceCount() : 0;
     if (TreeCount < 1)
     {
+        SetAuthoredEnvironmentVisible(Biome, false);
         return false;
     }
 
@@ -165,6 +259,7 @@ bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredEnvironment(
         FTransform TreeTransform;
         if (!Biome->TreeTrunks->GetInstanceTransform(Index, TreeTransform, false))
         {
+            SetAuthoredEnvironmentVisible(Biome, false);
             return false;
         }
 
@@ -185,21 +280,13 @@ bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredEnvironment(
     FTransform HeroTransform;
     if (!Biome->TreeTrunks->GetInstanceTransform(HeroIndex, HeroTransform, false))
     {
+        SetAuthoredEnvironmentVisible(Biome, false);
         return false;
     }
     HeroArt->AddInstance(HeroTransform, false);
 
-    for (UProceduralMeshComponent* Procedural : TArray<UProceduralMeshComponent*>{
-        Biome->GroundArt,
-        Biome->TerrainArt,
-        Biome->BarkAndRootsArt,
-        Biome->FoliageArt,
-        Biome->StoneArt,
-        Biome->WaterArt})
-    {
-        WMAuthoredBridge::SetProceduralFamilyVisible(Procedural, false);
-    }
-
+    SetProceduralEnvironmentVisible(Biome, false);
+    SetAuthoredEnvironmentVisible(Biome, true);
     return true;
 }
 
@@ -218,9 +305,17 @@ void UWMAuthoredVisualBridgeSubsystem::RefreshAuthoredVisuals()
         bAuthoredAvatarActive |= TryApplyAuthoredAvatar(*It, Assets);
     }
 
+    const bool bPreviouslyAuthoredEnvironment = bAuthoredEnvironmentActive;
     bAuthoredEnvironmentActive = false;
     for (TActorIterator<AWMCaribbeanRainforestPrototype> It(World); It; ++It)
     {
-        bAuthoredEnvironmentActive |= TryApplyAuthoredEnvironment(*It, Assets);
+        AWMCaribbeanRainforestPrototype* Biome = *It;
+        const bool bApplied = TryApplyAuthoredEnvironment(Biome, Assets);
+        bAuthoredEnvironmentActive |= bApplied;
+        if (!bApplied && bPreviouslyAuthoredEnvironment)
+        {
+            SetAuthoredEnvironmentVisible(Biome, false);
+            SetProceduralEnvironmentVisible(Biome, true);
+        }
     }
 }
