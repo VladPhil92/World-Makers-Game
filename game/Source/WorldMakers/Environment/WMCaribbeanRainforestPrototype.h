@@ -78,5 +78,6 @@ public:
 private:
     void RebuildPrototype();
     void ApplyLookDevelopmentProfile();
+    void ApplySurfaceLanguage();
     FVector RandomRingPoint(FRandomStream& Random, float MinRadius, float MaxRadius) const;
 };

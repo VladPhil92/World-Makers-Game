@@ -7,7 +7,9 @@
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Visual/WMStylizedSurfaceLibrary.h"
 
 const FName AWMCaribbeanRainforestPrototype::PrototypeBiomeTag(TEXT("WM_CaribbeanRainforestPrototype"));
 
@@ -62,6 +64,7 @@ AWMCaribbeanRainforestPrototype::AWMCaribbeanRainforestPrototype()
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> ProxySurfaceMaterial(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
 
     if (CubeMesh.Succeeded())
     {
@@ -77,6 +80,16 @@ AWMCaribbeanRainforestPrototype::AWMCaribbeanRainforestPrototype()
     if (CylinderMesh.Succeeded())
     {
         TreeTrunks->SetStaticMesh(CylinderMesh.Object);
+    }
+
+    if (ProxySurfaceMaterial.Succeeded())
+    {
+        GroundTiles->SetMaterial(0, ProxySurfaceMaterial.Object);
+        TerrainMounds->SetMaterial(0, ProxySurfaceMaterial.Object);
+        TreeTrunks->SetMaterial(0, ProxySurfaceMaterial.Object);
+        TreeCanopies->SetMaterial(0, ProxySurfaceMaterial.Object);
+        Rocks->SetMaterial(0, ProxySurfaceMaterial.Object);
+        WaterEdgeMarkers->SetMaterial(0, ProxySurfaceMaterial.Object);
     }
 }
 
@@ -120,6 +133,16 @@ void AWMCaribbeanRainforestPrototype::ApplyLookDevelopmentProfile()
     PrototypeHeightFog->SetFogInscatteringColor(FLinearColor::LerpUsingHSV(Profile->Palette.Sky, Profile->Palette.Sunlight, 0.18f));
 }
 
+void AWMCaribbeanRainforestPrototype::ApplySurfaceLanguage()
+{
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(GroundTiles, EWMStylizedSurfaceRole::GroundEarth);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(TerrainMounds, EWMStylizedSurfaceRole::Terrain);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(TreeTrunks, EWMStylizedSurfaceRole::Bark);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(TreeCanopies, EWMStylizedSurfaceRole::Foliage);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(Rocks, EWMStylizedSurfaceRole::Stone);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(WaterEdgeMarkers, EWMStylizedSurfaceRole::Water);
+}
+
 void AWMCaribbeanRainforestPrototype::RebuildPrototype()
 {
     GroundTiles->ClearInstances();
@@ -137,12 +160,13 @@ void AWMCaribbeanRainforestPrototype::RebuildPrototype()
 
     const EWMVisualQualityTier EffectiveTier = bUseProfileDefaultQuality ? Profile->DefaultQualityTier : QualityTier;
     const FWMVisualBudget& Budget = Profile->GetBudget(EffectiveTier);
-    if (!Budget.IsSane() || !Profile->Atmosphere.IsSane())
+    if (!Budget.IsSane() || !Profile->Atmosphere.IsSane() || !Profile->SurfaceResponse.IsSane())
     {
         return;
     }
 
     ApplyLookDevelopmentProfile();
+    ApplySurfaceLanguage();
 
     GroundTiles->AddInstance(FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, -50.0f), FVector(50.0f, 50.0f, 1.0f)));
 

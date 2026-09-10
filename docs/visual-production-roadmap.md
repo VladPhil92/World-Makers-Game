@@ -10,7 +10,7 @@ A source-complete phase is not automatically art-certified. Binary Unreal assets
 
 ## V1 — Visual Production Foundation / Look Development
 
-Status target: source-complete foundation.
+Status: **source-complete in PR #49; native visual certification pending.**
 
 - extend `UWMVisualProfileSettings` beyond density budgets into reproducible look-development controls;
 - introduce atmospheric sun, skylight, sky atmosphere and height fog into the current Caribbean Rainforest slice;
@@ -24,17 +24,34 @@ Exit: source CI passes and the prototype has a reproducible atmosphere + motion 
 
 ## V2 — Materials & Surface Language
 
+Status: **source implementation deployed on `feat/v2-materials-surface-language`; native authored-material certification pending.**
+
 Goal: establish the material grammar that makes different asset families feel like one game.
 
-- authored master surface material with controlled base color, roughness, normal detail and stylized variation;
-- material instances for earth/clay, stone, wood/bark, leaves, painted construction pieces and fantasy surfaces;
-- foliage shading with restrained translucency/overdraw and tablet fallback;
-- water surface language for shallow edges, rivers and magical/scientific states;
-- trim-sheet / atlas strategy for reusable architecture and props;
-- build-placement material feedback that remains distinguishable without relying only on color;
-- shader-complexity and texture-resolution budgets by device tier.
+Implemented source/runtime contract:
 
-Exit: representative proxy and first authored meshes can share a coherent surface system without bespoke shaders per asset.
+- stable surface roles for earth, terrain, bark, foliage, stone, water, neutral/Eco construction, placement states and magical accents;
+- profile-driven base color, roughness, metallic, emissive, wind and opacity intent;
+- stable Custom Primitive Data layout for future authored materials;
+- temporary visible `/Engine/BasicShapes/BasicShapeMaterial` fallback so existing proxies receive semantic color now;
+- rainforest proxy surface pass across ground, terrain, trunks, canopy, stone and water;
+- build surface differentiation plus valid/invalid preview roles;
+- valid/invalid custom-depth stencil preserved so placement state never becomes color-only;
+- per-tier material-slot, texture-edge and sampled-texture ceilings;
+- machine-readable handoff contract for `M_WM_MasterSurface` and `M_WM_Water`;
+- source/automation tests and Repository Quality gate.
+
+Authored production target:
+
+- `M_WM_MasterSurface` with controlled base tint, roughness, restrained normal detail, packed masks and stylized macro variation;
+- material instances for earth/clay, stone, wood/bark, leaves, painted construction pieces and fantasy surfaces;
+- masked/two-sided foliage treatment with restrained overdraw and tablet fallback;
+- `M_WM_Water` for shallow edges, rivers and later magical/scientific states, with intentional opaque Low-tier fallback until profiling validates translucency;
+- trim-sheet / atlas strategy for reusable architecture and props.
+
+Exit: representative proxy and first authored meshes can share a coherent surface system without bespoke shaders per asset. Source exit can pass before binary `.uasset` art certification; authored master materials still require Unreal Editor and native visual review.
+
+See `docs/v2-materials-surface-language.md` and `content/visual/materials/surface-language-v2.json`.
 
 ## V3 — Environment Art / Biome Production
 
