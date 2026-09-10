@@ -168,7 +168,7 @@ void UWMAuthoredVisualBridgeSubsystem::SetProceduralEnvironmentVisible(
     }
 }
 
-bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredAvatar(
+bool UWMAuthoredVisualBridgeSubsystem::TryPrepareAuthoredAvatar(
     AWMPlayerCharacter* Character,
     UWMAuthoredAssetSubsystem* Assets)
 {
@@ -299,10 +299,10 @@ void UWMAuthoredVisualBridgeSubsystem::RefreshAuthoredVisuals()
         return;
     }
 
-    bAuthoredAvatarActive = false;
+    bAuthoredAvatarReady = false;
     for (TActorIterator<AWMPlayerCharacter> It(World); It; ++It)
     {
-        bAuthoredAvatarActive |= TryApplyAuthoredAvatar(*It, Assets);
+        bAuthoredAvatarReady |= TryPrepareAuthoredAvatar(*It, Assets);
     }
 
     const bool bPreviouslyAuthoredEnvironment = bAuthoredEnvironmentActive;
