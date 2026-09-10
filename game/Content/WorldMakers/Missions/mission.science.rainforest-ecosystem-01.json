@@ -1,0 +1,62 @@
+{
+  "id": "mission.science.rainforest-ecosystem-01",
+  "axis": "science",
+  "ageBand": "7-8",
+  "learningObjectives": [
+    "science.ecosystems.observe-interdependence",
+    "science.ecosystems.compare-living-and-nonliving-factors"
+  ],
+  "playerGoalKey": "mission.science.rainforest-ecosystem-01.goal",
+  "mechanics": [
+    "exploration",
+    "deliberate-observation",
+    "ecosystem-comparison"
+  ],
+  "evidenceEvents": [
+    "science.rainforest.ceiba-observed",
+    "science.rainforest.bromeliad-observed",
+    "science.rainforest.water-edge-observed"
+  ],
+  "difficulty": 2,
+  "scaffolds": [
+    "scaffold.science.rainforest.look-up",
+    "scaffold.science.rainforest.look-low",
+    "scaffold.science.rainforest.follow-water"
+  ],
+  "localizationKeys": [
+    "mission.science.rainforest-ecosystem-01.goal",
+    "mission.science.rainforest-ecosystem-01.progress",
+    "mission.science.rainforest-ecosystem-01.complete"
+  ],
+  "analyticsClassification": "minimized-learning-evidence",
+  "review": {
+    "pedagogy": "draft",
+    "safety": "draft",
+    "cultural": "draft"
+  },
+  "runtime": {
+    "evaluator": "observe-ecosystem",
+    "observationRequirements": [
+      {
+        "observationId": "observation.rainforest.ceiba",
+        "evidenceEventId": "science.rainforest.ceiba-observed",
+        "objectiveId": "science.ecosystems.observe-interdependence"
+      },
+      {
+        "observationId": "observation.rainforest.bromeliad-cluster",
+        "evidenceEventId": "science.rainforest.bromeliad-observed",
+        "objectiveId": "science.ecosystems.observe-interdependence"
+      },
+      {
+        "observationId": "observation.rainforest.water-edge",
+        "evidenceEventId": "science.rainforest.water-edge-observed",
+        "objectiveId": "science.ecosystems.compare-living-and-nonliving-factors"
+      }
+    ],
+    "rewardIds": [
+      "reward.science.rainforest-observer-badge-01"
+    ],
+    "prerequisiteMissionIds": [],
+    "prototypeOnly": true
+  }
+}

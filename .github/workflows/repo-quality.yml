@@ -35,6 +35,8 @@ jobs:
         run: python scripts/validate-m3-1-biome-runtime.py
       - name: Validate M3.2 World Interaction
         run: python scripts/validate-m3-2-world-interaction.py
+      - name: Validate M3.3 Science Mission Runtime
+        run: python scripts/validate-m3-3-science-mission-runtime.py
 
   parent-portal:
     runs-on: ubuntu-latest

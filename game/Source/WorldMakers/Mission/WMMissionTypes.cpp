@@ -6,6 +6,9 @@
 
 namespace
 {
+    const FName MeasureAndBuildEvaluator(TEXT("measure-and-build"));
+    const FName ObserveEcosystemEvaluator(TEXT("observe-ecosystem"));
+
     bool ReadNameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FName>& OutValues)
     {
         const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
@@ -17,7 +20,7 @@ namespace
         OutValues.Reset();
         for (const TSharedPtr<FJsonValue>& Value : *Values)
         {
-            if (!Value.IsValid() || Value->Type != EJson::String)
+            if (!Value.IsValid() || Value->Type != EJson::String || Value->AsString().IsEmpty())
             {
                 return false;
             }
@@ -51,6 +54,48 @@ namespace
         return true;
     }
 
+    bool ReadObservationRequirements(
+        const TSharedPtr<FJsonObject>& Runtime,
+        TArray<FWMObservationEvidenceRequirement>& OutRequirements)
+    {
+        OutRequirements.Reset();
+        const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+        if (!Runtime.IsValid() || !Runtime->TryGetArrayField(TEXT("observationRequirements"), Values) || !Values)
+        {
+            return false;
+        }
+
+        for (const TSharedPtr<FJsonValue>& Value : *Values)
+        {
+            const TSharedPtr<FJsonObject>* ObjectPtr = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(ObjectPtr) || !ObjectPtr || !ObjectPtr->IsValid())
+            {
+                return false;
+            }
+
+            FString ObservationIdString;
+            FString EvidenceEventIdString;
+            FString ObjectiveIdString;
+            if (!(*ObjectPtr)->TryGetStringField(TEXT("observationId"), ObservationIdString) || ObservationIdString.IsEmpty() ||
+                !(*ObjectPtr)->TryGetStringField(TEXT("evidenceEventId"), EvidenceEventIdString) || EvidenceEventIdString.IsEmpty() ||
+                !(*ObjectPtr)->TryGetStringField(TEXT("objectiveId"), ObjectiveIdString) || ObjectiveIdString.IsEmpty())
+            {
+                return false;
+            }
+
+            FWMObservationEvidenceRequirement Requirement;
+            Requirement.ObservationId = FName(*ObservationIdString);
+            Requirement.EvidenceEventId = FName(*EvidenceEventIdString);
+            Requirement.ObjectiveId = FName(*ObjectiveIdString);
+            if (!Requirement.IsSane())
+            {
+                return false;
+            }
+            OutRequirements.Add(MoveTemp(Requirement));
+        }
+        return !OutRequirements.IsEmpty();
+    }
+
     void SortNames(TArray<FName>& Values)
     {
         Values.Sort([](const FName& A, const FName& B)
@@ -60,10 +105,32 @@ namespace
     }
 }
 
+bool FWMObservationEvidenceRequirement::IsSane() const
+{
+    return !ObservationId.IsNone() && !EvidenceEventId.IsNone() && !ObjectiveId.IsNone();
+}
+
+bool FWMMissionRuntimeDefinition::IsMeasureAndBuild() const
+{
+    return Evaluator == MeasureAndBuildEvaluator;
+}
+
+bool FWMMissionRuntimeDefinition::IsObserveEcosystem() const
+{
+    return Evaluator == ObserveEcosystemEvaluator;
+}
+
+const FWMObservationEvidenceRequirement* FWMMissionRuntimeDefinition::FindObservationRequirement(const FName ObservationId) const
+{
+    return ObservationRequirements.FindByPredicate([ObservationId](const FWMObservationEvidenceRequirement& Requirement)
+    {
+        return Requirement.ObservationId == ObservationId;
+    });
+}
+
 bool FWMMissionRuntimeDefinition::IsSane() const
 {
-    if (MissionId.IsNone() || LearningObjectiveIds.Num() < 2 || RequiredEvidenceEventIds.Num() < 2 ||
-        TargetSpanCm < 50.0f || ToleranceCm < 0.0f || ToleranceCm >= TargetSpanCm || RewardIds.IsEmpty())
+    if (MissionId.IsNone() || Evaluator.IsNone() || LearningObjectiveIds.IsEmpty() || RequiredEvidenceEventIds.IsEmpty() || RewardIds.IsEmpty())
     {
         return false;
     }
@@ -77,7 +144,30 @@ bool FWMMissionRuntimeDefinition::IsSane() const
         }
         UniquePrerequisites.Add(PrerequisiteId);
     }
-    return true;
+
+    if (IsMeasureAndBuild())
+    {
+        return TargetSpanCm >= 50.0f && ToleranceCm >= 0.0f && ToleranceCm < TargetSpanCm && ObservationRequirements.IsEmpty();
+    }
+
+    if (!IsObserveEcosystem() || TargetSpanCm != 0.0f || ToleranceCm != 0.0f || ObservationRequirements.Num() < 2)
+    {
+        return false;
+    }
+
+    TSet<FName> ObservationIds;
+    TSet<FName> EvidenceEventIds;
+    for (const FWMObservationEvidenceRequirement& Requirement : ObservationRequirements)
+    {
+        if (!Requirement.IsSane() || ObservationIds.Contains(Requirement.ObservationId) || EvidenceEventIds.Contains(Requirement.EvidenceEventId) ||
+            !RequiredEvidenceEventIds.Contains(Requirement.EvidenceEventId) || !LearningObjectiveIds.Contains(Requirement.ObjectiveId))
+        {
+            return false;
+        }
+        ObservationIds.Add(Requirement.ObservationId);
+        EvidenceEventIds.Add(Requirement.EvidenceEventId);
+    }
+    return EvidenceEventIds.Num() == RequiredEvidenceEventIds.Num();
 }
 
 bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRuntimeDefinition& OutDefinition, FString& OutError)
@@ -104,30 +194,58 @@ bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRu
     }
 
     const TSharedPtr<FJsonObject> Runtime = Root->GetObjectField(TEXT("runtime"));
-    FString Evaluator;
-    double TargetSpan = 0.0;
-    double Tolerance = 0.0;
+    FString EvaluatorString;
     bool bPrototypeOnly = true;
-    if (!Runtime.IsValid() || !Runtime->TryGetStringField(TEXT("evaluator"), Evaluator) || Evaluator != TEXT("measure-and-build") ||
-        !Runtime->TryGetNumberField(TEXT("targetSpanCm"), TargetSpan) ||
-        !Runtime->TryGetNumberField(TEXT("toleranceCm"), Tolerance) ||
+    if (!Runtime.IsValid() || !Runtime->TryGetStringField(TEXT("evaluator"), EvaluatorString) || EvaluatorString.IsEmpty() ||
         !Runtime->TryGetBoolField(TEXT("prototypeOnly"), bPrototypeOnly))
     {
-        OutError = TEXT("Mission runtime block is invalid.");
+        OutError = TEXT("Mission runtime header is invalid.");
         return false;
     }
 
     FWMMissionRuntimeDefinition Candidate;
     Candidate.MissionId = FName(*MissionIdString);
-    Candidate.TargetSpanCm = static_cast<float>(TargetSpan);
-    Candidate.ToleranceCm = static_cast<float>(Tolerance);
+    Candidate.Evaluator = FName(*EvaluatorString);
     Candidate.bPrototypeOnly = bPrototypeOnly;
 
     if (!ReadNameArray(Root, TEXT("learningObjectives"), Candidate.LearningObjectiveIds) ||
         !ReadNameArray(Root, TEXT("evidenceEvents"), Candidate.RequiredEvidenceEventIds) ||
         !ReadNameArray(Runtime, TEXT("rewardIds"), Candidate.RewardIds) ||
-        !ReadOptionalNameArray(Runtime, TEXT("prerequisiteMissionIds"), Candidate.PrerequisiteMissionIds) ||
-        !Candidate.IsSane())
+        !ReadOptionalNameArray(Runtime, TEXT("prerequisiteMissionIds"), Candidate.PrerequisiteMissionIds))
+    {
+        OutError = TEXT("Mission runtime stable ID arrays are invalid.");
+        return false;
+    }
+
+    if (Candidate.IsMeasureAndBuild())
+    {
+        double TargetSpan = 0.0;
+        double Tolerance = 0.0;
+        if (!Runtime->TryGetNumberField(TEXT("targetSpanCm"), TargetSpan) ||
+            !Runtime->TryGetNumberField(TEXT("toleranceCm"), Tolerance) || Runtime->HasField(TEXT("observationRequirements")))
+        {
+            OutError = TEXT("measure-and-build evaluator fields are invalid.");
+            return false;
+        }
+        Candidate.TargetSpanCm = static_cast<float>(TargetSpan);
+        Candidate.ToleranceCm = static_cast<float>(Tolerance);
+    }
+    else if (Candidate.IsObserveEcosystem())
+    {
+        if (Runtime->HasField(TEXT("targetSpanCm")) || Runtime->HasField(TEXT("toleranceCm")) ||
+            !ReadObservationRequirements(Runtime, Candidate.ObservationRequirements))
+        {
+            OutError = TEXT("observe-ecosystem evaluator fields are invalid.");
+            return false;
+        }
+    }
+    else
+    {
+        OutError = TEXT("Mission evaluator is unsupported.");
+        return false;
+    }
+
+    if (!Candidate.IsSane())
     {
         OutError = TEXT("Mission runtime definition failed semantic validation.");
         return false;
@@ -154,12 +272,14 @@ bool FWMMissionProgressModel::Begin(const FWMMissionRuntimeDefinition& InDefinit
     NextEvidenceSequence = 1;
     Evidence.Reset();
     EarnedRewardIds.Reset();
+    RecordedObservationIds.Reset();
     return true;
 }
 
 bool FWMMissionProgressModel::RecordMeasurement(const float MeasuredSpanCm)
 {
-    if (State != EWMMissionRuntimeState::Active || bMeasurementEvidence || !FMath::IsFinite(MeasuredSpanCm) || MeasuredSpanCm <= 0.0f)
+    if (State != EWMMissionRuntimeState::Active || !Definition.IsMeasureAndBuild() || bMeasurementEvidence ||
+        !FMath::IsFinite(MeasuredSpanCm) || MeasuredSpanCm <= 0.0f)
     {
         return false;
     }
@@ -179,7 +299,8 @@ bool FWMMissionProgressModel::RecordMeasurement(const float MeasuredSpanCm)
 
 bool FWMMissionProgressModel::RecordStructureSpan(const float StructureSpanCm)
 {
-    if (State != EWMMissionRuntimeState::Active || !bMeasurementEvidence || !FMath::IsFinite(StructureSpanCm) || StructureSpanCm <= 0.0f)
+    if (State != EWMMissionRuntimeState::Active || !Definition.IsMeasureAndBuild() || !bMeasurementEvidence ||
+        !FMath::IsFinite(StructureSpanCm) || StructureSpanCm <= 0.0f)
     {
         return false;
     }
@@ -205,9 +326,47 @@ bool FWMMissionProgressModel::RecordStructureSpan(const float StructureSpanCm)
     return true;
 }
 
+bool FWMMissionProgressModel::RecordObservation(const FName ObservationId)
+{
+    if (State != EWMMissionRuntimeState::Active || !Definition.IsObserveEcosystem() || ObservationId.IsNone() ||
+        RecordedObservationIds.Contains(ObservationId))
+    {
+        return false;
+    }
+
+    const FWMObservationEvidenceRequirement* Requirement = Definition.FindObservationRequirement(ObservationId);
+    if (!Requirement)
+    {
+        return false;
+    }
+
+    RecordedObservationIds.Add(ObservationId);
+
+    FWMLearningEvidenceRecord Record;
+    Record.MissionId = Definition.MissionId;
+    Record.EventId = Requirement->EvidenceEventId;
+    Record.ObjectiveId = Requirement->ObjectiveId;
+    Record.NumericValue = 1.0f;
+    Record.Sequence = NextEvidenceSequence++;
+    Evidence.Add(Record);
+
+    if (RecordedObservationIds.Num() == Definition.ObservationRequirements.Num())
+    {
+        State = EWMMissionRuntimeState::Completed;
+        EarnedRewardIds = Definition.RewardIds;
+    }
+    return true;
+}
+
 float FWMMissionProgressModel::GetProgressFraction() const
 {
     if (State == EWMMissionRuntimeState::Completed) return 1.0f;
+    if (Definition.IsObserveEcosystem())
+    {
+        return Definition.ObservationRequirements.IsEmpty()
+            ? 0.0f
+            : static_cast<float>(RecordedObservationIds.Num()) / static_cast<float>(Definition.ObservationRequirements.Num());
+    }
     if (bMeasurementEvidence) return 0.5f;
     return 0.0f;
 }

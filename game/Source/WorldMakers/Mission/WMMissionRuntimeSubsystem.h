@@ -44,6 +44,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
     FName GetActiveMissionId() const { return Progress.State == EWMMissionRuntimeState::Inactive ? NAME_None : Progress.Definition.MissionId; }
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions")
+    FName GetActiveEvaluator() const { return Progress.State == EWMMissionRuntimeState::Inactive ? NAME_None : Progress.Definition.Evaluator; }
+
     UFUNCTION(BlueprintPure, Category = "World Makers|Learning Journey")
     EWMJourneyMissionState GetJourneyMissionState(FName MissionId) const;
 
@@ -59,15 +62,28 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Learning Journey")
     bool SaveJourneyProgress() const;
 
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Mathematics")
     bool RecordMeasurement(float MeasuredSpanCm);
 
     /** Legacy source helper retained for M2.1 compatibility; child UI uses the interactive measurement component in M2.2. */
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Mathematics")
     bool RecordActiveGeometryMeasurement();
 
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions")
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Mathematics")
     bool RecordStructureSpan(float StructureSpanCm);
+
+    /** Mission-side M3.3 entry point for stable biome observation evidence. */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Science")
+    bool RecordObservationEvidence(FName ObservationId);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Science")
+    bool IsObservationRequired(FName ObservationId) const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Science")
+    TArray<FName> GetRequiredObservationIds() const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Science")
+    int32 GetRecordedObservationCount() const { return Progress.GetRecordedObservationCount(); }
 
     void RegisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);
     void UnregisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);

@@ -219,6 +219,15 @@ void UWMBuildHUDWidget::RefreshStatus()
                     LOCTEXT("MissionComplete", "{0}: mission complete — choose Next mission to continue."),
                     MissionIdText));
             }
+            else if (Missions->GetActiveEvaluator() == FName(TEXT("observe-ecosystem")))
+            {
+                const int32 RequiredCount = Missions->GetRequiredObservationIds().Num();
+                const int32 RecordedCount = Missions->GetRecordedObservationCount();
+                MissionStatusText->SetText(FText::Format(
+                    LOCTEXT("ScienceObserveProgress", "Rainforest mission — observe ecosystem clues: {0}/{1}. Look carefully, then tap Observe."),
+                    FText::AsNumber(RecordedCount),
+                    FText::AsNumber(RequiredCount)));
+            }
             else if (!MissionMeasurementComponent.IsValid())
             {
                 MissionStatusText->SetText(LOCTEXT("MissionMeasurementUnavailable", "Mission measurement tools are unavailable."));

@@ -14,6 +14,7 @@ on:
       - 'docs/m2-3-mission-progression.md'
       - 'docs/m3-1-biome-runtime-exploration.md'
       - 'docs/m3-2-world-interaction.md'
+      - 'docs/m3-3-science-mission-runtime.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
@@ -30,6 +31,7 @@ on:
       - 'scripts/validate-m2-3-mission-progression.py'
       - 'scripts/validate-m3-1-biome-runtime.py'
       - 'scripts/validate-m3-2-world-interaction.py'
+      - 'scripts/validate-m3-3-science-mission-runtime.py'
       - '.github/workflows/unreal-ci.yml'
   push:
     branches:
@@ -46,6 +48,7 @@ on:
       - 'docs/m2-3-mission-progression.md'
       - 'docs/m3-1-biome-runtime-exploration.md'
       - 'docs/m3-2-world-interaction.md'
+      - 'docs/m3-3-science-mission-runtime.md'
       - 'scripts/**'
   workflow_dispatch:
 
@@ -85,6 +88,8 @@ jobs:
         run: python scripts/validate-m3-1-biome-runtime.py
       - name: Validate M3.2 World Interaction
         run: python scripts/validate-m3-2-world-interaction.py
+      - name: Validate M3.3 Science Mission Runtime
+        run: python scripts/validate-m3-3-science-mission-runtime.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
