@@ -33,6 +33,7 @@ public:
 private:
     FName ResolvePlatformDefaultProfileId() const;
     bool ApplyAllowlistedScalability(const FWMScalabilityProfile& Scalability) const;
+    bool ApplyVisualQualityTier(FName Tier) const;
 
     FWMPerformanceProfileCatalog Catalog;
     FName ActiveProfileId;
