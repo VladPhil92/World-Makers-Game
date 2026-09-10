@@ -19,7 +19,10 @@ REQUIRED_FILES = (
     "game/Source/WorldMakers/Performance/WMPerformanceProfileSubsystem.cpp",
     "game/Source/WorldMakers/Performance/WMPerformanceCaptureSubsystem.h",
     "game/Source/WorldMakers/Performance/WMPerformanceCaptureSubsystem.cpp",
+    "game/Source/WorldMakers/Environment/WMCaribbeanRainforestPrototype.h",
+    "game/Source/WorldMakers/Environment/WMCaribbeanRainforestPrototype.cpp",
     "game/Source/WorldMakers/Private/Tests/WMPerformanceProfileTests.cpp",
+    "game/Config/DefaultGame.ini",
     "docs/m3-7-tablet-performance.md",
 )
 
@@ -136,9 +139,28 @@ def main() -> None:
         "performance.tablet.medium",
         "performance.desktop.reference",
         "PLATFORM_ANDROID || PLATFORM_IOS",
+        "UWMVisualProfileSettings",
+        "EWMVisualQualityTier::Low",
+        "EWMVisualQualityTier::Mid",
+        "EWMVisualQualityTier::High",
+        "RefreshFromVisualProfile",
     ):
         require(token in profile_cpp, f"Profile runtime missing contract token: {token}")
     require("Exec(" not in profile_cpp and "ConsoleCommand(" not in profile_cpp, "Scalability profiles must not execute arbitrary console commands")
+
+    rainforest_h = read("game/Source/WorldMakers/Environment/WMCaribbeanRainforestPrototype.h")
+    rainforest_cpp = read("game/Source/WorldMakers/Environment/WMCaribbeanRainforestPrototype.cpp")
+    require("RefreshFromVisualProfile" in rainforest_h and "RefreshFromVisualProfile" in rainforest_cpp, "Rainforest prototype must support hot visual-budget refresh")
+    require("bUseProfileDefaultQuality" in rainforest_cpp and "Profile->DefaultQualityTier" in rainforest_cpp, "Rainforest density must remain driven by the selected visual profile")
+
+    default_game = read("game/Config/DefaultGame.ini")
+    require('+DirectoriesToAlwaysStageAsNonUFS=(Path="WorldMakers/Performance")' in default_game, "Performance profile JSON must be staged into packaged builds")
+    for expected in (
+        "LowBudget=(TargetFPS=30",
+        "MidBudget=(TargetFPS=30",
+        "HighBudget=(TargetFPS=60",
+    ):
+        require(expected in default_game, f"Existing rainforest visual budget must remain aligned with performance tiers: {expected}")
 
     capture_h = read("game/Source/WorldMakers/Performance/WMPerformanceCaptureSubsystem.h")
     capture_cpp = read("game/Source/WorldMakers/Performance/WMPerformanceCaptureSubsystem.cpp")
@@ -156,7 +178,7 @@ def main() -> None:
         "GetPlacedPieces().Num()",
         "GetInteractionTargetCount()",
         "GetActionTargetCount()",
-        "SavedDir",
+        "ProjectSavedDir",
         "WorldMakers/Performance",
     ):
         require(token in capture_cpp, f"Capture implementation missing source contract: {token}")
@@ -197,7 +219,7 @@ def main() -> None:
     for boundary in ("issue #9", "p95", "pii", "not claims", "representative tablets", "m3.8"):
         require(boundary in docs, f"M3.7 documentation boundary missing: {boundary}")
 
-    print("M3.7 tablet performance source contract validated: tiered budgets, fixed scalability allowlist, privacy-safe local capture, evidence wiring and CI gates are present.")
+    print("M3.7 tablet performance source contract validated: tiered budgets, visual-density synchronization, packaged profile data, fixed scalability allowlist, privacy-safe local capture, evidence wiring and CI gates are present.")
 
 
 if __name__ == "__main__":
