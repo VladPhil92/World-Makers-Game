@@ -42,12 +42,32 @@ struct WORLDMAKERS_API FWMLearningEvidenceRecord
 };
 
 USTRUCT(BlueprintType)
+struct WORLDMAKERS_API FWMObservationEvidenceRequirement
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
+    FName ObservationId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
+    FName EvidenceEventId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
+    FName ObjectiveId;
+
+    bool IsSane() const;
+};
+
+USTRUCT(BlueprintType)
 struct WORLDMAKERS_API FWMMissionRuntimeDefinition
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     FName MissionId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
+    FName Evaluator;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     TArray<FName> LearningObjectiveIds;
@@ -58,11 +78,14 @@ struct WORLDMAKERS_API FWMMissionRuntimeDefinition
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     TArray<FName> PrerequisiteMissionIds;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Mathematics")
     float TargetSpanCm = 0.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Mathematics")
     float ToleranceCm = 0.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
+    TArray<FWMObservationEvidenceRequirement> ObservationRequirements;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     TArray<FName> RewardIds;
@@ -71,6 +94,9 @@ struct WORLDMAKERS_API FWMMissionRuntimeDefinition
     bool bPrototypeOnly = true;
 
     bool IsSane() const;
+    bool IsMeasureAndBuild() const;
+    bool IsObserveEcosystem() const;
+    const FWMObservationEvidenceRequirement* FindObservationRequirement(FName ObservationId) const;
     static bool TryParseJson(const FString& Json, FWMMissionRuntimeDefinition& OutDefinition, FString& OutError);
 };
 
@@ -107,11 +133,14 @@ struct WORLDMAKERS_API FWMMissionProgressModel
     int32 NextEvidenceSequence = 1;
     TArray<FWMLearningEvidenceRecord> Evidence;
     TArray<FName> EarnedRewardIds;
+    TSet<FName> RecordedObservationIds;
 
     bool Begin(const FWMMissionRuntimeDefinition& InDefinition);
     bool RecordMeasurement(float MeasuredSpanCm);
     bool RecordStructureSpan(float StructureSpanCm);
+    bool RecordObservation(FName ObservationId);
     float GetProgressFraction() const;
+    int32 GetRecordedObservationCount() const { return RecordedObservationIds.Num(); }
 };
 
 /** Persistent journey state contains stable IDs only; no child PII or free text. */

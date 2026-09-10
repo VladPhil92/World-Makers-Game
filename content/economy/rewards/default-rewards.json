@@ -50,5 +50,23 @@
     "convertibleToMoney": false,
     "expiresAt": null,
     "streakRequired": false
+  },
+  {
+    "rewardId": "reward.science.rainforest-observer-badge-01",
+    "type": "mastery_badge",
+    "trigger": {
+      "event": "mission.completed",
+      "missionId": "mission.science.rainforest-ecosystem-01",
+      "objectiveId": "science.ecosystems.observe-interdependence"
+    },
+    "payload": {
+      "badgeId": "badge.rainforest-observer.prototype"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
   }
 ]

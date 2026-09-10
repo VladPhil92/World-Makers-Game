@@ -30,11 +30,25 @@
     "runtime": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["evaluator", "targetSpanCm", "toleranceCm", "rewardIds", "prototypeOnly"],
+      "required": ["evaluator", "rewardIds", "prototypeOnly"],
       "properties": {
-        "evaluator": { "enum": ["measure-and-build"] },
+        "evaluator": { "enum": ["measure-and-build", "observe-ecosystem"] },
         "targetSpanCm": { "type": "number", "minimum": 50, "maximum": 5000 },
         "toleranceCm": { "type": "number", "minimum": 0, "maximum": 500 },
+        "observationRequirements": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["observationId", "evidenceEventId", "objectiveId"],
+            "properties": {
+              "observationId": { "type": "string", "pattern": "^observation\\.[a-z0-9._-]+$" },
+              "evidenceEventId": { "type": "string" },
+              "objectiveId": { "type": "string" }
+            }
+          }
+        },
         "rewardIds": {
           "type": "array",
           "minItems": 1,

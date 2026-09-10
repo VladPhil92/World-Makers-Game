@@ -21,7 +21,9 @@
       "centerCm": [1500, 1000, 0],
       "extentCm": [450, 450, 300],
       "buildAllowed": false,
-      "missionIds": []
+      "missionIds": [
+        "mission.science.rainforest-ecosystem-01"
+      ]
     },
     {
       "id": "zone.rainforest.understory-west",
@@ -29,7 +31,9 @@
       "centerCm": [-1500, 650, 0],
       "extentCm": [500, 500, 300],
       "buildAllowed": false,
-      "missionIds": []
+      "missionIds": [
+        "mission.science.rainforest-ecosystem-01"
+      ]
     },
     {
       "id": "zone.rainforest.water-edge",
@@ -37,7 +41,9 @@
       "centerCm": [0, -2450, 0],
       "extentCm": [2400, 350, 250],
       "buildAllowed": false,
-      "missionIds": []
+      "missionIds": [
+        "mission.science.rainforest-ecosystem-01"
+      ]
     }
   ],
   "pointsOfInterest": [

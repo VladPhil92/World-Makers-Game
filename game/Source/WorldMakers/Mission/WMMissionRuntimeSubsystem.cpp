@@ -119,7 +119,10 @@ bool UWMMissionRuntimeSubsystem::ActivateMission(const FName MissionId)
     LastSavedActiveMissionId = MissionId;
     if (ActiveGeometry.IsValid())
     {
-        ActiveGeometry->ConfigureTargetSpanCm(Definition->TargetSpanCm);
+        if (Definition->IsMeasureAndBuild())
+        {
+            ActiveGeometry->ConfigureTargetSpanCm(Definition->TargetSpanCm);
+        }
         ActiveGeometry->ClearInteractiveMeasurement();
     }
     SaveJourneyProgress();
@@ -319,7 +322,7 @@ bool UWMMissionRuntimeSubsystem::RecordMeasurement(const float MeasuredSpanCm)
 
 bool UWMMissionRuntimeSubsystem::RecordActiveGeometryMeasurement()
 {
-    if (!ActiveGeometry.IsValid() || Progress.State != EWMMissionRuntimeState::Active)
+    if (!ActiveGeometry.IsValid() || Progress.State != EWMMissionRuntimeState::Active || !Progress.Definition.IsMeasureAndBuild())
     {
         return false;
     }
@@ -329,6 +332,38 @@ bool UWMMissionRuntimeSubsystem::RecordActiveGeometryMeasurement()
 bool UWMMissionRuntimeSubsystem::RecordStructureSpan(const float StructureSpanCm)
 {
     const bool bRecorded = Progress.RecordStructureSpan(StructureSpanCm);
+    if (bRecorded && Progress.State == EWMMissionRuntimeState::Completed)
+    {
+        FinalizeMissionCompletion();
+    }
+    return bRecorded;
+}
+
+bool UWMMissionRuntimeSubsystem::IsObservationRequired(const FName ObservationId) const
+{
+    return Progress.State == EWMMissionRuntimeState::Active && Progress.Definition.IsObserveEcosystem() &&
+        Progress.Definition.FindObservationRequirement(ObservationId) != nullptr;
+}
+
+TArray<FName> UWMMissionRuntimeSubsystem::GetRequiredObservationIds() const
+{
+    TArray<FName> Result;
+    if (!Progress.Definition.IsObserveEcosystem()) return Result;
+    Result.Reserve(Progress.Definition.ObservationRequirements.Num());
+    for (const FWMObservationEvidenceRequirement& Requirement : Progress.Definition.ObservationRequirements)
+    {
+        Result.Add(Requirement.ObservationId);
+    }
+    Result.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString() < B.ToString();
+    });
+    return Result;
+}
+
+bool UWMMissionRuntimeSubsystem::RecordObservationEvidence(const FName ObservationId)
+{
+    const bool bRecorded = Progress.RecordObservation(ObservationId);
     if (bRecorded && Progress.State == EWMMissionRuntimeState::Completed)
     {
         FinalizeMissionCompletion();
@@ -349,7 +384,7 @@ void UWMMissionRuntimeSubsystem::RegisterMissionGeometry(AWMMissionGeometryActor
     if (IsValid(GeometryActor))
     {
         ActiveGeometry = GeometryActor;
-        if (Progress.State != EWMMissionRuntimeState::Inactive && Progress.Definition.TargetSpanCm > 0.0f)
+        if (Progress.State != EWMMissionRuntimeState::Inactive && Progress.Definition.IsMeasureAndBuild() && Progress.Definition.TargetSpanCm > 0.0f)
         {
             GeometryActor->ConfigureTargetSpanCm(Progress.Definition.TargetSpanCm);
         }
