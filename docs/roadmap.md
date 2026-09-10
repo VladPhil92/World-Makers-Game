@@ -62,6 +62,15 @@ M4.2 target outcomes:
 
 Purpose: transform the existing mission foundation into a multidisciplinary adventure system with a high conceptual ceiling and low interaction friction.
 
+Current source progression:
+
+- M5.1 — curriculum architecture, 11 first-class learning streams and fantastic mission design contract: source-complete in PR #47.
+- M5.2 — composable Mission Runtime v2: implemented in source with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
+- M5.3 — Science Simulation Core: next.
+- M5.4 — Language, Literature and Thought Runtime: pending.
+- M5.5 — First Fantastic Adventure Pack: pending.
+- M5.6 — Cross-disciplinary epic adventures: pending.
+
 Core learning streams:
 
 1. Mathematics
@@ -88,7 +97,7 @@ History and culture remain cross-curricular context layers.
 
 ### M5.2 — Composable Mission Runtime v2
 
-Replace subject-specific evaluator growth with reusable evidence primitives:
+Reusable evidence primitives:
 
 - construct-to-constraint;
 - observe-and-classify;
@@ -101,7 +110,20 @@ Replace subject-specific evaluator growth with reusable evidence primitives:
 - reason-through-dilemma;
 - argue-and-revise.
 
+Implementation status:
+
+- `composable` evaluator added without removing legacy M2/M3 evaluators;
+- each requirement maps a primitive, stable evidence event, objective and bounded `requiredCount`;
+- progress is calculated across required evidence units;
+- exact primitive/event pairs are enforced;
+- unsupported primitives and over-count evidence are rejected;
+- minimized evidence records include primitive attribution but no child-authored free text;
+- Blueprint-facing subsystem APIs expose evidence submission and requirement introspection;
+- source fixture demonstrates physics + geometry + philosophy composition without entering the packaged playable catalog.
+
 Target: one mission may compose several primitives and produce evidence for multiple learning objectives without creating a separate hard-coded runtime for every subject.
+
+See `docs/m5-2-composable-mission-runtime.md`.
 
 ### M5.3 — Science Simulation Core
 
@@ -162,8 +184,8 @@ See `docs/fantastic-learning-universe.md` and `content/learning-objectives/core-
 
 ## Suggested GitHub issue titles
 
-1. `M5.2: Build composable Mission Runtime v2 evidence primitives`
-2. `M5.3: Implement science simulation core for chemistry, physics, biology and ecology`
-3. `M5.4: Implement bilingual language, literature, ethics and philosophy mission runtime`
-4. `M5.5: Build first fantastic multidisciplinary adventure pack`
+1. `M5.3: Implement science simulation core for chemistry, physics, biology and ecology`
+2. `M5.4: Implement bilingual language, literature, ethics and philosophy mission runtime`
+3. `M5.5: Build first fantastic multidisciplinary adventure pack`
+4. `M5.6: Build cross-disciplinary epic adventure framework`
 5. `M6: Implement parent-approved private multiplayer invitation flow`
