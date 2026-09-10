@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "device.ipados.reference-01",
+  "status": "pending",
+  "testedAtUtc": null,
+  "platform": "iPadOS",
+  "hardwareClass": "reference-tablet",
+  "deviceModel": "Representative iPad model",
+  "osVersion": "[OS_VERSION]",
+  "unrealVersion": "5.8.2",
+  "repositoryCommit": "0000000000000000000000000000000000000000",
+  "performanceProfileId": "performance.tablet.medium",
+  "captureFile": "performance/capture-performance-tablet-medium.json",
+  "captureSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "routeStatus": "passed"
+}
