@@ -28,6 +28,9 @@ Current source progression:
 - M3.3 — multi-evaluator mission runtime + first rainforest science mission: source-complete pending native UE certification.
 - M3.4 — reactive ecosystem state and visible consequences: source-complete pending native UE certification.
 - M3.5 — spatial ecological building interventions + persistent creative unlocks: source-complete pending native UE certification.
+- M3.6 — child journey UX: next.
+- M3.7 — tablet performance profiles and capture.
+- M3.8 — vertical-slice certification.
 - M3.6 — child journey UX: source-complete pending native UE certification.
 - M3.7 — tablet performance profiles and capture: source-complete pending representative-device evidence.
 - M3.8 — vertical-slice certification infrastructure: source-complete; runtime/device certification blocked by Issue #9 and external evidence.
