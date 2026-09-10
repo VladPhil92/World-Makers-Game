@@ -26,6 +26,9 @@ bool FWMVisualProfileBudgetTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("High budget is sane"), High.IsSane());
     TestTrue(TEXT("Tree density scales monotonically"), Low.TreeClusters <= Mid.TreeClusters && Mid.TreeClusters <= High.TreeClusters);
     TestTrue(TEXT("Rock density scales monotonically"), Low.RockClusters <= Mid.RockClusters && Mid.RockClusters <= High.RockClusters);
+    TestTrue(TEXT("Atmosphere look is sane"), Profile->Atmosphere.IsSane());
+    TestTrue(TEXT("Camera FOV stays tablet-readable"), Profile->Atmosphere.CameraFOVDegrees >= 60.0f && Profile->Atmosphere.CameraFOVDegrees <= 90.0f);
+    TestTrue(TEXT("Fog remains restrained for gameplay readability"), Profile->Atmosphere.FogDensity <= 0.05f);
     TestEqual(TEXT("Default profile name is explicit"), Profile->ProfileName, FString(TEXT("CaribbeanRainforestPrototype")));
     return true;
 }
