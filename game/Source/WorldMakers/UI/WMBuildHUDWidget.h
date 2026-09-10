@@ -10,6 +10,7 @@ class UHorizontalBox;
 class UTextBlock;
 class UWMBuildingComponent;
 class UWMMissionMeasurementComponent;
+class UWMInteractionComponent;
 
 UCLASS()
 class WORLDMAKERS_API UWMBuildHUDWidget : public UUserWidget
@@ -19,6 +20,7 @@ class WORLDMAKERS_API UWMBuildHUDWidget : public UUserWidget
 public:
     void BindBuildingComponent(UWMBuildingComponent* InBuildingComponent);
     void BindMissionMeasurementComponent(UWMMissionMeasurementComponent* InMissionMeasurementComponent);
+    void BindInteractionComponent(UWMInteractionComponent* InInteractionComponent);
 
 protected:
     virtual void NativeOnInitialized() override;
@@ -27,6 +29,7 @@ protected:
 private:
     UButton* CreateActionButton(UHorizontalBox* Row, FName WidgetName, const FText& Label);
     FText ResolveSelectedPieceLabel() const;
+    FText ResolveInteractionPromptLabel() const;
     void RefreshStatus();
 
     UFUNCTION()
@@ -54,6 +57,9 @@ private:
     void HandleNextMission();
 
     UFUNCTION()
+    void HandleObserve();
+
+    UFUNCTION()
     void HandleMove();
 
     UFUNCTION()
@@ -70,13 +76,20 @@ private:
 
     TWeakObjectPtr<UWMBuildingComponent> BuildingComponent;
     TWeakObjectPtr<UWMMissionMeasurementComponent> MissionMeasurementComponent;
+    TWeakObjectPtr<UWMInteractionComponent> InteractionComponent;
     FTimerHandle StatusRefreshTimer;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTextBlock> InteractionStatusText;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> MissionStatusText;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> StatusText;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UButton> ObserveButton;
 
     UPROPERTY(Transient)
     TObjectPtr<UButton> ConfirmButton;

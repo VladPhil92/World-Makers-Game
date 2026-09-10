@@ -69,8 +69,21 @@ bool FWMBiomeZoneDefinition::ContainsWorldLocation(const FVector& WorldLocation,
 
 bool FWMPointOfInterestDefinition::IsSane() const
 {
-    return !PointId.IsNone() && !ZoneId.IsNone() && !Category.IsNone() && !DiscoveryId.IsNone() &&
+    const bool bBaseSane = !PointId.IsNone() && !ZoneId.IsNone() && !Category.IsNone() && !DiscoveryId.IsNone() &&
         !LocationCm.ContainsNaN() && FMath::IsFinite(DiscoveryRadiusCm) && DiscoveryRadiusCm >= 50.0f && DiscoveryRadiusCm <= 2000.0f;
+    if (!bBaseSane)
+    {
+        return false;
+    }
+
+    if (!bRequiresInteraction)
+    {
+        return true;
+    }
+
+    return !InteractionMode.IsNone() && !PromptKey.IsNone() && !ObservationId.IsNone() &&
+        FMath::IsFinite(InteractionRadiusCm) && InteractionRadiusCm >= 100.0f && InteractionRadiusCm <= 1500.0f &&
+        FMath::IsFinite(FocusRadiusCm) && FocusRadiusCm >= 20.0f && FocusRadiusCm <= 400.0f;
 }
 
 bool FWMPointOfInterestDefinition::IsWithinDiscoveryRange(const FVector& WorldLocation, const FVector& BiomeOriginCm) const
@@ -80,6 +93,15 @@ bool FWMPointOfInterestDefinition::IsWithinDiscoveryRange(const FVector& WorldLo
         return false;
     }
     return FVector::DistSquared(WorldLocation, BiomeOriginCm + LocationCm) <= FMath::Square(DiscoveryRadiusCm);
+}
+
+bool FWMPointOfInterestDefinition::IsWithinInteractionRange(const FVector& WorldLocation, const FVector& BiomeOriginCm) const
+{
+    if (!IsSane() || !bRequiresInteraction || WorldLocation.ContainsNaN() || BiomeOriginCm.ContainsNaN())
+    {
+        return false;
+    }
+    return FVector::DistSquared(WorldLocation, BiomeOriginCm + LocationCm) <= FMath::Square(InteractionRadiusCm);
 }
 
 bool FWMBiomeRuntimeDefinition::IsSane() const
@@ -101,14 +123,23 @@ bool FWMBiomeRuntimeDefinition::IsSane() const
 
     TSet<FName> PointIds;
     TSet<FName> DiscoveryIds;
+    TSet<FName> ObservationIds;
     for (const FWMPointOfInterestDefinition& Point : PointsOfInterest)
     {
         if (!Point.IsSane() || !ZoneIds.Contains(Point.ZoneId) || PointIds.Contains(Point.PointId) || DiscoveryIds.Contains(Point.DiscoveryId))
         {
             return false;
         }
+        if (Point.bRequiresInteraction && ObservationIds.Contains(Point.ObservationId))
+        {
+            return false;
+        }
         PointIds.Add(Point.PointId);
         DiscoveryIds.Add(Point.DiscoveryId);
+        if (Point.bRequiresInteraction)
+        {
+            ObservationIds.Add(Point.ObservationId);
+        }
     }
     return true;
 }
@@ -123,6 +154,14 @@ const FWMBiomeZoneDefinition* FWMBiomeRuntimeDefinition::FindZoneAtWorldLocation
         }
     }
     return nullptr;
+}
+
+const FWMPointOfInterestDefinition* FWMBiomeRuntimeDefinition::FindPointOfInterest(const FName PointId) const
+{
+    return PointsOfInterest.FindByPredicate([PointId](const FWMPointOfInterestDefinition& Point)
+    {
+        return Point.PointId == PointId;
+    });
 }
 
 TArray<FName> FWMBiomeRuntimeDefinition::FindNearbyPointOfInterestIds(const FVector& WorldLocation) const
@@ -238,6 +277,37 @@ bool FWMBiomeRuntimeDefinition::TryParseJson(const FString& Json, FWMBiomeRuntim
         Point.Category = FName(*CategoryString);
         Point.DiscoveryId = FName(*DiscoveryIdString);
         Point.DiscoveryRadiusCm = static_cast<float>(RadiusValue);
+
+        if (PointObject->HasField(TEXT("requiresInteraction")) &&
+            !PointObject->TryGetBoolField(TEXT("requiresInteraction"), Point.bRequiresInteraction))
+        {
+            OutError = TEXT("POI requiresInteraction must be boolean.");
+            return false;
+        }
+
+        if (Point.bRequiresInteraction)
+        {
+            FString InteractionModeString;
+            FString PromptKeyString;
+            FString ObservationIdString;
+            double InteractionRadiusValue = 0.0;
+            double FocusRadiusValue = 0.0;
+            if (!PointObject->TryGetStringField(TEXT("interactionMode"), InteractionModeString) || InteractionModeString.IsEmpty() ||
+                !PointObject->TryGetStringField(TEXT("promptKey"), PromptKeyString) || PromptKeyString.IsEmpty() ||
+                !PointObject->TryGetStringField(TEXT("observationId"), ObservationIdString) || ObservationIdString.IsEmpty() ||
+                !PointObject->TryGetNumberField(TEXT("interactionRadiusCm"), InteractionRadiusValue) ||
+                !PointObject->TryGetNumberField(TEXT("focusRadiusCm"), FocusRadiusValue))
+            {
+                OutError = TEXT("Deliberate POI interaction metadata is invalid.");
+                return false;
+            }
+            Point.InteractionMode = FName(*InteractionModeString);
+            Point.PromptKey = FName(*PromptKeyString);
+            Point.ObservationId = FName(*ObservationIdString);
+            Point.InteractionRadiusCm = static_cast<float>(InteractionRadiusValue);
+            Point.FocusRadiusCm = static_cast<float>(FocusRadiusValue);
+        }
+
         Candidate.PointsOfInterest.Add(MoveTemp(Point));
     }
 
@@ -277,7 +347,33 @@ TArray<FName> FWMExplorationProgressModel::GetDiscoveredIds() const
     return Result;
 }
 
+bool FWMExplorationProgressModel::RegisterObservation(const FName ObservationId)
+{
+    if (ObservationId.IsNone() || ObservedIds.Contains(ObservationId))
+    {
+        return false;
+    }
+    ObservedIds.Add(ObservationId);
+    return true;
+}
+
+bool FWMExplorationProgressModel::HasObserved(const FName ObservationId) const
+{
+    return !ObservationId.IsNone() && ObservedIds.Contains(ObservationId);
+}
+
+TArray<FName> FWMExplorationProgressModel::GetObservedIds() const
+{
+    TArray<FName> Result = ObservedIds.Array();
+    Result.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString() < B.ToString();
+    });
+    return Result;
+}
+
 void FWMExplorationProgressModel::Reset()
 {
     DiscoveredIds.Reset();
+    ObservedIds.Reset();
 }

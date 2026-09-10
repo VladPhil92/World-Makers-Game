@@ -54,7 +54,13 @@
         "category": {"type": "string"},
         "locationCm": {"$ref": "#/$defs/vector3"},
         "discoveryRadiusCm": {"type": "number", "minimum": 50, "maximum": 2000},
-        "discoveryId": {"type": "string", "pattern": "^discovery\\.[a-z0-9.-]+$"}
+        "discoveryId": {"type": "string", "pattern": "^discovery\\.[a-z0-9.-]+$"},
+        "requiresInteraction": {"type": "boolean"},
+        "interactionMode": {"type": "string", "enum": ["observe", "inspect"]},
+        "interactionRadiusCm": {"type": "number", "minimum": 100, "maximum": 1500},
+        "focusRadiusCm": {"type": "number", "minimum": 20, "maximum": 400},
+        "promptKey": {"type": "string", "pattern": "^interaction\\.[a-z0-9.-]+$"},
+        "observationId": {"type": "string", "pattern": "^observation\\.[a-z0-9.-]+$"}
       }
     }
   }

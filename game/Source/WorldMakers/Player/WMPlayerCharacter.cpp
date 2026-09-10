@@ -4,6 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Environment/WMExplorationComponent.h"
+#include "Environment/WMInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/PlayerController.h"
@@ -93,6 +94,7 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     BuildingComponent = CreateDefaultSubobject<UWMBuildingComponent>(TEXT("BuildingComponent"));
     MissionMeasurementComponent = CreateDefaultSubobject<UWMMissionMeasurementComponent>(TEXT("MissionMeasurementComponent"));
     ExplorationComponent = CreateDefaultSubobject<UWMExplorationComponent>(TEXT("ExplorationComponent"));
+    InteractionComponent = CreateDefaultSubobject<UWMInteractionComponent>(TEXT("InteractionComponent"));
 }
 
 void AWMPlayerCharacter::BeginPlay()
@@ -109,7 +111,7 @@ void AWMPlayerCharacter::PawnClientRestart()
 
 void AWMPlayerCharacter::EnsureBuildHUD()
 {
-    if (BuildHUD || !IsLocallyControlled() || !BuildingComponent || !MissionMeasurementComponent)
+    if (BuildHUD || !IsLocallyControlled() || !BuildingComponent || !MissionMeasurementComponent || !InteractionComponent)
     {
         return;
     }
@@ -128,6 +130,7 @@ void AWMPlayerCharacter::EnsureBuildHUD()
 
     BuildHUD->BindBuildingComponent(BuildingComponent);
     BuildHUD->BindMissionMeasurementComponent(MissionMeasurementComponent);
+    BuildHUD->BindInteractionComponent(InteractionComponent);
     BuildHUD->AddToPlayerScreen(10);
 
     FInputModeGameAndUI InputMode;
@@ -160,6 +163,7 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction(TEXT("MeasureMission"), IE_Pressed, this, &AWMPlayerCharacter::CaptureMissionMeasurementPoint);
     PlayerInputComponent->BindAction(TEXT("ResetMissionMeasurement"), IE_Pressed, this, &AWMPlayerCharacter::ResetMissionMeasurement);
     PlayerInputComponent->BindAction(TEXT("CycleMission"), IE_Pressed, this, &AWMPlayerCharacter::CycleMission);
+    PlayerInputComponent->BindAction(TEXT("ObserveWorld"), IE_Pressed, this, &AWMPlayerCharacter::ObserveWorld);
 
     PlayerInputComponent->BindTouch(IE_Pressed, this, &AWMPlayerCharacter::HandleTouchPressed);
     PlayerInputComponent->BindTouch(IE_Repeat, this, &AWMPlayerCharacter::HandleTouchRepeat);
@@ -195,6 +199,7 @@ void AWMPlayerCharacter::SavePrototypeWorld() { if (BuildingComponent) BuildingC
 void AWMPlayerCharacter::LoadPrototypeWorld() { if (BuildingComponent) BuildingComponent->LoadWorld(); }
 void AWMPlayerCharacter::CaptureMissionMeasurementPoint() { if (MissionMeasurementComponent) MissionMeasurementComponent->CapturePointFromView(); }
 void AWMPlayerCharacter::ResetMissionMeasurement() { if (MissionMeasurementComponent) MissionMeasurementComponent->ResetMeasurement(); }
+void AWMPlayerCharacter::ObserveWorld() { if (InteractionComponent) InteractionComponent->TryInteractFocused(); }
 
 void AWMPlayerCharacter::CycleMission()
 {
