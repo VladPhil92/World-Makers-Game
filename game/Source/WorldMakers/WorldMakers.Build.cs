@@ -13,6 +13,7 @@ public class WorldMakers : ModuleRules
             "Engine",
             "InputCore",
             "PhysicsCore",
+            "ProceduralMeshComponent",
             "UMG"
         });
 

@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "environment.caribbean-rainforest.v3",
+  "seed": 17062026,
+  "renderPath": "procedural-environment-art",
+  "collisionPath": "legacy-hidden-proxy",
+  "productionBoundary": "procedural-source-art-not-final-dcc-assets",
+  "families": [
+    {
+      "id": "ground",
+      "surfaceRole": "ground-earth",
+      "geometry": "irregular-ground-disc",
+      "variantCount": 1,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Ground"
+    },
+    {
+      "id": "terrain",
+      "surfaceRole": "terrain",
+      "geometry": "faceted-ellipsoid-mounds",
+      "variantCount": 3,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Terrain"
+    },
+    {
+      "id": "trees",
+      "surfaceRole": "bark+foliage",
+      "geometry": "tapered-trunks+buttress-roots+faceted-canopies",
+      "variantCount": 3,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Trees"
+    },
+    {
+      "id": "understory",
+      "surfaceRole": "foliage",
+      "geometry": "radial-leaf-clusters",
+      "variantCount": 3,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Understory"
+    },
+    {
+      "id": "rocks",
+      "surfaceRole": "stone",
+      "geometry": "faceted-boulders",
+      "variantCount": 4,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Rocks"
+    },
+    {
+      "id": "water-edge",
+      "surfaceRole": "water",
+      "geometry": "sinuous-river-strip",
+      "variantCount": 1,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Water"
+    },
+    {
+      "id": "hero-ceiba",
+      "surfaceRole": "bark+foliage",
+      "geometry": "landmark-tapered-trunk+six-buttress-roots+three-crown-volumes",
+      "variantCount": 1,
+      "authoredTarget": "/Game/WorldMakers/Environment/CaribbeanRainforest/Landmarks"
+    }
+  ],
+  "qualityTiers": {
+    "low": {
+      "facetSegments": 5,
+      "groundSegments": 18,
+      "riverSegments": 10,
+      "leafCountPerCluster": 4
+    },
+    "mid": {
+      "facetSegments": 6,
+      "groundSegments": 26,
+      "riverSegments": 16,
+      "leafCountPerCluster": 5
+    },
+    "high": {
+      "facetSegments": 8,
+      "groundSegments": 34,
+      "riverSegments": 22,
+      "leafCountPerCluster": 7
+    }
+  },
+  "composition": {
+    "quietBuildClearing": true,
+    "densityIncreasesTowardPerimeter": true,
+    "waterBoundaryOnOneSide": true,
+    "heroLandmarkCount": 1
+  },
+  "handoff": {
+    "replaceProceduralWithAuthoredMeshesInV3ArtPass": true,
+    "preserveSurfaceRolesFromV2": true,
+    "preserveGameplayCollisionSemantics": true,
+    "requiredForArtCertification": [
+      "authored-static-meshes",
+      "lod-or-hlod-plan",
+      "cull-distances",
+      "texture-budget-proof",
+      "representative-device-capture"
+    ]
+  }
+}
