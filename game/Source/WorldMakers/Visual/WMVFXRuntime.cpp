@@ -15,7 +15,7 @@ namespace
 
 bool FWMVFXStyle::IsSane() const
 {
-    return Color.IsFinite() &&
+    return FMath::IsFinite(Color.R) && FMath::IsFinite(Color.G) && FMath::IsFinite(Color.B) && FMath::IsFinite(Color.A) &&
         FMath::IsFinite(BaseRadiusCm) && BaseRadiusCm >= 5.0f && BaseRadiusCm <= 500.0f &&
         FMath::IsFinite(TravelCm) && TravelCm >= 0.0f && TravelCm <= 800.0f &&
         FMath::IsFinite(PulseCycles) && PulseCycles >= 0.0f && PulseCycles <= 6.0f;
