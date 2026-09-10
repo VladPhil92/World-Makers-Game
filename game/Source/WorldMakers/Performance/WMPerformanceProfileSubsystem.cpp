@@ -1,9 +1,13 @@
 #include "Performance/WMPerformanceProfileSubsystem.h"
 
-#include "HAL/FileManager.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "EngineUtils.h"
+#include "Environment/WMCaribbeanRainforestPrototype.h"
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Visual/WMVisualProfileSettings.h"
 
 namespace
 {
@@ -51,6 +55,7 @@ bool UWMPerformanceProfileSubsystem::ApplyProfile(const FName ProfileId)
     const FWMPerformanceProfileDefinition* Profile = Catalog.FindProfile(ProfileId);
     if (!Profile || !Profile->IsSane()) return false;
     if (!ApplyAllowlistedScalability(Profile->Scalability)) return false;
+    if (!ApplyVisualQualityTier(Profile->Tier)) return false;
     ActiveProfileId = ProfileId;
     return true;
 }
@@ -103,6 +108,45 @@ bool UWMPerformanceProfileSubsystem::ApplyAllowlistedScalability(const FWMScalab
             return false;
         }
         Variable->Set(*Assignment.Value, ECVF_SetByGameSetting);
+    }
+    return true;
+}
+
+bool UWMPerformanceProfileSubsystem::ApplyVisualQualityTier(const FName Tier) const
+{
+    EWMVisualQualityTier VisualTier = EWMVisualQualityTier::Mid;
+    if (Tier == FName(TEXT("low")))
+    {
+        VisualTier = EWMVisualQualityTier::Low;
+    }
+    else if (Tier == FName(TEXT("medium")))
+    {
+        VisualTier = EWMVisualQualityTier::Mid;
+    }
+    else if (Tier == FName(TEXT("high")) || Tier == FName(TEXT("reference")))
+    {
+        VisualTier = EWMVisualQualityTier::High;
+    }
+    else
+    {
+        return false;
+    }
+
+    UWMVisualProfileSettings* VisualProfile = GetMutableDefault<UWMVisualProfileSettings>();
+    if (!VisualProfile)
+    {
+        return false;
+    }
+    VisualProfile->DefaultQualityTier = VisualTier;
+
+    UGameInstance* GameInstance = GetGameInstance();
+    UWorld* World = GameInstance ? GameInstance->GetWorld() : nullptr;
+    if (World)
+    {
+        for (TActorIterator<AWMCaribbeanRainforestPrototype> It(World); It; ++It)
+        {
+            It->RefreshFromVisualProfile();
+        }
     }
     return true;
 }
