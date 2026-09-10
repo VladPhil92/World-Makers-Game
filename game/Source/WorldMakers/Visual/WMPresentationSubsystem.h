@@ -21,7 +21,6 @@ public:
     virtual TStatId GetStatId() const override;
     virtual bool IsTickable() const override { return true; }
 
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Presentation")
     bool PulseCameraMode(EWMPresentationCameraMode Mode, float DurationSeconds = 0.8f, FName CueId = NAME_None);
 
     UFUNCTION(BlueprintCallable, Category = "World Makers|Presentation|Accessibility")
@@ -30,7 +29,6 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Presentation|Accessibility")
     bool IsReducedMotion() const { return bReducedMotion; }
 
-    UFUNCTION(BlueprintPure, Category = "World Makers|Presentation")
     EWMPresentationCameraMode GetActiveCameraMode() const { return ActiveProfile.Mode; }
 
 private:
