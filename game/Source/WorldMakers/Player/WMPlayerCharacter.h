@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UStaticMeshComponent;
 class UWMBuildingComponent;
 class UWMBuildHUDWidget;
+class UWMCharacterAnimationComponent;
 class UWMMissionMeasurementComponent;
 class UWMExplorationComponent;
 class UWMInteractionComponent;
@@ -133,6 +134,10 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
     TObjectPtr<UWMInteractionComponent> InteractionComponent;
 
+    /** V5 animation state/read-model bridge for both procedural art and the future production AnimBP. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Animation")
+    TObjectPtr<UWMCharacterAnimationComponent> CharacterAnimationComponent;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
     float TouchDragDeadZonePx = 24.0f;
 
@@ -144,6 +149,8 @@ private:
     void MoveRight(float Value);
     void Turn(float Value);
     void LookUp(float Value);
+    void StartJump();
+    void EndJump();
 
     void PlaceBuild();
     void RotateBuildClockwise();

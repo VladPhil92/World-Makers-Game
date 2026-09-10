@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "runtimeId": "animation.character.v1",
+  "profile": "ChildExplorerV1",
+  "movementAuthority": "CharacterMovementComponent",
+  "rootMotionDefault": false,
+  "locomotionStates": [
+    "locomotion.idle",
+    "locomotion.start",
+    "locomotion.walk",
+    "locomotion.run",
+    "locomotion.stop",
+    "locomotion.turn-in-place",
+    "locomotion.jump",
+    "locomotion.fall",
+    "locomotion.land"
+  ],
+  "interactionActions": [
+    {"id": "interaction.build-place", "defaultDurationSeconds": 0.36, "layer": "upper-body"},
+    {"id": "interaction.build-remove", "defaultDurationSeconds": 0.48, "layer": "upper-body"},
+    {"id": "interaction.build-move", "defaultDurationSeconds": 0.55, "layer": "upper-body"},
+    {"id": "interaction.measure", "defaultDurationSeconds": 0.60, "layer": "upper-body"},
+    {"id": "interaction.observe", "defaultDurationSeconds": 0.52, "layer": "upper-body-look"},
+    {"id": "interaction.inspect", "defaultDurationSeconds": 0.62, "layer": "upper-body-look"},
+    {"id": "interaction.pickup", "defaultDurationSeconds": 0.55, "layer": "upper-body"},
+    {"id": "interaction.science-manipulate", "defaultDurationSeconds": 0.72, "layer": "upper-body-precision"}
+  ],
+  "layering": {
+    "base": "locomotion-state-machine",
+    "additive": ["look-yaw-pitch", "upper-body-interaction", "landing-compression"],
+    "interactionDoesNotOwnMovement": true,
+    "locomotionContinuesDuringUpperBodyActions": true
+  },
+  "proceduralSourcePose": {
+    "enabled": true,
+    "purpose": "source-visible-motion-until-authored-clips-exist",
+    "drivenJoints": [
+      "root", "pelvis", "chest", "head",
+      "upperarm_l", "lowerarm_l", "hand_l",
+      "upperarm_r", "lowerarm_r", "hand_r",
+      "thigh_l", "calf_l", "foot_l",
+      "thigh_r", "calf_r", "foot_r"
+    ],
+    "poseBoundsRequired": true
+  },
+  "authoredTargets": {
+    "animationBlueprint": "/Game/WorldMakers/Characters/Player/ABP_WM_ChildExplorer",
+    "idle": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Idle",
+    "walk": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Walk",
+    "run": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Run",
+    "jump": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Jump",
+    "fall": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Fall",
+    "land": "/Game/WorldMakers/Characters/Player/Animations/A_WM_Child_Land",
+    "interactionMontageRoot": "/Game/WorldMakers/Characters/Player/Animations/Interactions",
+    "ikRig": "/Game/WorldMakers/Characters/Player/IKR_WM_ChildExplorer"
+  },
+  "animBPReadModel": [
+    "locomotionStateId",
+    "speedAlpha",
+    "isAirborne",
+    "stateAgeSeconds",
+    "aimYawDegrees",
+    "aimPitchDegrees",
+    "interactionActionId",
+    "interactionAlpha"
+  ],
+  "qualityTiers": {
+    "low": {"targetPoseHz": 30, "maxConcurrentAdditiveLayers": 2, "allowFingerAnimation": false},
+    "mid": {"targetPoseHz": 45, "maxConcurrentAdditiveLayers": 3, "allowFingerAnimation": false},
+    "high": {"targetPoseHz": 60, "maxConcurrentAdditiveLayers": 4, "allowFingerAnimation": true}
+  },
+  "accessibilityAndSafety": {
+    "supportsReducedMotion": true,
+    "cameraShakeRequired": false,
+    "flashingFeedbackRequired": false,
+    "manipulativeCelebrationLoops": false,
+    "commerceAnimationHooks": false,
+    "childBiometricMotionCaptureRequired": false
+  },
+  "certificationBoundary": {
+    "sourceRuntimeCanBeValidatedInCI": true,
+    "authoredAnimationAssetsPresent": false,
+    "nativeUnrealVisualReviewRequired": true,
+    "representativeDeviceProfilingRequired": true
+  }
+}

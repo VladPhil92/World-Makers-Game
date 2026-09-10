@@ -19,6 +19,7 @@
 #include "UI/WMBuildHUDWidget.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Visual/WMAvatarArtTypes.h"
+#include "Visual/WMCharacterAnimationComponent.h"
 #include "Visual/WMProceduralAvatarGeometry.h"
 #include "Visual/WMPrototypeMotionStyle.h"
 #include "Visual/WMVisualProfileSettings.h"
@@ -236,6 +237,7 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     MissionMeasurementComponent = CreateDefaultSubobject<UWMMissionMeasurementComponent>(TEXT("MissionMeasurementComponent"));
     ExplorationComponent = CreateDefaultSubobject<UWMExplorationComponent>(TEXT("ExplorationComponent"));
     InteractionComponent = CreateDefaultSubobject<UWMInteractionComponent>(TEXT("InteractionComponent"));
+    CharacterAnimationComponent = CreateDefaultSubobject<UWMCharacterAnimationComponent>(TEXT("CharacterAnimationComponent"));
 }
 
 void AWMPlayerCharacter::OnConstruction(const FTransform& Transform)
@@ -409,6 +411,14 @@ void AWMPlayerCharacter::UpdatePrototypeMotion(const float DeltaSeconds)
         return;
     }
 
+    // V5 owns the procedural V4 rig and the production AnimBP read-model. Keep M1.8 motion only for the
+    // explicit legacy six-piece fallback so earlier certification contracts remain reversible.
+    const bool bProductionMeshActive = GetMesh() && GetMesh()->GetSkeletalMeshAsset() != nullptr && !bProceduralAvatarActive;
+    if (CharacterAnimationComponent && (bProceduralAvatarActive || bProductionMeshActive))
+    {
+        return;
+    }
+
     const float MaxWalkSpeed = FMath::Max(GetCharacterMovement()->MaxWalkSpeed, 1.0f);
     const float SpeedAlpha = FMath::Clamp(GetVelocity().Size2D() / MaxWalkSpeed, 0.0f, 1.0f);
     const bool bAirborne = GetCharacterMovement()->IsFalling();
@@ -420,20 +430,6 @@ void AWMPlayerCharacter::UpdatePrototypeMotion(const float DeltaSeconds)
     }
 
     const FWMPrototypeMotionPose Pose = FWMPrototypeMotionStyle::Evaluate(SpeedAlpha, PrototypeMotionPhase, bAirborne);
-
-    if (bProceduralAvatarActive && AvatarRigRoot && AvatarHeadRig && AvatarUpperArmLeftRig && AvatarUpperArmRightRig && AvatarThighLeftRig && AvatarThighRightRig)
-    {
-        const UWMAvatarVisualSettings* Settings = GetDefault<UWMAvatarVisualSettings>();
-        const float HeadBaseZ = Settings ? Settings->Proportions.HeadHeightCm * 0.50f : 15.8f;
-        AvatarRigRoot->SetRelativeLocation(FVector(0.0f, 0.0f, Pose.BodyBobCm));
-        AvatarRigRoot->SetRelativeRotation(FRotator(Pose.BodyLeanDegrees, 0.0f, 0.0f));
-        AvatarHeadRig->SetRelativeLocation(FVector(0.0f, 0.0f, HeadBaseZ + Pose.HeadBobCm));
-        AvatarUpperArmLeftRig->SetRelativeRotation(FRotator(Pose.ArmSwingDegrees, 0.0f, -5.0f));
-        AvatarUpperArmRightRig->SetRelativeRotation(FRotator(-Pose.ArmSwingDegrees, 0.0f, 5.0f));
-        AvatarThighLeftRig->SetRelativeRotation(FRotator(Pose.LegSwingDegrees, 0.0f, 0.0f));
-        AvatarThighRightRig->SetRelativeRotation(FRotator(-Pose.LegSwingDegrees, 0.0f, 0.0f));
-        return;
-    }
 
     if (!PrototypeBody || !PrototypeHead || !PrototypeLeftArm || !PrototypeRightArm || !PrototypeLeftLeg || !PrototypeRightLeg)
     {
@@ -489,6 +485,8 @@ void AWMPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AWMPlayerCharacter::Turn);
     PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AWMPlayerCharacter::LookUp);
 
+    PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &AWMPlayerCharacter::StartJump);
+    PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &AWMPlayerCharacter::EndJump);
     PlayerInputComponent->BindAction(TEXT("PlaceBuild"), IE_Pressed, this, &AWMPlayerCharacter::PlaceBuild);
     PlayerInputComponent->BindAction(TEXT("RotateBuild"), IE_Pressed, this, &AWMPlayerCharacter::RotateBuildClockwise);
     PlayerInputComponent->BindAction(TEXT("RotateBuildBack"), IE_Pressed, this, &AWMPlayerCharacter::RotateBuildCounterClockwise);
@@ -526,20 +524,60 @@ void AWMPlayerCharacter::MoveRight(const float Value)
 
 void AWMPlayerCharacter::Turn(const float Value) { AddControllerYawInput(Value); }
 void AWMPlayerCharacter::LookUp(const float Value) { AddControllerPitchInput(Value); }
-void AWMPlayerCharacter::PlaceBuild() { if (BuildingComponent) BuildingComponent->TryPlaceCurrentPiece(); }
+void AWMPlayerCharacter::StartJump() { Jump(); }
+void AWMPlayerCharacter::EndJump() { StopJumping(); }
+
+void AWMPlayerCharacter::PlaceBuild()
+{
+    if (BuildingComponent && BuildingComponent->TryPlaceCurrentPiece() && CharacterAnimationComponent)
+    {
+        CharacterAnimationComponent->TriggerAction(EWMCharacterInteractionAction::BuildPlace, 0.36f);
+    }
+}
+
 void AWMPlayerCharacter::RotateBuildClockwise() { if (BuildingComponent) BuildingComponent->RotatePreview(1.0f); }
 void AWMPlayerCharacter::RotateBuildCounterClockwise() { if (BuildingComponent) BuildingComponent->RotatePreview(-1.0f); }
-void AWMPlayerCharacter::RemoveBuild() { if (BuildingComponent) BuildingComponent->TryRemoveTargetPiece(); }
-void AWMPlayerCharacter::MoveBuild() { if (BuildingComponent) BuildingComponent->TryBeginMoveTargetPiece(); }
+
+void AWMPlayerCharacter::RemoveBuild()
+{
+    if (BuildingComponent && BuildingComponent->TryRemoveTargetPiece() && CharacterAnimationComponent)
+    {
+        CharacterAnimationComponent->TriggerAction(EWMCharacterInteractionAction::BuildRemove, 0.48f);
+    }
+}
+
+void AWMPlayerCharacter::MoveBuild()
+{
+    if (BuildingComponent && BuildingComponent->TryBeginMoveTargetPiece() && CharacterAnimationComponent)
+    {
+        CharacterAnimationComponent->TriggerAction(EWMCharacterInteractionAction::BuildMove, 0.55f);
+    }
+}
+
 void AWMPlayerCharacter::CycleBuildPiece() { if (BuildingComponent) BuildingComponent->CycleSelectedPiece(1); }
 void AWMPlayerCharacter::CancelBuildEdit() { if (BuildingComponent) BuildingComponent->CancelMove(); }
 void AWMPlayerCharacter::UndoBuild() { if (BuildingComponent) BuildingComponent->UndoLastAction(); }
 void AWMPlayerCharacter::RedoBuild() { if (BuildingComponent) BuildingComponent->RedoLastAction(); }
 void AWMPlayerCharacter::SavePrototypeWorld() { if (BuildingComponent) BuildingComponent->SaveWorld(); }
 void AWMPlayerCharacter::LoadPrototypeWorld() { if (BuildingComponent) BuildingComponent->LoadWorld(); }
-void AWMPlayerCharacter::CaptureMissionMeasurementPoint() { if (MissionMeasurementComponent) MissionMeasurementComponent->CapturePointFromView(); }
+
+void AWMPlayerCharacter::CaptureMissionMeasurementPoint()
+{
+    if (MissionMeasurementComponent && MissionMeasurementComponent->CapturePointFromView() && CharacterAnimationComponent)
+    {
+        CharacterAnimationComponent->TriggerAction(EWMCharacterInteractionAction::Measure, 0.60f);
+    }
+}
+
 void AWMPlayerCharacter::ResetMissionMeasurement() { if (MissionMeasurementComponent) MissionMeasurementComponent->ResetMeasurement(); }
-void AWMPlayerCharacter::ObserveWorld() { if (InteractionComponent) InteractionComponent->TryInteractFocused(); }
+
+void AWMPlayerCharacter::ObserveWorld()
+{
+    if (InteractionComponent && InteractionComponent->TryInteractFocused() && CharacterAnimationComponent)
+    {
+        CharacterAnimationComponent->TriggerAction(EWMCharacterInteractionAction::Observe, 0.52f);
+    }
+}
 
 void AWMPlayerCharacter::CycleMission()
 {
