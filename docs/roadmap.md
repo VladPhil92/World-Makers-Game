@@ -67,8 +67,8 @@ Current source progression:
 - M5.1 — curriculum architecture, 11 first-class learning streams and fantastic mission design contract: source-complete in PR #47.
 - M5.2 — composable Mission Runtime v2: source-complete with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
 - M5.3 — Science Simulation Core: source-complete with data-driven matter/reaction catalog, solubility/filtration, stoichiometry and conservation, mechanics/energy, ideal DC circuits, cellular systems, plant lifecycle and ecology coupling; native Unreal execution remains required for runtime certification.
-- M5.4 — Language, Literature and Thought Runtime: next.
-- M5.5 — First Fantastic Adventure Pack: pending.
+- M5.4 — Language, Literature and Thought Runtime: source-complete with bilingual contextual communication, provenance-aware narrative graphs, neutral ethical reasoning, philosophy argument revision, M5.2 evidence integration and privacy-minimized stable-ID inputs; native Unreal execution remains required for runtime certification.
+- M5.5 — First Fantastic Adventure Pack: next.
 - M5.6 — Cross-disciplinary epic adventures: pending.
 
 Core learning streams:
@@ -145,12 +145,23 @@ See `docs/m5-3-science-simulation-core.md`.
 
 ### M5.4 — Language, Literature and Thought Runtime
 
-- Contextual English/Spanish communication actions.
-- Reading/listening/inference evidence.
-- Myth/legend narrative graph with provenance metadata.
-- Point-of-view and interpretation mechanics.
-- Ethics dilemma model with consequences and reason comparison.
-- Philosophy dialogue model that evaluates argument structure, contradiction, assumptions, counterexamples and revision rather than ideological conformity.
+Implementation status:
+
+- contextual communication challenges for both English and Spanish;
+- language success requires target language + semantic intent + acceptable register, not token matching alone;
+- myth/legend narrative graph with explicit `retelling` / `adaptation` / `historical-source` classification;
+- provenance key and cultural-review state required for narrative content;
+- narrative nodes carry localization passage keys and point-of-view IDs;
+- inference choices are graph edges that generate `interpret-text-world` evidence;
+- ethical dilemmas expose reasons, multiple affected perspectives, tradeoffs and normalized consequence profiles;
+- ethical evaluation measures reasoning quality without a hidden morally correct option;
+- philosophy problems support alternative claims, reason links, assumptions, counterexamples and mandatory revision;
+- argument evidence requires a selected reason to actually target the selected claim;
+- `UWMLanguageThoughtSubsystem` submits valid language/literature/ethics/philosophy outcomes into M5.2 `RecordComposableEvidence`;
+- runtime inputs use `stable-ids-no-child-free-text` and do not persist child-authored free text or ideological/personality labels;
+- canonical/staged thought catalog parity, Repository Quality gate and Unreal Automation coverage are wired.
+
+See `docs/m5-4-language-literature-thought-runtime.md`.
 
 ### M5.5 — First Fantastic Adventure Pack
 
@@ -190,7 +201,6 @@ See `docs/fantastic-learning-universe.md` and `content/learning-objectives/core-
 
 ## Suggested GitHub issue titles
 
-1. `M5.4: Implement bilingual language, literature, ethics and philosophy mission runtime`
-2. `M5.5: Build first fantastic multidisciplinary adventure pack`
-3. `M5.6: Build cross-disciplinary epic adventure framework`
-4. `M6: Implement parent-approved private multiplayer invitation flow`
+1. `M5.5: Build first fantastic multidisciplinary adventure pack`
+2. `M5.6: Build cross-disciplinary epic adventure framework`
+3. `M6: Implement parent-approved private multiplayer invitation flow`
