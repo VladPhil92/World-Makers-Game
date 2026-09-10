@@ -49,6 +49,12 @@ jobs:
         run: python scripts/validate-m3-8-vertical-slice-certification.py
       - name: Validate M4.1 Parent Portal MVP
         run: python scripts/validate-m4-parent-portal.py
+      - name: Validate M5.2 Composable Mission Runtime
+        run: python scripts/validate-m5-2-composable-runtime.py
+      - name: Validate M5.3 Science Simulation Core
+        run: python scripts/validate-m5-3-science-simulation.py
+      - name: Validate M5.4 Language Literature Thought Runtime
+        run: python scripts/validate-m5-4-language-thought-runtime.py
 
   parent-portal:
     runs-on: ubuntu-latest

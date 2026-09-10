@@ -28,9 +28,6 @@ Current source progression:
 - M3.3 — multi-evaluator mission runtime + first rainforest science mission: source-complete pending native UE certification.
 - M3.4 — reactive ecosystem state and visible consequences: source-complete pending native UE certification.
 - M3.5 — spatial ecological building interventions + persistent creative unlocks: source-complete pending native UE certification.
-- M3.6 — child journey UX: next.
-- M3.7 — tablet performance profiles and capture.
-- M3.8 — vertical-slice certification.
 - M3.6 — child journey UX: source-complete pending native UE certification.
 - M3.7 — tablet performance profiles and capture: source-complete pending representative-device evidence.
 - M3.8 — vertical-slice certification infrastructure: source-complete; runtime/device certification blocked by Issue #9 and external evidence.
@@ -53,16 +50,6 @@ Current source progression:
 - M4.1 — parent portal MVP: source-complete with demo-only auth and provider-neutral contracts.
 - M4.2 — production identity, durable family linking and backend adapters: next.
 
-M4.1 outcomes:
-
-- Guardian session boundary with production fail-closed behavior.
-- Authorized child-profile filtering and cross-account denial.
-- Read-only seven-day play-time, recent creations, learning and adventure summaries.
-- Link requests that remain pending until backend relationship verification.
-- Explicit export, unlink and delete requests with guardian acknowledgement.
-- Accessible responsive Family Space UI.
-- No direct browser/database coupling, raw child telemetry or browser-exposed secrets.
-
 M4.2 target outcomes:
 
 - Select production identity provider and authenticated server adapter.
@@ -71,7 +58,141 @@ M4.2 target outcomes:
 - Durable export/delete/unlink workflows with audit and retention semantics.
 - Production localization and deployment topology.
 
-## M5 — Closed multiplayer prototype
+## M5 — Fantastic Learning Universe
+
+Purpose: transform the existing mission foundation into a multidisciplinary adventure system with a high conceptual ceiling and low interaction friction.
+
+Current source progression:
+
+- M5.1 — curriculum architecture, 11 first-class learning streams and fantastic mission design contract: source-complete in PR #47.
+- M5.2 — composable Mission Runtime v2: source-complete with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
+- M5.3 — Science Simulation Core: source-complete with data-driven matter/reaction catalog, solubility/filtration, stoichiometry and conservation, mechanics/energy, ideal DC circuits, cellular systems, plant lifecycle and ecology coupling; native Unreal execution remains required for runtime certification.
+- M5.4 — Language, Literature and Thought Runtime: source-complete with bilingual contextual communication, provenance-aware narrative graphs, neutral ethical reasoning, philosophy argument revision, M5.2 evidence integration and privacy-minimized stable-ID inputs; native Unreal execution remains required for runtime certification.
+- M5.5 — First Fantastic Adventure Pack: next.
+- M5.6 — Cross-disciplinary epic adventures: pending.
+
+Core learning streams:
+
+1. Mathematics
+2. Geometry
+3. English language
+4. Spanish language
+5. Literature
+6. Biology
+7. Chemistry
+8. Physics
+9. Ecology
+10. Ethics
+11. Philosophy for children
+
+History and culture remain cross-curricular context layers.
+
+### M5.1 — Curriculum and mission contract
+
+- Core curriculum concept map.
+- Mission metadata for primary/secondary disciplines, concept tags and layered depth.
+- Experience → Concept → Formalization progression.
+- Fantastic mission design catalog.
+- Pedagogy rule: learning must be structurally necessary to play, not attached as a worksheet.
+
+### M5.2 — Composable Mission Runtime v2
+
+Reusable evidence primitives:
+
+- construct-to-constraint;
+- observe-and-classify;
+- predict-test-revise;
+- sequence-and-infer;
+- communicate-in-language;
+- model-system;
+- solve-spatial-system;
+- interpret-text-world;
+- reason-through-dilemma;
+- argue-and-revise.
+
+Implementation status:
+
+- `composable` evaluator added without removing legacy M2/M3 evaluators;
+- each requirement maps a primitive, stable evidence event, objective and bounded `requiredCount`;
+- progress is calculated across required evidence units;
+- exact primitive/event pairs are enforced;
+- unsupported primitives and over-count evidence are rejected;
+- minimized evidence records include primitive attribution but no child-authored free text;
+- Blueprint-facing subsystem APIs expose evidence submission and requirement introspection;
+- source fixture demonstrates physics + geometry + philosophy composition without entering the packaged playable catalog.
+
+Target: one mission may compose several primitives and produce evidence for multiple learning objectives without creating a separate hard-coded runtime for every subject.
+
+See `docs/m5-2-composable-mission-runtime.md`.
+
+### M5.3 — Science Simulation Core
+
+Implementation status:
+
+- substance identity, molar mass and simplified phase transitions;
+- water solubility, saturation and conceptual filtration boundaries;
+- balanced reaction definitions, limiting-reagent execution and mass-conservation checks;
+- deterministic force/motion, momentum and kinetic-energy primitives;
+- ideal DC circuit relationships using Ohm's law and electrical power;
+- normalized cellular-system state covering membrane, energy, transport, information and waste;
+- plant lifecycle from seed through fruiting with water/light/nutrient/temperature/pollinator constraints;
+- bounded plant-to-ecosystem state coupling;
+- canonical and staged runtime science catalog parity;
+- virtual-only chemistry content boundary with no real-world procedural instructions;
+- Repository Quality gate and Unreal Automation coverage.
+
+See `docs/m5-3-science-simulation-core.md`.
+
+### M5.4 — Language, Literature and Thought Runtime
+
+Implementation status:
+
+- contextual communication challenges for both English and Spanish;
+- language success requires target language + semantic intent + acceptable register, not token matching alone;
+- myth/legend narrative graph with explicit `retelling` / `adaptation` / `historical-source` classification;
+- provenance key and cultural-review state required for narrative content;
+- narrative nodes carry localization passage keys and point-of-view IDs;
+- inference choices are graph edges that generate `interpret-text-world` evidence;
+- ethical dilemmas expose reasons, multiple affected perspectives, tradeoffs and normalized consequence profiles;
+- ethical evaluation measures reasoning quality without a hidden morally correct option;
+- philosophy problems support alternative claims, reason links, assumptions, counterexamples and mandatory revision;
+- argument evidence requires a selected reason to actually target the selected claim;
+- `UWMLanguageThoughtSubsystem` submits valid language/literature/ethics/philosophy outcomes into M5.2 `RecordComposableEvidence`;
+- runtime inputs use `stable-ids-no-child-free-text` and do not persist child-authored free text or ideological/personality labels;
+- canonical/staged thought catalog parity, Repository Quality gate and Unreal Automation coverage are wired.
+
+See `docs/m5-4-language-literature-thought-runtime.md`.
+
+### M5.5 — First Fantastic Adventure Pack
+
+Initial production candidates:
+
+- The Vault of the Infinite Staircase — mathematics.
+- Architects of the Impossible City — geometry.
+- The Dragon Who Lost His Words — English.
+- La Biblioteca de las Palabras Perdidas — Spanish.
+- The Labyrinth of Stories — literature / myths and legends.
+- The City Inside a Cell — biology.
+- The Alchemist's Archipelago — chemistry.
+- The Moonforge — physics.
+- The Forest of a Thousand Voices — ecology.
+- The Bridge Between Two Villages — ethics.
+- The Ship That Was Never the Same — philosophy for children.
+
+### M5.6 — Cross-disciplinary epic adventures
+
+- Missions combine multiple learning streams when the world problem naturally requires them.
+- Candidate: The Eclipse Engine — geometry + physics + mathematics + language/literature + philosophy.
+- Candidate: The Garden at the End of Winter — biology + chemistry + ecology + mathematics + ethics + mythology.
+- Evidence attribution remains explicit per objective even when one action supports several disciplines.
+
+### M5 exit condition
+
+M5 is not complete when the repository merely contains educational text. It is complete when representative adventures can be played end-to-end and successful completion requires authentic use of the targeted ideas, with source tests, native Unreal tests, pedagogical review and minimized learning evidence.
+
+See `docs/fantastic-learning-universe.md` and `content/learning-objectives/core-curriculum-v1.json`.
+
+## M6 — Closed multiplayer prototype
 
 - Parent-approved invite/friend relationship.
 - Private session join flow.
@@ -80,8 +201,6 @@ M4.2 target outcomes:
 
 ## Suggested GitHub issue titles
 
-1. `M1: Implement basic building placement and grid snapping`
-2. `M2: Integrate curriculum mission schema and math mission v1`
-3. `M3: Build Caribbean Rainforest vertical slice and tablet performance budget`
-4. `M4: Implement parent portal read model MVP`
-5. `M5: Implement parent-approved private multiplayer invitation flow`
+1. `M5.5: Build first fantastic multidisciplinary adventure pack`
+2. `M5.6: Build cross-disciplinary epic adventure framework`
+3. `M6: Implement parent-approved private multiplayer invitation flow`

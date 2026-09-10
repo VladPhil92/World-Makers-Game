@@ -8,6 +8,7 @@ namespace
 {
     const FName MeasureAndBuildEvaluator(TEXT("measure-and-build"));
     const FName ObserveEcosystemEvaluator(TEXT("observe-ecosystem"));
+    const FName ComposableEvaluator(TEXT("composable"));
 
     bool ReadNameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FName>& OutValues)
     {
@@ -96,6 +97,65 @@ namespace
         return !OutRequirements.IsEmpty();
     }
 
+    bool ReadComposableRequirements(
+        const TSharedPtr<FJsonObject>& Runtime,
+        TArray<FWMComposableEvidenceRequirement>& OutRequirements)
+    {
+        OutRequirements.Reset();
+        const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+        if (!Runtime.IsValid() || !Runtime->TryGetArrayField(TEXT("evidencePrimitives"), Values) || !Values)
+        {
+            return false;
+        }
+
+        for (const TSharedPtr<FJsonValue>& Value : *Values)
+        {
+            const TSharedPtr<FJsonObject>* ObjectPtr = nullptr;
+            if (!Value.IsValid() || !Value->TryGetObject(ObjectPtr) || !ObjectPtr || !ObjectPtr->IsValid())
+            {
+                return false;
+            }
+
+            FString PrimitiveIdString;
+            FString EvidenceEventIdString;
+            FString ObjectiveIdString;
+            if (!(*ObjectPtr)->TryGetStringField(TEXT("primitiveId"), PrimitiveIdString) || PrimitiveIdString.IsEmpty() ||
+                !(*ObjectPtr)->TryGetStringField(TEXT("evidenceEventId"), EvidenceEventIdString) || EvidenceEventIdString.IsEmpty() ||
+                !(*ObjectPtr)->TryGetStringField(TEXT("objectiveId"), ObjectiveIdString) || ObjectiveIdString.IsEmpty())
+            {
+                return false;
+            }
+
+            int32 RequiredCount = 1;
+            if ((*ObjectPtr)->HasField(TEXT("requiredCount")))
+            {
+                double RequiredCountValue = 0.0;
+                if (!(*ObjectPtr)->TryGetNumberField(TEXT("requiredCount"), RequiredCountValue) ||
+                    RequiredCountValue < 1.0 || RequiredCountValue > 20.0)
+                {
+                    return false;
+                }
+                RequiredCount = static_cast<int32>(RequiredCountValue);
+                if (static_cast<double>(RequiredCount) != RequiredCountValue)
+                {
+                    return false;
+                }
+            }
+
+            FWMComposableEvidenceRequirement Requirement;
+            Requirement.PrimitiveId = FName(*PrimitiveIdString);
+            Requirement.EvidenceEventId = FName(*EvidenceEventIdString);
+            Requirement.ObjectiveId = FName(*ObjectiveIdString);
+            Requirement.RequiredCount = RequiredCount;
+            if (!Requirement.IsSane())
+            {
+                return false;
+            }
+            OutRequirements.Add(MoveTemp(Requirement));
+        }
+        return !OutRequirements.IsEmpty();
+    }
+
     void SortNames(TArray<FName>& Values)
     {
         Values.Sort([](const FName& A, const FName& B)
@@ -110,6 +170,11 @@ bool FWMObservationEvidenceRequirement::IsSane() const
     return !ObservationId.IsNone() && !EvidenceEventId.IsNone() && !ObjectiveId.IsNone();
 }
 
+bool FWMComposableEvidenceRequirement::IsSane() const
+{
+    return !PrimitiveId.IsNone() && !EvidenceEventId.IsNone() && !ObjectiveId.IsNone() && RequiredCount >= 1 && RequiredCount <= 20;
+}
+
 bool FWMMissionRuntimeDefinition::IsMeasureAndBuild() const
 {
     return Evaluator == MeasureAndBuildEvaluator;
@@ -120,11 +185,40 @@ bool FWMMissionRuntimeDefinition::IsObserveEcosystem() const
     return Evaluator == ObserveEcosystemEvaluator;
 }
 
+bool FWMMissionRuntimeDefinition::IsComposable() const
+{
+    return Evaluator == ComposableEvaluator;
+}
+
+bool FWMMissionRuntimeDefinition::IsSupportedEvidencePrimitive(const FName PrimitiveId)
+{
+    return PrimitiveId == TEXT("construct-to-constraint") ||
+        PrimitiveId == TEXT("observe-and-classify") ||
+        PrimitiveId == TEXT("predict-test-revise") ||
+        PrimitiveId == TEXT("sequence-and-infer") ||
+        PrimitiveId == TEXT("communicate-in-language") ||
+        PrimitiveId == TEXT("model-system") ||
+        PrimitiveId == TEXT("solve-spatial-system") ||
+        PrimitiveId == TEXT("interpret-text-world") ||
+        PrimitiveId == TEXT("reason-through-dilemma") ||
+        PrimitiveId == TEXT("argue-and-revise");
+}
+
 const FWMObservationEvidenceRequirement* FWMMissionRuntimeDefinition::FindObservationRequirement(const FName ObservationId) const
 {
     return ObservationRequirements.FindByPredicate([ObservationId](const FWMObservationEvidenceRequirement& Requirement)
     {
         return Requirement.ObservationId == ObservationId;
+    });
+}
+
+const FWMComposableEvidenceRequirement* FWMMissionRuntimeDefinition::FindComposableRequirement(
+    const FName PrimitiveId,
+    const FName EvidenceEventId) const
+{
+    return ComposableRequirements.FindByPredicate([PrimitiveId, EvidenceEventId](const FWMComposableEvidenceRequirement& Requirement)
+    {
+        return Requirement.PrimitiveId == PrimitiveId && Requirement.EvidenceEventId == EvidenceEventId;
     });
 }
 
@@ -147,27 +241,55 @@ bool FWMMissionRuntimeDefinition::IsSane() const
 
     if (IsMeasureAndBuild())
     {
-        return TargetSpanCm >= 50.0f && ToleranceCm >= 0.0f && ToleranceCm < TargetSpanCm && ObservationRequirements.IsEmpty();
+        return TargetSpanCm >= 50.0f && ToleranceCm >= 0.0f && ToleranceCm < TargetSpanCm &&
+            ObservationRequirements.IsEmpty() && ComposableRequirements.IsEmpty();
     }
 
-    if (!IsObserveEcosystem() || TargetSpanCm != 0.0f || ToleranceCm != 0.0f || ObservationRequirements.Num() < 2)
+    if (IsObserveEcosystem())
     {
-        return false;
-    }
-
-    TSet<FName> ObservationIds;
-    TSet<FName> EvidenceEventIds;
-    for (const FWMObservationEvidenceRequirement& Requirement : ObservationRequirements)
-    {
-        if (!Requirement.IsSane() || ObservationIds.Contains(Requirement.ObservationId) || EvidenceEventIds.Contains(Requirement.EvidenceEventId) ||
-            !RequiredEvidenceEventIds.Contains(Requirement.EvidenceEventId) || !LearningObjectiveIds.Contains(Requirement.ObjectiveId))
+        if (TargetSpanCm != 0.0f || ToleranceCm != 0.0f || ObservationRequirements.Num() < 2 || !ComposableRequirements.IsEmpty())
         {
             return false;
         }
-        ObservationIds.Add(Requirement.ObservationId);
-        EvidenceEventIds.Add(Requirement.EvidenceEventId);
+
+        TSet<FName> ObservationIds;
+        TSet<FName> EvidenceEventIds;
+        for (const FWMObservationEvidenceRequirement& Requirement : ObservationRequirements)
+        {
+            if (!Requirement.IsSane() || ObservationIds.Contains(Requirement.ObservationId) || EvidenceEventIds.Contains(Requirement.EvidenceEventId) ||
+                !RequiredEvidenceEventIds.Contains(Requirement.EvidenceEventId) || !LearningObjectiveIds.Contains(Requirement.ObjectiveId))
+            {
+                return false;
+            }
+            ObservationIds.Add(Requirement.ObservationId);
+            EvidenceEventIds.Add(Requirement.EvidenceEventId);
+        }
+        return EvidenceEventIds.Num() == RequiredEvidenceEventIds.Num();
     }
-    return EvidenceEventIds.Num() == RequiredEvidenceEventIds.Num();
+
+    if (IsComposable())
+    {
+        if (TargetSpanCm != 0.0f || ToleranceCm != 0.0f || !ObservationRequirements.IsEmpty() || ComposableRequirements.IsEmpty())
+        {
+            return false;
+        }
+
+        TSet<FName> EvidenceEventIds;
+        for (const FWMComposableEvidenceRequirement& Requirement : ComposableRequirements)
+        {
+            if (!Requirement.IsSane() || !IsSupportedEvidencePrimitive(Requirement.PrimitiveId) ||
+                EvidenceEventIds.Contains(Requirement.EvidenceEventId) ||
+                !RequiredEvidenceEventIds.Contains(Requirement.EvidenceEventId) ||
+                !LearningObjectiveIds.Contains(Requirement.ObjectiveId))
+            {
+                return false;
+            }
+            EvidenceEventIds.Add(Requirement.EvidenceEventId);
+        }
+        return EvidenceEventIds.Num() == RequiredEvidenceEventIds.Num();
+    }
+
+    return false;
 }
 
 bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRuntimeDefinition& OutDefinition, FString& OutError)
@@ -222,7 +344,8 @@ bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRu
         double TargetSpan = 0.0;
         double Tolerance = 0.0;
         if (!Runtime->TryGetNumberField(TEXT("targetSpanCm"), TargetSpan) ||
-            !Runtime->TryGetNumberField(TEXT("toleranceCm"), Tolerance) || Runtime->HasField(TEXT("observationRequirements")))
+            !Runtime->TryGetNumberField(TEXT("toleranceCm"), Tolerance) ||
+            Runtime->HasField(TEXT("observationRequirements")) || Runtime->HasField(TEXT("evidencePrimitives")))
         {
             OutError = TEXT("measure-and-build evaluator fields are invalid.");
             return false;
@@ -232,10 +355,19 @@ bool FWMMissionRuntimeDefinition::TryParseJson(const FString& Json, FWMMissionRu
     }
     else if (Candidate.IsObserveEcosystem())
     {
-        if (Runtime->HasField(TEXT("targetSpanCm")) || Runtime->HasField(TEXT("toleranceCm")) ||
+        if (Runtime->HasField(TEXT("targetSpanCm")) || Runtime->HasField(TEXT("toleranceCm")) || Runtime->HasField(TEXT("evidencePrimitives")) ||
             !ReadObservationRequirements(Runtime, Candidate.ObservationRequirements))
         {
             OutError = TEXT("observe-ecosystem evaluator fields are invalid.");
+            return false;
+        }
+    }
+    else if (Candidate.IsComposable())
+    {
+        if (Runtime->HasField(TEXT("targetSpanCm")) || Runtime->HasField(TEXT("toleranceCm")) || Runtime->HasField(TEXT("observationRequirements")) ||
+            !ReadComposableRequirements(Runtime, Candidate.ComposableRequirements))
+        {
+            OutError = TEXT("composable evaluator fields are invalid.");
             return false;
         }
     }
@@ -273,6 +405,7 @@ bool FWMMissionProgressModel::Begin(const FWMMissionRuntimeDefinition& InDefinit
     Evidence.Reset();
     EarnedRewardIds.Reset();
     RecordedObservationIds.Reset();
+    RecordedComposableEvidenceCounts.Reset();
     return true;
 }
 
@@ -358,6 +491,58 @@ bool FWMMissionProgressModel::RecordObservation(const FName ObservationId)
     return true;
 }
 
+bool FWMMissionProgressModel::RecordComposableEvidence(
+    const FName PrimitiveId,
+    const FName EvidenceEventId,
+    const float NumericValue)
+{
+    if (State != EWMMissionRuntimeState::Active || !Definition.IsComposable() || PrimitiveId.IsNone() || EvidenceEventId.IsNone() ||
+        !FMath::IsFinite(NumericValue))
+    {
+        return false;
+    }
+
+    const FWMComposableEvidenceRequirement* Requirement = Definition.FindComposableRequirement(PrimitiveId, EvidenceEventId);
+    if (!Requirement)
+    {
+        return false;
+    }
+
+    const int32 ExistingCount = RecordedComposableEvidenceCounts.FindRef(EvidenceEventId);
+    if (ExistingCount >= Requirement->RequiredCount)
+    {
+        return false;
+    }
+
+    RecordedComposableEvidenceCounts.Add(EvidenceEventId, ExistingCount + 1);
+
+    FWMLearningEvidenceRecord Record;
+    Record.MissionId = Definition.MissionId;
+    Record.EventId = Requirement->EvidenceEventId;
+    Record.ObjectiveId = Requirement->ObjectiveId;
+    Record.PrimitiveId = Requirement->PrimitiveId;
+    Record.NumericValue = NumericValue;
+    Record.Sequence = NextEvidenceSequence++;
+    Evidence.Add(Record);
+
+    bool bAllRequirementsSatisfied = true;
+    for (const FWMComposableEvidenceRequirement& Candidate : Definition.ComposableRequirements)
+    {
+        if (RecordedComposableEvidenceCounts.FindRef(Candidate.EvidenceEventId) < Candidate.RequiredCount)
+        {
+            bAllRequirementsSatisfied = false;
+            break;
+        }
+    }
+
+    if (bAllRequirementsSatisfied)
+    {
+        State = EWMMissionRuntimeState::Completed;
+        EarnedRewardIds = Definition.RewardIds;
+    }
+    return true;
+}
+
 float FWMMissionProgressModel::GetProgressFraction() const
 {
     if (State == EWMMissionRuntimeState::Completed) return 1.0f;
@@ -366,6 +551,17 @@ float FWMMissionProgressModel::GetProgressFraction() const
         return Definition.ObservationRequirements.IsEmpty()
             ? 0.0f
             : static_cast<float>(RecordedObservationIds.Num()) / static_cast<float>(Definition.ObservationRequirements.Num());
+    }
+    if (Definition.IsComposable())
+    {
+        int32 RequiredTotal = 0;
+        int32 RecordedTotal = 0;
+        for (const FWMComposableEvidenceRequirement& Requirement : Definition.ComposableRequirements)
+        {
+            RequiredTotal += Requirement.RequiredCount;
+            RecordedTotal += FMath::Min(RecordedComposableEvidenceCounts.FindRef(Requirement.EvidenceEventId), Requirement.RequiredCount);
+        }
+        return RequiredTotal > 0 ? static_cast<float>(RecordedTotal) / static_cast<float>(RequiredTotal) : 0.0f;
     }
     if (bMeasurementEvidence) return 0.5f;
     return 0.0f;

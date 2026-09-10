@@ -34,6 +34,10 @@ struct WORLDMAKERS_API FWMLearningEvidenceRecord
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Learning")
     FName ObjectiveId;
 
+    /** Optional M5.2 evidence primitive. Legacy evidence records leave this unset. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Learning")
+    FName PrimitiveId;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Learning")
     float NumericValue = 0.0f;
 
@@ -54,6 +58,30 @@ struct WORLDMAKERS_API FWMObservationEvidenceRequirement
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
     FName ObjectiveId;
+
+    bool IsSane() const;
+};
+
+/**
+ * M5.2 generic evidence requirement. Subjects compose a small allowlisted set of
+ * cognitive/gameplay primitives instead of requiring one hard-coded evaluator per subject.
+ */
+USTRUCT(BlueprintType)
+struct WORLDMAKERS_API FWMComposableEvidenceRequirement
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Composable")
+    FName PrimitiveId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Composable")
+    FName EvidenceEventId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Composable")
+    FName ObjectiveId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Composable", meta = (ClampMin = "1", ClampMax = "20"))
+    int32 RequiredCount = 1;
 
     bool IsSane() const;
 };
@@ -87,6 +115,9 @@ struct WORLDMAKERS_API FWMMissionRuntimeDefinition
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Science")
     TArray<FWMObservationEvidenceRequirement> ObservationRequirements;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions|Composable")
+    TArray<FWMComposableEvidenceRequirement> ComposableRequirements;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Missions")
     TArray<FName> RewardIds;
 
@@ -96,7 +127,10 @@ struct WORLDMAKERS_API FWMMissionRuntimeDefinition
     bool IsSane() const;
     bool IsMeasureAndBuild() const;
     bool IsObserveEcosystem() const;
+    bool IsComposable() const;
     const FWMObservationEvidenceRequirement* FindObservationRequirement(FName ObservationId) const;
+    const FWMComposableEvidenceRequirement* FindComposableRequirement(FName PrimitiveId, FName EvidenceEventId) const;
+    static bool IsSupportedEvidencePrimitive(FName PrimitiveId);
     static bool TryParseJson(const FString& Json, FWMMissionRuntimeDefinition& OutDefinition, FString& OutError);
 };
 
@@ -134,13 +168,16 @@ struct WORLDMAKERS_API FWMMissionProgressModel
     TArray<FWMLearningEvidenceRecord> Evidence;
     TArray<FName> EarnedRewardIds;
     TSet<FName> RecordedObservationIds;
+    TMap<FName, int32> RecordedComposableEvidenceCounts;
 
     bool Begin(const FWMMissionRuntimeDefinition& InDefinition);
     bool RecordMeasurement(float MeasuredSpanCm);
     bool RecordStructureSpan(float StructureSpanCm);
     bool RecordObservation(FName ObservationId);
+    bool RecordComposableEvidence(FName PrimitiveId, FName EvidenceEventId, float NumericValue = 1.0f);
     float GetProgressFraction() const;
     int32 GetRecordedObservationCount() const { return RecordedObservationIds.Num(); }
+    int32 GetRecordedComposableEvidenceCount(FName EvidenceEventId) const { return RecordedComposableEvidenceCounts.FindRef(EvidenceEventId); }
 };
 
 /** Persistent journey state contains stable IDs only; no child PII or free text. */

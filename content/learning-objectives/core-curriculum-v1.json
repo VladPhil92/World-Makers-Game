@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "world-makers.core-curriculum-v1",
+  "designPrinciple": "high-concept-ceiling-low-interaction-friction",
+  "depthModel": [
+    "experience",
+    "concept",
+    "formalization"
+  ],
+  "streams": [
+    {
+      "id": "mathematics",
+      "concepts": ["number-sense", "fractions", "ratios", "proportion", "patterns", "equations", "estimation", "optimization", "coordinates"]
+    },
+    {
+      "id": "geometry",
+      "concepts": ["angles", "symmetry", "transformations", "tessellation", "area", "volume", "scale", "coordinates", "pythagorean-reasoning", "spatial-proof"]
+    },
+    {
+      "id": "english-language",
+      "concepts": ["contextual-vocabulary", "syntax", "listening", "speaking", "reading-comprehension", "inference", "functional-writing", "bilingual-transfer"]
+    },
+    {
+      "id": "spanish-language",
+      "concepts": ["semantic-precision", "syntax", "morphology", "reading-comprehension", "inference", "figurative-language", "functional-writing", "oral-expression"]
+    },
+    {
+      "id": "literature",
+      "concepts": ["plot", "character", "archetype", "myth", "legend", "point-of-view", "symbolism", "theme", "intertextuality", "comparative-interpretation"]
+    },
+    {
+      "id": "biology",
+      "concepts": ["cell-systems", "organelles", "tissues", "organ-systems", "microorganisms", "heredity", "variation", "adaptation", "life-cycles", "homeostasis"]
+    },
+    {
+      "id": "chemistry",
+      "concepts": ["matter", "atoms", "molecules", "states-of-matter", "mixtures", "solutions", "solubility", "acids-bases", "reaction-evidence", "conservation-of-mass", "reaction-rate", "energy-change"]
+    },
+    {
+      "id": "physics",
+      "concepts": ["forces", "motion", "energy", "work", "simple-machines", "vectors", "momentum", "buoyancy", "electricity", "circuits", "waves", "sound", "optics", "gravity", "orbital-reasoning"]
+    },
+    {
+      "id": "ecology",
+      "concepts": ["ecosystems", "interdependence", "food-webs", "biodiversity", "water-cycle", "carbon-cycle", "nutrient-cycles", "carrying-capacity", "succession", "habitat-fragmentation", "stewardship-tradeoffs"]
+    },
+    {
+      "id": "ethics",
+      "concepts": ["fairness", "equality", "need", "consent", "promises", "responsibility", "stewardship", "consequences", "common-good", "perspective-taking"]
+    },
+    {
+      "id": "philosophy-for-children",
+      "concepts": ["identity", "knowledge", "truth", "causality", "freedom", "mind", "language", "argument", "assumptions", "contradiction", "counterexample", "reason-revision"]
+    }
+  ],
+  "crossCurricularContext": [
+    "history",
+    "culture",
+    "myth-and-legend-provenance",
+    "architecture-and-technology",
+    "environment-and-place"
+  ]
+}

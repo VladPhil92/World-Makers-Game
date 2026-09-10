@@ -371,6 +371,44 @@ bool UWMMissionRuntimeSubsystem::RecordObservationEvidence(const FName Observati
     return bRecorded;
 }
 
+bool UWMMissionRuntimeSubsystem::IsComposableEvidenceRequired(const FName PrimitiveId, const FName EvidenceEventId) const
+{
+    return Progress.State == EWMMissionRuntimeState::Active && Progress.Definition.IsComposable() &&
+        Progress.Definition.FindComposableRequirement(PrimitiveId, EvidenceEventId) != nullptr;
+}
+
+TArray<FName> UWMMissionRuntimeSubsystem::GetRequiredEvidencePrimitiveIds() const
+{
+    TSet<FName> UniquePrimitiveIds;
+    if (Progress.Definition.IsComposable())
+    {
+        for (const FWMComposableEvidenceRequirement& Requirement : Progress.Definition.ComposableRequirements)
+        {
+            UniquePrimitiveIds.Add(Requirement.PrimitiveId);
+        }
+    }
+
+    TArray<FName> Result = UniquePrimitiveIds.Array();
+    Result.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString() < B.ToString();
+    });
+    return Result;
+}
+
+bool UWMMissionRuntimeSubsystem::RecordComposableEvidence(
+    const FName PrimitiveId,
+    const FName EvidenceEventId,
+    const float NumericValue)
+{
+    const bool bRecorded = Progress.RecordComposableEvidence(PrimitiveId, EvidenceEventId, NumericValue);
+    if (bRecorded && Progress.State == EWMMissionRuntimeState::Completed)
+    {
+        FinalizeMissionCompletion();
+    }
+    return bRecorded;
+}
+
 void UWMMissionRuntimeSubsystem::FinalizeMissionCompletion()
 {
     TArray<FName> NewRewardIds;
