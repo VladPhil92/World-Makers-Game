@@ -110,7 +110,7 @@ M3.7 does **not** make those reports mandatory for the existing M1 native gate. 
 
 ## Privacy boundary
 
-Performance capture is deliberately not behavioral analytics.
+Performance capture is deliberately not behavioral analytics. **No PII is collected or exported by this capture path.**
 
 The report contains no:
 
@@ -122,7 +122,7 @@ The report contains no:
 - commerce, entitlement or purchase data;
 - gameplay event history.
 
-The report is a local engineering artifact composed only of profile ID, bounded frame-time measurements, structural counts and pass/fail results.
+The report is a local engineering artifact composed only of performance profile ID, bounded frame-time measurements, structural counts and pass/fail results.
 
 ## Gameplay boundary
 
