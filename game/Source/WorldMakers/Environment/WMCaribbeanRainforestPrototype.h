@@ -6,8 +6,11 @@
 #include "WMCaribbeanRainforestPrototype.generated.h"
 
 class UDirectionalLightComponent;
+class UExponentialHeightFogComponent;
 class UHierarchicalInstancedStaticMeshComponent;
 class USceneComponent;
+class USkyAtmosphereComponent;
+class USkyLightComponent;
 
 UCLASS(Config = Game)
 class WORLDMAKERS_API AWMCaribbeanRainforestPrototype : public AActor
@@ -61,9 +64,19 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
     TObjectPtr<UDirectionalLightComponent> PrototypeSun;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
+    TObjectPtr<USkyLightComponent> PrototypeSkyLight;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
+    TObjectPtr<USkyAtmosphereComponent> PrototypeSkyAtmosphere;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
+    TObjectPtr<UExponentialHeightFogComponent> PrototypeHeightFog;
+
     static const FName PrototypeBiomeTag;
 
 private:
     void RebuildPrototype();
+    void ApplyLookDevelopmentProfile();
     FVector RandomRingPoint(FRandomStream& Random, float MinRadius, float MaxRadius) const;
 };

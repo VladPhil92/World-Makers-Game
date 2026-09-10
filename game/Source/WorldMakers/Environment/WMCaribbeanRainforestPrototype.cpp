@@ -1,8 +1,11 @@
 #include "Environment/WMCaribbeanRainforestPrototype.h"
 
 #include "Components/DirectionalLightComponent.h"
+#include "Components/ExponentialHeightFogComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/SkyAtmosphereComponent.h"
+#include "Components/SkyLightComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -43,7 +46,18 @@ AWMCaribbeanRainforestPrototype::AWMCaribbeanRainforestPrototype()
     PrototypeSun = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("PrototypeSun"));
     PrototypeSun->SetupAttachment(SceneRoot);
     PrototypeSun->SetRelativeRotation(FRotator(-42.0f, -28.0f, 0.0f));
-    PrototypeSun->SetIntensity(4.0f);
+    PrototypeSun->SetAtmosphereSunLight(true);
+    PrototypeSun->SetAtmosphereSunLightIndex(0);
+
+    PrototypeSkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("PrototypeSkyLight"));
+    PrototypeSkyLight->SetupAttachment(SceneRoot);
+    PrototypeSkyLight->SetRealTimeCapture(false);
+
+    PrototypeSkyAtmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("PrototypeSkyAtmosphere"));
+    PrototypeSkyAtmosphere->SetupAttachment(SceneRoot);
+
+    PrototypeHeightFog = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("PrototypeHeightFog"));
+    PrototypeHeightFog->SetupAttachment(SceneRoot);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -87,6 +101,25 @@ FVector AWMCaribbeanRainforestPrototype::RandomRingPoint(FRandomStream& Random, 
     return FVector(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, 0.0f);
 }
 
+void AWMCaribbeanRainforestPrototype::ApplyLookDevelopmentProfile()
+{
+    const UWMVisualProfileSettings* Profile = GetDefault<UWMVisualProfileSettings>();
+    if (!Profile || !Profile->Atmosphere.IsSane())
+    {
+        return;
+    }
+
+    PrototypeSun->SetIntensity(Profile->Atmosphere.SunIntensity);
+    PrototypeSun->SetLightColor(Profile->Palette.Sunlight);
+
+    PrototypeSkyLight->SetIntensity(Profile->Atmosphere.SkyLightIntensity);
+    PrototypeSkyLight->SetLightColor(Profile->Palette.Sky);
+
+    PrototypeHeightFog->SetFogDensity(Profile->Atmosphere.FogDensity);
+    PrototypeHeightFog->SetFogHeightFalloff(Profile->Atmosphere.FogHeightFalloff);
+    PrototypeHeightFog->SetFogInscatteringColor(FLinearColor::LerpUsingHSV(Profile->Palette.Sky, Profile->Palette.Sunlight, 0.18f));
+}
+
 void AWMCaribbeanRainforestPrototype::RebuildPrototype()
 {
     GroundTiles->ClearInstances();
@@ -104,12 +137,12 @@ void AWMCaribbeanRainforestPrototype::RebuildPrototype()
 
     const EWMVisualQualityTier EffectiveTier = bUseProfileDefaultQuality ? Profile->DefaultQualityTier : QualityTier;
     const FWMVisualBudget& Budget = Profile->GetBudget(EffectiveTier);
-    if (!Budget.IsSane())
+    if (!Budget.IsSane() || !Profile->Atmosphere.IsSane())
     {
         return;
     }
 
-    PrototypeSun->SetLightColor(Profile->Palette.Sunlight);
+    ApplyLookDevelopmentProfile();
 
     GroundTiles->AddInstance(FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, -50.0f), FVector(50.0f, 50.0f, 1.0f)));
 

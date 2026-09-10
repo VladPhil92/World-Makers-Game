@@ -42,6 +42,33 @@ struct FWMVisualPalette
     FLinearColor Sunlight = FLinearColor(1.0f, 0.890f, 0.690f, 1.0f);
 };
 
+/**
+ * Source-controlled look-development controls that can be applied even while the scene still uses proxy meshes.
+ * Values are intentionally renderer-agnostic and conservative enough to scale down for tablet profiles.
+ */
+USTRUCT(BlueprintType)
+struct FWMAtmosphereLook
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "20.0"))
+    float SunIntensity = 4.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "10.0"))
+    float SkyLightIntensity = 0.85f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "0.2"))
+    float FogDensity = 0.012f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.01", ClampMax = "2.0"))
+    float FogHeightFalloff = 0.22f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "30.0", ClampMax = "120.0"))
+    float CameraFOVDegrees = 72.0f;
+
+    bool IsSane() const;
+};
+
 USTRUCT(BlueprintType)
 struct FWMVisualBudget
 {
@@ -82,6 +109,9 @@ public:
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
     FWMVisualPalette Palette;
+
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
+    FWMAtmosphereLook Atmosphere;
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
     FWMVisualBudget LowBudget;
