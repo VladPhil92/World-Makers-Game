@@ -7,7 +7,46 @@
   "required": ["id", "axis", "ageBand", "learningObjectives", "playerGoalKey", "mechanics", "evidenceEvents", "difficulty", "review", "runtime"],
   "properties": {
     "id": { "type": "string", "pattern": "^mission\\.[a-z0-9._-]+$" },
-    "axis": { "enum": ["mathematics", "science", "language-narrative", "history-culture"] },
+    "axis": { "enum": ["mathematics", "science", "language-narrative", "history-culture", "ethics-philosophy"] },
+    "discipline": {
+      "enum": [
+        "mathematics",
+        "geometry",
+        "english-language",
+        "spanish-language",
+        "literature",
+        "biology",
+        "chemistry",
+        "physics",
+        "ecology",
+        "ethics",
+        "philosophy-for-children"
+      ]
+    },
+    "secondaryDisciplines": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "mathematics",
+          "geometry",
+          "english-language",
+          "spanish-language",
+          "literature",
+          "biology",
+          "chemistry",
+          "physics",
+          "ecology",
+          "ethics",
+          "philosophy-for-children"
+        ]
+      }
+    },
+    "conceptTags": { "type": "array", "items": { "type": "string" } },
+    "depthLayers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["experience", "concept", "formalization"] }
+    },
     "ageBand": { "enum": ["4-6", "7-8", "9-10"] },
     "learningObjectives": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "playerGoalKey": { "type": "string" },
