@@ -6,6 +6,21 @@
 #include "Misc/Paths.h"
 #include "UObject/SoftObjectPath.h"
 
+namespace WMAuthoredAssetRuntime
+{
+    bool StaticMeshMeetsContract(const UStaticMesh* Mesh, const FWMAuthoredVisualAssetDefinition& Definition)
+    {
+        return Mesh && Mesh->GetNumLODs() >= Definition.MinLods &&
+            Mesh->GetStaticMaterials().Num() <= Definition.MaxMaterialSlots;
+    }
+
+    bool SkeletalMeshMeetsContract(const USkeletalMesh* Mesh, const FWMAuthoredVisualAssetDefinition& Definition)
+    {
+        return Mesh && Mesh->GetLODNum() >= Definition.MinLods &&
+            Mesh->GetMaterials().Num() <= Definition.MaxMaterialSlots;
+    }
+}
+
 void UWMAuthoredAssetSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
@@ -72,7 +87,14 @@ UStaticMesh* UWMAuthoredAssetSubsystem::LoadStaticMesh(const FName AssetId) cons
     {
         return nullptr;
     }
-    return Cast<UStaticMesh>(FSoftObjectPath(Asset->ObjectPath).TryLoad());
+
+    UStaticMesh* Mesh = Cast<UStaticMesh>(FSoftObjectPath(Asset->ObjectPath).TryLoad());
+    if (!WMAuthoredAssetRuntime::StaticMeshMeetsContract(Mesh, *Asset))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("World Makers authored StaticMesh rejected by P1 LOD/material contract: %s"), *AssetId.ToString());
+        return nullptr;
+    }
+    return Mesh;
 }
 
 USkeletalMesh* UWMAuthoredAssetSubsystem::LoadSkeletalMesh(const FName AssetId) const
@@ -82,5 +104,12 @@ USkeletalMesh* UWMAuthoredAssetSubsystem::LoadSkeletalMesh(const FName AssetId) 
     {
         return nullptr;
     }
-    return Cast<USkeletalMesh>(FSoftObjectPath(Asset->ObjectPath).TryLoad());
+
+    USkeletalMesh* Mesh = Cast<USkeletalMesh>(FSoftObjectPath(Asset->ObjectPath).TryLoad());
+    if (!WMAuthoredAssetRuntime::SkeletalMeshMeetsContract(Mesh, *Asset))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("World Makers authored SkeletalMesh rejected by P1 LOD/material contract: %s"), *AssetId.ToString());
+        return nullptr;
+    }
+    return Mesh;
 }
