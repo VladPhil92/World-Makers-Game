@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "platform": "Android",
+  "deviceClass": "Representative tablet model",
+  "osVersion": "pending",
+  "unrealVersion": "5.8.2",
+  "buildCommit": "0000000000000000000000000000000000000000",
+  "profileId": "performance.tablet.low",
+  "captureTool": "UnrealInsights",
+  "captureFile": "captures/pending.utrace",
+  "captureSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "screenshotFile": "screenshots/pending.png",
+  "screenshotSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "visualReview": {
+    "sceneReadable": false,
+    "uiLegible": false,
+    "cameraComfortable": false,
+    "noCriticalArtifacts": false,
+    "reviewerRole": "visual-qa"
+  },
+  "scenarios": [
+    {"id": "visual.rainforest.explore", "frameSamples": 0, "averageFrameTimeMs": 0, "p95FrameTimeMs": 0, "gameThreadP95Ms": 0, "renderThreadP95Ms": 0, "gpuP95Ms": 0, "peakDrawCalls": 0, "peakVisibleTriangles": 0, "peakResidentTextureMB": 0, "peakActiveVfx": 0},
+    {"id": "visual.build.dense", "frameSamples": 0, "averageFrameTimeMs": 0, "p95FrameTimeMs": 0, "gameThreadP95Ms": 0, "renderThreadP95Ms": 0, "gpuP95Ms": 0, "peakDrawCalls": 0, "peakVisibleTriangles": 0, "peakResidentTextureMB": 0, "peakActiveVfx": 0},
+    {"id": "visual.science.vfx-burst", "frameSamples": 0, "averageFrameTimeMs": 0, "p95FrameTimeMs": 0, "gameThreadP95Ms": 0, "renderThreadP95Ms": 0, "gpuP95Ms": 0, "peakDrawCalls": 0, "peakVisibleTriangles": 0, "peakResidentTextureMB": 0, "peakActiveVfx": 0},
+    {"id": "visual.adventure.reveal", "frameSamples": 0, "averageFrameTimeMs": 0, "p95FrameTimeMs": 0, "gameThreadP95Ms": 0, "renderThreadP95Ms": 0, "gpuP95Ms": 0, "peakDrawCalls": 0, "peakVisibleTriangles": 0, "peakResidentTextureMB": 0, "peakActiveVfx": 0}
+  ]
+}
