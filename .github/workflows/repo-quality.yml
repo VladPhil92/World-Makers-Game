@@ -67,6 +67,8 @@ jobs:
         run: python scripts/validate-v5-character-animation.py
       - name: Validate V6 VFX Scientific Fantastic Feedback
         run: python scripts/validate-v6-vfx-feedback.py
+      - name: Validate V7 Camera Cinematics UI Motion
+        run: python scripts/validate-v7-camera-ui-motion.py
 
   parent-portal:
     runs-on: ubuntu-latest
