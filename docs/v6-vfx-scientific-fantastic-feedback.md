@@ -22,6 +22,8 @@ The procedural renderer uses original ring, halo, burst and directional-chevron 
 
 ## Stable feedback vocabulary
 
+The current V6 contract contains **17 stable semantic effects**. They are grouped by causal domain rather than by spectacle type.
+
 Gameplay/world:
 
 - `gameplay.build.place`
