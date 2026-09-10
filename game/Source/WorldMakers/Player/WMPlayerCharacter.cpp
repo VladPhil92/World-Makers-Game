@@ -2,6 +2,8 @@
 
 #include "Building/WMBuildingComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/SceneComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Environment/WMExplorationComponent.h"
 #include "Environment/WMInteractionComponent.h"
@@ -10,12 +12,50 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/WMTouchGestureLibrary.h"
+#include "Materials/MaterialInterface.h"
 #include "Mission/WMMissionMeasurementComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
+#include "ProceduralMeshComponent.h"
 #include "UI/WMBuildHUDWidget.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Visual/WMAvatarArtTypes.h"
+#include "Visual/WMProceduralAvatarGeometry.h"
 #include "Visual/WMPrototypeMotionStyle.h"
 #include "Visual/WMVisualProfileSettings.h"
+
+namespace WMAvatarArt
+{
+    void ConfigureRenderOnly(UProceduralMeshComponent* Component)
+    {
+        if (!Component)
+        {
+            return;
+        }
+        Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Component->SetCanEverAffectNavigation(false);
+        Component->bUseAsyncCooking = false;
+    }
+
+    bool Commit(UProceduralMeshComponent* Component, const FWMEnvironmentMeshData& Mesh, const FLinearColor& Color)
+    {
+        if (!Component || !Mesh.IsSane())
+        {
+            return false;
+        }
+        Component->ClearAllMeshSections();
+        Component->CreateMeshSection_LinearColor(
+            0,
+            Mesh.Vertices,
+            Mesh.Triangles,
+            Mesh.Normals,
+            Mesh.UV0,
+            Mesh.VertexColors,
+            Mesh.Tangents,
+            false);
+        Component->SetVectorParameterValueOnMaterials(TEXT("Color"), Color);
+        return true;
+    }
+}
 
 AWMPlayerCharacter::AWMPlayerCharacter()
 {
@@ -31,6 +71,15 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     GetCharacterMovement()->AirControl = 0.25f;
     GetCharacterMovement()->MaxWalkSpeed = 450.0f;
 
+    // ACharacter already owns the production SkeletalMeshComponent. V4 keeps it collision-free and reserves it
+    // as the authored avatar destination; source-visible procedural art is used while no production mesh exists.
+    if (GetMesh())
+    {
+        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        GetMesh()->SetVisibility(false, true);
+    }
+
+    // Legacy V1 six-piece visual remains rollback-only.
     PrototypeBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PrototypeBody"));
     PrototypeBody->SetupAttachment(RootComponent);
     PrototypeBody->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -84,6 +133,96 @@ AWMPlayerCharacter::AWMPlayerCharacter()
         PrototypeHead->SetStaticMesh(HeadMesh.Object);
     }
 
+    // V4 joint hierarchy. Names intentionally mirror the stable rig contract for V5 handoff.
+    AvatarRigRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Rig_root"));
+    AvatarRigRoot->SetupAttachment(RootComponent);
+
+    AvatarPelvisRig = CreateDefaultSubobject<USceneComponent>(TEXT("Rig_pelvis"));
+    AvatarPelvisRig->SetupAttachment(AvatarRigRoot);
+
+    AvatarSpineRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_spine"));
+    AvatarSpineRig->SetupAttachment(AvatarPelvisRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarSpineRig);
+
+    AvatarChestRig = CreateDefaultSubobject<USceneComponent>(TEXT("Rig_chest"));
+    AvatarChestRig->SetupAttachment(AvatarSpineRig);
+
+    AvatarNeckRig = CreateDefaultSubobject<USceneComponent>(TEXT("Rig_neck"));
+    AvatarNeckRig->SetupAttachment(AvatarChestRig);
+
+    AvatarHeadRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_head"));
+    AvatarHeadRig->SetupAttachment(AvatarNeckRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarHeadRig);
+
+    AvatarJawRig = CreateDefaultSubobject<USceneComponent>(TEXT("Rig_jaw"));
+    AvatarJawRig->SetupAttachment(AvatarHeadRig);
+
+    AvatarHairArt = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Art_hair"));
+    AvatarHairArt->SetupAttachment(AvatarHeadRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarHairArt);
+
+    AvatarUpperArmLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_upperarm_l"));
+    AvatarUpperArmLeftRig->SetupAttachment(AvatarChestRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarUpperArmLeftRig);
+
+    AvatarLowerArmLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_lowerarm_l"));
+    AvatarLowerArmLeftRig->SetupAttachment(AvatarUpperArmLeftRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarLowerArmLeftRig);
+
+    AvatarHandLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_hand_l"));
+    AvatarHandLeftRig->SetupAttachment(AvatarLowerArmLeftRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarHandLeftRig);
+
+    AvatarUpperArmRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_upperarm_r"));
+    AvatarUpperArmRightRig->SetupAttachment(AvatarChestRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarUpperArmRightRig);
+
+    AvatarLowerArmRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_lowerarm_r"));
+    AvatarLowerArmRightRig->SetupAttachment(AvatarUpperArmRightRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarLowerArmRightRig);
+
+    AvatarHandRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_hand_r"));
+    AvatarHandRightRig->SetupAttachment(AvatarLowerArmRightRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarHandRightRig);
+
+    AvatarThighLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_thigh_l"));
+    AvatarThighLeftRig->SetupAttachment(AvatarPelvisRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarThighLeftRig);
+
+    AvatarCalfLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_calf_l"));
+    AvatarCalfLeftRig->SetupAttachment(AvatarThighLeftRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarCalfLeftRig);
+
+    AvatarFootLeftRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_foot_l"));
+    AvatarFootLeftRig->SetupAttachment(AvatarCalfLeftRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarFootLeftRig);
+
+    AvatarThighRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_thigh_r"));
+    AvatarThighRightRig->SetupAttachment(AvatarPelvisRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarThighRightRig);
+
+    AvatarCalfRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_calf_r"));
+    AvatarCalfRightRig->SetupAttachment(AvatarThighRightRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarCalfRightRig);
+
+    AvatarFootRightRig = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Rig_foot_r"));
+    AvatarFootRightRig->SetupAttachment(AvatarCalfRightRig);
+    WMAvatarArt::ConfigureRenderOnly(AvatarFootRightRig);
+
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> AvatarFallbackMaterial(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+    if (AvatarFallbackMaterial.Succeeded())
+    {
+        for (UProceduralMeshComponent* Part : TArray<UProceduralMeshComponent*>{
+            AvatarSpineRig, AvatarHeadRig, AvatarHairArt,
+            AvatarUpperArmLeftRig, AvatarLowerArmLeftRig, AvatarHandLeftRig,
+            AvatarUpperArmRightRig, AvatarLowerArmRightRig, AvatarHandRightRig,
+            AvatarThighLeftRig, AvatarCalfLeftRig, AvatarFootLeftRig,
+            AvatarThighRightRig, AvatarCalfRightRig, AvatarFootRightRig})
+        {
+            Part->SetMaterial(0, AvatarFallbackMaterial.Object);
+        }
+    }
+
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 500.0f;
@@ -99,9 +238,16 @@ AWMPlayerCharacter::AWMPlayerCharacter()
     InteractionComponent = CreateDefaultSubobject<UWMInteractionComponent>(TEXT("InteractionComponent"));
 }
 
+void AWMPlayerCharacter::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    BuildProceduralAvatarArt();
+}
+
 void AWMPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+    BuildProceduralAvatarArt();
     ApplyVisualProfileToCamera();
     EnsureBuildHUD();
 }
@@ -109,6 +255,7 @@ void AWMPlayerCharacter::BeginPlay()
 void AWMPlayerCharacter::PawnClientRestart()
 {
     Super::PawnClientRestart();
+    BuildProceduralAvatarArt();
     ApplyVisualProfileToCamera();
     EnsureBuildHUD();
 }
@@ -128,10 +275,136 @@ void AWMPlayerCharacter::ApplyVisualProfileToCamera()
     }
 }
 
+void AWMPlayerCharacter::BuildProceduralAvatarArt()
+{
+    const UWMAvatarVisualSettings* AvatarSettings = GetDefault<UWMAvatarVisualSettings>();
+    const UWMVisualProfileSettings* VisualSettings = GetDefault<UWMVisualProfileSettings>();
+    if (!AvatarSettings || !VisualSettings || !AvatarSettings->Proportions.IsSane() || !FWMAvatarRigContract::IsSane())
+    {
+        bProceduralAvatarReady = false;
+        RefreshAvatarVisualPath();
+        return;
+    }
+
+    const FWMAvatarProportions& P = AvatarSettings->Proportions;
+    const FWMAvatarArtBudget& Budget = AvatarSettings->GetBudget(VisualSettings->DefaultQualityTier);
+    if (!Budget.IsSane() || FWMProceduralAvatarGeometry::EstimateTriangleCount(P, Budget) > Budget.MaxTriangles)
+    {
+        bProceduralAvatarReady = false;
+        RefreshAvatarVisualPath();
+        return;
+    }
+
+    AvatarRigRoot->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
+    AvatarPelvisRig->SetRelativeLocation(FVector(0.0f, 0.0f, -5.0f));
+    AvatarSpineRig->SetRelativeLocation(FVector::ZeroVector);
+    AvatarChestRig->SetRelativeLocation(FVector(0.0f, 0.0f, P.TorsoHeightCm * 0.84f));
+    AvatarNeckRig->SetRelativeLocation(FVector(0.0f, 0.0f, P.TorsoHeightCm * 0.16f));
+    AvatarHeadRig->SetRelativeLocation(FVector(0.0f, 0.0f, P.HeadHeightCm * 0.50f));
+    AvatarJawRig->SetRelativeLocation(FVector(P.HeadHeightCm * 0.34f, 0.0f, -P.HeadHeightCm * 0.20f));
+    AvatarHairArt->SetRelativeLocation(FVector::ZeroVector);
+
+    const float ShoulderY = P.ShoulderWidthCm * 0.50f;
+    const float HipY = P.HipWidthCm * 0.30f;
+    AvatarUpperArmLeftRig->SetRelativeLocation(FVector(0.0f, -ShoulderY, P.TorsoHeightCm * 0.15f));
+    AvatarUpperArmRightRig->SetRelativeLocation(FVector(0.0f, ShoulderY, P.TorsoHeightCm * 0.15f));
+    AvatarLowerArmLeftRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.UpperArmLengthCm));
+    AvatarLowerArmRightRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.UpperArmLengthCm));
+    AvatarHandLeftRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.LowerArmLengthCm));
+    AvatarHandRightRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.LowerArmLengthCm));
+
+    AvatarThighLeftRig->SetRelativeLocation(FVector(0.0f, -HipY, 0.0f));
+    AvatarThighRightRig->SetRelativeLocation(FVector(0.0f, HipY, 0.0f));
+    AvatarCalfLeftRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.ThighLengthCm));
+    AvatarCalfRightRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.ThighLengthCm));
+    AvatarFootLeftRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.CalfLengthCm));
+    AvatarFootRightRig->SetRelativeLocation(FVector(0.0f, 0.0f, -P.CalfLengthCm));
+
+    FWMEnvironmentMeshData Mesh;
+    bool bAllPartsValid = true;
+
+    FWMProceduralAvatarGeometry::BuildTorso(Mesh, P);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarSpineRig, Mesh, AvatarSettings->Palette.Top);
+
+    FWMProceduralAvatarGeometry::BuildHead(Mesh, P, Budget.HeadSegments);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarHeadRig, Mesh, AvatarSettings->Palette.Skin);
+
+    FWMProceduralAvatarGeometry::BuildHairCap(Mesh, P, Budget.HeadSegments);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarHairArt, Mesh, AvatarSettings->Palette.Hair);
+
+    FWMProceduralAvatarGeometry::BuildUpperArm(Mesh, P, Budget.FacetSides);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarUpperArmLeftRig, Mesh, AvatarSettings->Palette.Top);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarUpperArmRightRig, Mesh, AvatarSettings->Palette.Top);
+
+    FWMProceduralAvatarGeometry::BuildLowerArm(Mesh, P, Budget.FacetSides);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarLowerArmLeftRig, Mesh, AvatarSettings->Palette.Skin);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarLowerArmRightRig, Mesh, AvatarSettings->Palette.Skin);
+
+    FWMProceduralAvatarGeometry::BuildHand(Mesh, Budget.HeadSegments);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarHandLeftRig, Mesh, AvatarSettings->Palette.Skin);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarHandRightRig, Mesh, AvatarSettings->Palette.Skin);
+
+    FWMProceduralAvatarGeometry::BuildThigh(Mesh, P, Budget.FacetSides);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarThighLeftRig, Mesh, AvatarSettings->Palette.Bottom);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarThighRightRig, Mesh, AvatarSettings->Palette.Bottom);
+
+    FWMProceduralAvatarGeometry::BuildCalf(Mesh, P, Budget.FacetSides);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarCalfLeftRig, Mesh, AvatarSettings->Palette.Bottom);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarCalfRightRig, Mesh, AvatarSettings->Palette.Bottom);
+
+    FWMProceduralAvatarGeometry::BuildFoot(Mesh, Budget.HeadSegments);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarFootLeftRig, Mesh, AvatarSettings->Palette.Footwear);
+    bAllPartsValid &= WMAvatarArt::Commit(AvatarFootRightRig, Mesh, AvatarSettings->Palette.Footwear);
+
+    bProceduralAvatarReady = bAllPartsValid;
+    RefreshAvatarVisualPath();
+}
+
+void AWMPlayerCharacter::SetLegacyAvatarVisible(const bool bVisible)
+{
+    for (UStaticMeshComponent* Part : TArray<UStaticMeshComponent*>{PrototypeBody, PrototypeHead, PrototypeLeftArm, PrototypeRightArm, PrototypeLeftLeg, PrototypeRightLeg})
+    {
+        if (Part)
+        {
+            Part->SetVisibility(bVisible, true);
+            Part->SetHiddenInGame(!bVisible, true);
+        }
+    }
+}
+
+void AWMPlayerCharacter::SetProceduralAvatarVisible(const bool bVisible)
+{
+    if (AvatarRigRoot)
+    {
+        AvatarRigRoot->SetVisibility(bVisible, true);
+        AvatarRigRoot->SetHiddenInGame(!bVisible, true);
+    }
+}
+
+void AWMPlayerCharacter::RefreshAvatarVisualPath()
+{
+    const UWMAvatarVisualSettings* Settings = GetDefault<UWMAvatarVisualSettings>();
+    const bool bHasProductionSkeletalMesh = GetMesh() && GetMesh()->GetSkeletalMeshAsset() != nullptr;
+    const bool bPreferProcedural = !Settings || Settings->bUseProceduralAvatarArt;
+    const bool bUseProcedural = bProceduralAvatarReady && (bPreferProcedural || !bHasProductionSkeletalMesh);
+    const bool bUseProductionSkeletalMesh = !bUseProcedural && bHasProductionSkeletalMesh;
+    const bool bUseLegacy = !bUseProcedural && !bUseProductionSkeletalMesh;
+
+    bProceduralAvatarActive = bUseProcedural;
+    SetProceduralAvatarVisible(bUseProcedural);
+    SetLegacyAvatarVisible(bUseLegacy);
+
+    if (GetMesh())
+    {
+        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        GetMesh()->SetVisibility(bUseProductionSkeletalMesh, true);
+        GetMesh()->SetHiddenInGame(!bUseProductionSkeletalMesh, true);
+    }
+}
+
 void AWMPlayerCharacter::UpdatePrototypeMotion(const float DeltaSeconds)
 {
-    if (!PrototypeBody || !PrototypeHead || !PrototypeLeftArm || !PrototypeRightArm || !PrototypeLeftLeg || !PrototypeRightLeg ||
-        !GetCharacterMovement() || !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
+    if (!GetCharacterMovement() || !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
     {
         return;
     }
@@ -147,6 +420,26 @@ void AWMPlayerCharacter::UpdatePrototypeMotion(const float DeltaSeconds)
     }
 
     const FWMPrototypeMotionPose Pose = FWMPrototypeMotionStyle::Evaluate(SpeedAlpha, PrototypeMotionPhase, bAirborne);
+
+    if (bProceduralAvatarActive && AvatarRigRoot && AvatarHeadRig && AvatarUpperArmLeftRig && AvatarUpperArmRightRig && AvatarThighLeftRig && AvatarThighRightRig)
+    {
+        const UWMAvatarVisualSettings* Settings = GetDefault<UWMAvatarVisualSettings>();
+        const float HeadBaseZ = Settings ? Settings->Proportions.HeadHeightCm * 0.50f : 15.8f;
+        AvatarRigRoot->SetRelativeLocation(FVector(0.0f, 0.0f, Pose.BodyBobCm));
+        AvatarRigRoot->SetRelativeRotation(FRotator(Pose.BodyLeanDegrees, 0.0f, 0.0f));
+        AvatarHeadRig->SetRelativeLocation(FVector(0.0f, 0.0f, HeadBaseZ + Pose.HeadBobCm));
+        AvatarUpperArmLeftRig->SetRelativeRotation(FRotator(Pose.ArmSwingDegrees, 0.0f, -5.0f));
+        AvatarUpperArmRightRig->SetRelativeRotation(FRotator(-Pose.ArmSwingDegrees, 0.0f, 5.0f));
+        AvatarThighLeftRig->SetRelativeRotation(FRotator(Pose.LegSwingDegrees, 0.0f, 0.0f));
+        AvatarThighRightRig->SetRelativeRotation(FRotator(-Pose.LegSwingDegrees, 0.0f, 0.0f));
+        return;
+    }
+
+    if (!PrototypeBody || !PrototypeHead || !PrototypeLeftArm || !PrototypeRightArm || !PrototypeLeftLeg || !PrototypeRightLeg)
+    {
+        return;
+    }
+
     PrototypeBody->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f + Pose.BodyBobCm));
     PrototypeBody->SetRelativeRotation(FRotator(Pose.BodyLeanDegrees, 0.0f, 0.0f));
     PrototypeHead->SetRelativeLocation(FVector(0.0f, 0.0f, 62.0f + Pose.HeadBobCm));
