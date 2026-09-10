@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.local/schema/m3-tablet-device-evidence.schema.json",
+  "title": "World Makers M3 representative tablet evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "evidenceId", "status", "testedAtUtc", "platform", "hardwareClass",
+    "deviceModel", "osVersion", "unrealVersion", "repositoryCommit", "performanceProfileId",
+    "captureFile", "captureSha256", "routeStatus"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "evidenceId": {"type": "string", "pattern": "^device\\.(ipados|android)\\.[a-z0-9-]+$"},
+    "status": {"enum": ["pending", "passed", "failed"]},
+    "testedAtUtc": {"type": ["string", "null"], "format": "date-time"},
+    "platform": {"enum": ["iPadOS", "Android"]},
+    "hardwareClass": {"type": "string", "minLength": 3, "maxLength": 64},
+    "deviceModel": {"type": "string", "minLength": 3, "maxLength": 128},
+    "osVersion": {"type": "string", "minLength": 1, "maxLength": 64},
+    "unrealVersion": {"const": "5.8.2"},
+    "repositoryCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "performanceProfileId": {"type": "string", "pattern": "^performance\\.tablet\\.(low|medium|high)$"},
+    "captureFile": {"type": "string", "pattern": "^performance/[A-Za-z0-9._-]+\\.json$"},
+    "captureSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "routeStatus": {"const": "passed"}
+  }
+}

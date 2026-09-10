@@ -1,0 +1,74 @@
+name: M3 Vertical Slice Certification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-precondition:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate M3.8 source contract
+        run: python scripts/validate-m3-8-vertical-slice-certification.py
+      - name: Require native certification runner enablement
+        env:
+          UNREAL_SELF_HOSTED_ENABLED: ${{ vars.UNREAL_SELF_HOSTED_ENABLED }}
+        run: |
+          if [ "$UNREAL_SELF_HOSTED_ENABLED" != "true" ]; then
+            echo "M3 certification requires UNREAL_SELF_HOSTED_ENABLED=true and the locked Windows x64 Unreal runner."
+            exit 1
+          fi
+
+  certify:
+    needs: source-precondition
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+      - unreal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Preflight locked Unreal runner and authored map
+        shell: powershell
+        run: ./scripts/preflight-unreal-runner.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -RequireAuthoredMap
+
+      - name: Require authored certification map in source gate
+        run: python scripts/validate-m1-certification.py --require-authored-map
+
+      - name: Build WorldMakers Editor on exact UE baseline
+        shell: powershell
+        run: ./scripts/build-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\certification'
+
+      - name: Run complete World Makers automation namespace
+        shell: powershell
+        run: ./scripts/test-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -TestFilter 'WorldMakers.' -EvidenceDir 'artifacts\certification'
+
+      - name: Collect native, smoke, route and tablet evidence
+        if: always()
+        shell: powershell
+        run: ./scripts/collect-unreal-certification-evidence.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\certification' -ManualSmokeEvidenceFile '${{ vars.M3_MANUAL_SMOKE_EVIDENCE_FILE }}' -VerticalSliceEvidenceFile '${{ vars.M3_VERTICAL_SLICE_EVIDENCE_FILE }}' -DeviceEvidenceRoot '${{ vars.M3_DEVICE_EVIDENCE_ROOT }}'
+
+      - name: Require complete M3 certification matrix
+        if: always()
+        run: python scripts/assess-m3-8-certification.py --evidence-dir artifacts/certification --require-certified
+
+      - name: Upload M3 certification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-vertical-slice-certification-${{ github.sha }}
+          path: artifacts/certification/**
+          if-no-files-found: error
+          retention-days: 90

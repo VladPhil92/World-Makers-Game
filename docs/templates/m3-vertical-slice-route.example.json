@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "testedAtUtc": null,
+  "operatorRole": "qa",
+  "platform": "Windows",
+  "unrealVersion": "5.8.2",
+  "commit": "0000000000000000000000000000000000000000",
+  "map": "game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap",
+  "checks": {
+    "biomeLoaded": "pending",
+    "semanticExploration": "pending",
+    "deliberateObservations": "pending",
+    "scienceMissionCompleted": "pending",
+    "reactiveEcosystemVisible": "pending",
+    "ecologicalBuildApplied": "pending",
+    "creativeUnlockGranted": "pending",
+    "myAdventuresProgressVisible": "pending",
+    "stopWithoutPenalty": "pending",
+    "resumeRestoresProgress": "pending",
+    "noCommercialPressure": "pending"
+  }
+}

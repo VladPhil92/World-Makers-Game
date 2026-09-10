@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.local/schema/m3-vertical-slice-route.schema.json",
+  "title": "World Makers M3 vertical slice route evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "testedAtUtc", "operatorRole", "platform", "unrealVersion", "commit", "map", "checks"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["pending", "passed", "failed"]},
+    "testedAtUtc": {"type": ["string", "null"], "format": "date-time"},
+    "operatorRole": {"enum": ["qa", "developer", "pedagogy-reviewer"]},
+    "platform": {"enum": ["Windows", "iPadOS", "Android"]},
+    "unrealVersion": {"const": "5.8.2"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "map": {"const": "game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap"},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "biomeLoaded",
+        "semanticExploration",
+        "deliberateObservations",
+        "scienceMissionCompleted",
+        "reactiveEcosystemVisible",
+        "ecologicalBuildApplied",
+        "creativeUnlockGranted",
+        "myAdventuresProgressVisible",
+        "stopWithoutPenalty",
+        "resumeRestoresProgress",
+        "noCommercialPressure"
+      ],
+      "properties": {
+        "biomeLoaded": {"enum": ["pending", "passed", "failed"]},
+        "semanticExploration": {"enum": ["pending", "passed", "failed"]},
+        "deliberateObservations": {"enum": ["pending", "passed", "failed"]},
+        "scienceMissionCompleted": {"enum": ["pending", "passed", "failed"]},
+        "reactiveEcosystemVisible": {"enum": ["pending", "passed", "failed"]},
+        "ecologicalBuildApplied": {"enum": ["pending", "passed", "failed"]},
+        "creativeUnlockGranted": {"enum": ["pending", "passed", "failed"]},
+        "myAdventuresProgressVisible": {"enum": ["pending", "passed", "failed"]},
+        "stopWithoutPenalty": {"enum": ["pending", "passed", "failed"]},
+        "resumeRestoresProgress": {"enum": ["pending", "passed", "failed"]},
+        "noCommercialPressure": {"enum": ["pending", "passed", "failed"]}
+      }
+    }
+  }
+}

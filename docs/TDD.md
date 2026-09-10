@@ -158,6 +158,14 @@ Repository Quality also executes the Trust Economy policy validator. It fails if
 
 A lightweight GitHub check is never sufficient evidence of Unreal runtime certification. See `docs/prototype-certification.md`.
 
+### M3.8 certification matrix
+
+M3.8 adds a separate **fail-closed** release-certification path. Ordinary PR/push CI validates source contracts but cannot set a certified result. The release workflow requires native Unreal evidence, passed manual smoke, the complete integrated Caribbean Rainforest route, evidence from at least one representative iPadOS tablet and one representative Android tablet, passing M3.7 performance captures, commit/version coherence and SHA-256 evidence integrity.
+
+The canonical machine-readable result is `artifacts/certification/m3-vertical-slice-assessment.json`. It may contain only `CERTIFIED` or `BLOCKED`; the `--require-certified` release mode exits non-zero for every incomplete or inconsistent evidence set.
+
+Representative-device evidence records non-unique engineering metadata only. Hardware serials, child/account identifiers, advertising IDs, free text, learning-answer payloads, commerce fields and behavioral history are prohibited.
+
 ## 12. Current locked decisions
 
 - Engine family: Unreal Engine 5.8.
@@ -170,6 +178,7 @@ A lightweight GitHub check is never sufficient evidence of Unreal runtime certif
 - Child runtime direct payments: prohibited.
 - Paid content ownership: family entitlement model.
 - Gameplay rewards: deterministic, non-purchasable, non-transferable, non-convertible.
+- M3 release certification: fail-closed evidence matrix; source success is not runtime/device certification.
 
 ## 13. Open decisions
 

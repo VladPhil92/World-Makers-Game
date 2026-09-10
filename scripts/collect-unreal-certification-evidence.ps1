@@ -2,6 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$EngineRoot,
     [string]$EvidenceDir = 'artifacts\certification',
+    [string]$ManualSmokeEvidenceFile = '',
+    [string]$VerticalSliceEvidenceFile = '',
+    [string]$DeviceEvidenceRoot = '',
     [switch]$RequireNativePass
 )
 
@@ -14,26 +17,55 @@ $VersionFile = Join-Path $RepoRoot 'game\UNREAL_ENGINE_VERSION'
 $BuildVersionFile = Join-Path $EngineRoot 'Engine\Build\Build.version'
 $PerformanceSourcePath = Join-Path $RepoRoot 'game\Saved\WorldMakers\Performance'
 $PerformanceEvidencePath = Join-Path $EvidencePath 'performance'
+$DeviceEvidencePath = Join-Path $EvidencePath 'devices'
+
+if ([string]::IsNullOrWhiteSpace($VerticalSliceEvidenceFile)) {
+    $VerticalSliceEvidenceFile = Join-Path $RepoRoot 'game\Saved\WorldMakers\Certification\vertical-slice-route.json'
+}
+if ([string]::IsNullOrWhiteSpace($DeviceEvidenceRoot)) {
+    $DeviceEvidenceRoot = Join-Path $RepoRoot 'game\Saved\WorldMakers\CertificationDevices'
+}
 
 function Read-JsonIfPresent([string]$Path) {
     if (Test-Path $Path) { return Get-Content $Path -Raw | ConvertFrom-Json }
     return $null
 }
 
+function Copy-JsonDirectory([string]$Source, [string]$Destination) {
+    $Copied = @()
+    if (Test-Path $Source) {
+        New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+        foreach ($Item in Get-ChildItem -Path $Source -Filter '*.json' -File | Sort-Object Name) {
+            Copy-Item -Force -Path $Item.FullName -Destination (Join-Path $Destination $Item.Name)
+            $Copied += $Item.Name
+        }
+    }
+    return $Copied
+}
+
+if (-not [string]::IsNullOrWhiteSpace($ManualSmokeEvidenceFile) -and (Test-Path $ManualSmokeEvidenceFile)) {
+    Copy-Item -Force -Path $ManualSmokeEvidenceFile -Destination (Join-Path $EvidencePath 'manual-smoke.json')
+}
+if (-not [string]::IsNullOrWhiteSpace($VerticalSliceEvidenceFile) -and (Test-Path $VerticalSliceEvidenceFile)) {
+    Copy-Item -Force -Path $VerticalSliceEvidenceFile -Destination (Join-Path $EvidencePath 'vertical-slice-route.json')
+}
+
+$PerformanceCaptureFiles = @()
+$PerformanceCaptureFiles += Copy-JsonDirectory $PerformanceSourcePath $PerformanceEvidencePath
+
+$DeviceEvidenceFiles = @()
+if (Test-Path $DeviceEvidenceRoot) {
+    $DeviceEvidenceFiles += Copy-JsonDirectory (Join-Path $DeviceEvidenceRoot 'devices') $DeviceEvidencePath
+    $PerformanceCaptureFiles += Copy-JsonDirectory (Join-Path $DeviceEvidenceRoot 'performance') $PerformanceEvidencePath
+}
+$PerformanceCaptureFiles = @($PerformanceCaptureFiles | Sort-Object -Unique)
+$DeviceEvidenceFiles = @($DeviceEvidenceFiles | Sort-Object -Unique)
+
 $Preflight = Read-JsonIfPresent (Join-Path $EvidencePath 'runner-preflight.json')
 $Build = Read-JsonIfPresent (Join-Path $EvidencePath 'build-result.json')
 $Automation = Read-JsonIfPresent (Join-Path $EvidencePath 'automation-result.json')
 $ManualSmoke = Read-JsonIfPresent (Join-Path $EvidencePath 'manual-smoke.json')
-
-$PerformanceCaptureFiles = @()
-if (Test-Path $PerformanceSourcePath) {
-    New-Item -ItemType Directory -Force -Path $PerformanceEvidencePath | Out-Null
-    foreach ($Capture in Get-ChildItem -Path $PerformanceSourcePath -Filter '*.json' -File | Sort-Object Name) {
-        $Destination = Join-Path $PerformanceEvidencePath $Capture.Name
-        Copy-Item -Force -Path $Capture.FullName -Destination $Destination
-        $PerformanceCaptureFiles += $Capture.Name
-    }
-}
+$VerticalSliceRoute = Read-JsonIfPresent (Join-Path $EvidencePath 'vertical-slice-route.json')
 
 $ExpectedVersion = if (Test-Path $VersionFile) { (Get-Content $VersionFile -Raw).Trim() } else { $null }
 $ActualVersion = $null
@@ -60,7 +92,8 @@ $HashCandidates = @(
     'build.log',
     'automation-result.json',
     'automation.log',
-    'manual-smoke.json'
+    'manual-smoke.json',
+    'vertical-slice-route.json'
 )
 foreach ($Name in $HashCandidates) {
     $Path = Join-Path $EvidencePath $Name
@@ -74,6 +107,13 @@ foreach ($Name in $PerformanceCaptureFiles) {
     if (Test-Path $Path) {
         $Hash = Get-FileHash -Algorithm SHA256 -Path $Path
         $HashEntries += [ordered]@{ file = "performance/$Name"; sha256 = $Hash.Hash.ToLowerInvariant() }
+    }
+}
+foreach ($Name in $DeviceEvidenceFiles) {
+    $Path = Join-Path $DeviceEvidencePath $Name
+    if (Test-Path $Path) {
+        $Hash = Get-FileHash -Algorithm SHA256 -Path $Path
+        $HashEntries += [ordered]@{ file = "devices/$Name"; sha256 = $Hash.Hash.ToLowerInvariant() }
     }
 }
 
@@ -104,8 +144,16 @@ $Manifest = [ordered]@{
         present = ($PerformanceCaptureFiles.Count -gt 0)
         requiredForM3VerticalSlice = $true
         enforcedByCurrentM1NativeGate = $false
-        source = 'game/Saved/WorldMakers/Performance/*.json'
+        source = 'game/Saved/WorldMakers/Performance/*.json and M3 device evidence bundle'
         files = $PerformanceCaptureFiles
+    }
+    m3VerticalSliceEvidence = [ordered]@{
+        assessmentRequired = $true
+        routePresent = ($null -ne $VerticalSliceRoute)
+        routeStatus = if ($VerticalSliceRoute) { $VerticalSliceRoute.status } else { 'pending' }
+        deviceEvidencePresent = ($DeviceEvidenceFiles.Count -gt 0)
+        deviceEvidenceFiles = $DeviceEvidenceFiles
+        assessor = 'scripts/assess-m3-8-certification.py'
     }
     runtimeCertification = [ordered]@{
         certified = $RuntimeCertified
