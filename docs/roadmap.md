@@ -46,14 +46,30 @@ Target outcomes:
 - Tablet performance capture.
 - Fail-closed certification matrix spanning source, native UE, manual smoke, integrated route, device performance, evidence integrity and privacy.
 
-## M4 — Parent portal MVP
+## M4 — Parent portal
 
-Current source progression: **next** while M3 runtime/device evidence is completed independently.
+Current source progression:
 
-- Parent authentication boundary.
-- Child profile linking through explicit consent/authorization design.
-- Read-only play time, recent builds, and learning-progress summary.
-- Data export/delete flows specified before production PII.
+- M4.1 — parent portal MVP: source-complete with demo-only auth and provider-neutral contracts.
+- M4.2 — production identity, durable family linking and backend adapters: next.
+
+M4.1 outcomes:
+
+- Guardian session boundary with production fail-closed behavior.
+- Authorized child-profile filtering and cross-account denial.
+- Read-only seven-day play-time, recent creations, learning and adventure summaries.
+- Link requests that remain pending until backend relationship verification.
+- Explicit export, unlink and delete requests with guardian acknowledgement.
+- Accessible responsive Family Space UI.
+- No direct browser/database coupling, raw child telemetry or browser-exposed secrets.
+
+M4.2 target outcomes:
+
+- Select production identity provider and authenticated server adapter.
+- Durable family/guardian/child relationship storage and verification.
+- Real data aggregation from authorized game services.
+- Durable export/delete/unlink workflows with audit and retention semantics.
+- Production localization and deployment topology.
 
 ## M5 — Closed multiplayer prototype
 

@@ -1,25 +1,18 @@
 # Parent Portal
 
-This directory is the independently deployable parent-facing application boundary.
+Privacy-first parent/guardian application boundary for World Makers.
 
-The initial scaffold intentionally avoids locking the team into a production framework before authentication, hosting, accessibility, localization, and product requirements are confirmed. **Next.js + TypeScript** is the current default recommendation for implementation because it is widely supported, server-capable, and appropriate for a small team; that decision should be recorded in an ADR before production development begins.
+M4.1 upgrades the original scaffold into a runnable zero-dependency Node 22 MVP. The browser receives only minimized family read models; all child-scoped access is checked against a server-owned guardian session.
 
-## Responsibilities
+## Run locally
 
-- Parent/guardian authentication.
-- Authorized child-profile summaries.
-- Play-time summaries.
-- Recent build/creation summaries.
-- Learning-objective progress summaries.
-- Social/invitation controls.
-- Privacy/export/delete controls.
+```bash
+WORLD_MAKERS_ALLOW_DEMO_AUTH=true npm start
+```
 
-## Non-responsibilities
+Open `http://127.0.0.1:4173` and choose **Open secure demo**.
 
-- Direct database access.
-- Storage of backend credentials in client bundles.
-- Raw analytics or unrestricted child telemetry.
-- Public child profiles.
+Without `WORLD_MAKERS_ALLOW_DEMO_AUTH=true`, authenticated APIs fail closed because a production identity provider has not yet been selected.
 
 ## Local checks
 
@@ -29,4 +22,25 @@ npm run lint
 npm test
 ```
 
-The current scripts validate the scaffold and are replaced by framework-specific lint/test commands when the web stack is initialized.
+## Responsibilities
+
+- Parent/guardian authentication boundary.
+- Authorized child-profile summaries.
+- Seven-day play-time summaries.
+- Recent build/creation summaries.
+- Learning-objective progress summaries.
+- Family link requests pending backend verification.
+- Privacy export/unlink/delete requests.
+
+## Security and privacy boundaries
+
+- No direct database access from browser code.
+- No production credentials in browser bundles.
+- No public child profiles.
+- No raw telemetry, chat logs, exact learning answers, precise location or advertising IDs in the dashboard.
+- Missing and unauthorized child IDs are externally indistinguishable.
+- Guardian session cookie is HttpOnly and SameSite=Strict; production mode also requires Secure transport.
+
+## Architecture decision
+
+See `docs/adr/ADR-0001-parent-portal-stack.md`. M4.1 intentionally stays dependency-minimized until M4.2 selects production identity/backend topology. Next.js remains the preferred framework migration target once those boundaries are concrete.

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>World Makers Family Space</title>
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="brand-lockup">
+      <span class="brand-mark" aria-hidden="true">WM</span>
+      <div><strong>World Makers</strong><span>Family Space</span></div>
+    </div>
+    <button id="sign-out" class="button button-quiet" type="button" hidden>Sign out</button>
+  </header>
+
+  <main id="main" class="shell">
+    <section id="signed-out" class="auth-card" aria-labelledby="welcome-title">
+      <p class="eyebrow">For parents and guardians</p>
+      <h1 id="welcome-title">A calm view of their world.</h1>
+      <p>See broad learning progress, recent creations and play-time summaries without turning a child’s play into surveillance.</p>
+      <button id="demo-sign-in" class="button button-primary" type="button">Open secure demo</button>
+      <p id="auth-note" class="fine-print">Production sign-in stays disabled until an approved identity provider is configured.</p>
+    </section>
+
+    <section id="portal" hidden>
+      <div class="hero-row">
+        <div>
+          <p class="eyebrow">Family overview</p>
+          <h1>What are they making and learning?</h1>
+          <p class="lede">Only the information needed to support them: no chat logs, raw answers or advertising profiles.</p>
+        </div>
+        <label class="child-picker">Child profile
+          <select id="child-select" aria-label="Choose a linked child profile"></select>
+        </label>
+      </div>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <section class="metric-grid" aria-label="Weekly overview">
+        <article class="metric-card"><span class="metric-label">Play time · 7 days</span><strong id="play-minutes">—</strong><span id="session-count">—</span></article>
+        <article class="metric-card"><span class="metric-label">Learning areas</span><strong id="learning-count">—</strong><span>Broad progress only</span></article>
+        <article class="metric-card"><span class="metric-label">Recent creations</span><strong id="creation-count">—</strong><span>Curated summaries</span></article>
+        <article class="metric-card"><span class="metric-label">Design principle</span><strong>Right to Stop</strong><span>No streaks or loss for leaving</span></article>
+      </section>
+
+      <div class="content-grid">
+        <section class="panel" aria-labelledby="learning-title">
+          <div class="panel-heading"><div><p class="eyebrow">Learning</p><h2 id="learning-title">Skills taking shape</h2></div><span class="privacy-badge">Summary only</span></div>
+          <div id="learning-list" class="stack"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="adventures-title">
+          <div class="panel-heading"><div><p class="eyebrow">Adventures</p><h2 id="adventures-title">Current journey</h2></div></div>
+          <div id="adventure-list" class="stack"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="builds-title">
+          <div class="panel-heading"><div><p class="eyebrow">Creations</p><h2 id="builds-title">Recent builds</h2></div></div>
+          <div id="build-list" class="stack"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="link-title">
+          <div class="panel-heading"><div><p class="eyebrow">Family</p><h2 id="link-title">Link another profile</h2></div></div>
+          <p>Use the one-time family code shown on the child’s device. A code never grants access until the backend verifies the relationship.</p>
+          <form id="link-form" class="inline-form">
+            <label>8-character code<input id="link-code" name="linkCode" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" required></label>
+            <button class="button button-secondary" type="submit">Request link</button>
+          </form>
+          <p id="link-result" class="fine-print" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="panel privacy-panel" aria-labelledby="privacy-title">
+        <div class="panel-heading"><div><p class="eyebrow">Privacy</p><h2 id="privacy-title">Your family’s data controls</h2></div><span class="privacy-badge">Guardian only</span></div>
+        <p>Requests are explicit and scoped to the selected linked profile. Destructive requests require acknowledgement and server-side authorization.</p>
+        <label class="ack"><input id="privacy-ack" type="checkbox"> I understand this request applies to the selected child profile.</label>
+        <div class="privacy-actions">
+          <button class="button button-secondary privacy-action" data-operation="export-child-data" type="button">Request data export</button>
+          <button class="button button-secondary privacy-action" data-operation="unlink-child-profile" type="button">Request unlink</button>
+          <button class="button button-danger privacy-action" data-operation="delete-child-data" type="button">Request deletion</button>
+        </div>
+        <p id="privacy-result" class="fine-print" aria-live="polite"></p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>World Makers Family Space</span><span>Privacy-first by design · Prototype MVP</span></footer>
+</body>
+</html>
