@@ -115,9 +115,22 @@ Commerce audit records belong to the parent/family trust zone and must not be ex
 
 ## 8. Rendering and performance
 
-Nanite/Lumen are optional high-tier features, not universal assumptions. Establish representative-device budgets for frame time, memory, texture pool, draw calls/material slots, shader complexity, dynamic lights/shadows, skeletal meshes/animation, effects/particles, and world streaming.
+Nanite/Lumen are optional high-tier features, not universal assumptions. Performance is governed by versioned World Makers profiles rather than one universal rendering assumption.
 
-[PLACEHOLDER: target FPS per device class and representative test devices]
+M3.7 source targets:
+
+| Tier | Target | p95 frame time | Screen percentage | Texture pool |
+| --- | ---: | ---: | ---: | ---: |
+| Tablet Low | 30 FPS | 33.34 ms | 70% | 384 MB |
+| Tablet Medium | 30 FPS | 33.34 ms | 85% | 512 MB |
+| Tablet High | 60 FPS | 16.67 ms | 100% | 768 MB |
+| Desktop Reference | 60 FPS | 16.67 ms | 100% | 1024 MB |
+
+The profile catalog also budgets maximum world actors, placed building pieces and active interactables. Rendering tiers control view distance, anti-aliasing, shadows, post-processing, textures, effects, foliage quality/density, grass density and shadow distance through a fixed CVar allowlist owned by code.
+
+The primary runtime fluidity gate is **p95 frame time**. Average frame time is retained for diagnostics but cannot hide intermittent slow frames. Performance capture is local engineering evidence only and contains no child identity, free text, learning responses, commerce or behavioral analytics.
+
+These values are engineering targets, not representative-device pass claims. M3.8 must execute the vertical slice on representative tablets and retain the resulting capture evidence before any tablet tier is called certified.
 
 ## 9. Save/version compatibility
 
@@ -145,6 +158,14 @@ Repository Quality also executes the Trust Economy policy validator. It fails if
 
 A lightweight GitHub check is never sufficient evidence of Unreal runtime certification. See `docs/prototype-certification.md`.
 
+### M3.8 certification matrix
+
+M3.8 adds a separate **fail-closed** release-certification path. Ordinary PR/push CI validates source contracts but cannot set a certified result. The release workflow requires native Unreal evidence, passed manual smoke, the complete integrated Caribbean Rainforest route, evidence from at least one representative iPadOS tablet and one representative Android tablet, passing M3.7 performance captures, commit/version coherence and SHA-256 evidence integrity.
+
+The canonical machine-readable result is `artifacts/certification/m3-vertical-slice-assessment.json`. It may contain only `CERTIFIED` or `BLOCKED`; the `--require-certified` release mode exits non-zero for every incomplete or inconsistent evidence set.
+
+Representative-device evidence records non-unique engineering metadata only. Hardware serials, child/account identifiers, advertising IDs, free text, learning-answer payloads, commerce fields and behavioral history are prohibited.
+
 ## 12. Current locked decisions
 
 - Engine family: Unreal Engine 5.8.
@@ -157,6 +178,7 @@ A lightweight GitHub check is never sufficient evidence of Unreal runtime certif
 - Child runtime direct payments: prohibited.
 - Paid content ownership: family entitlement model.
 - Gameplay rewards: deterministic, non-purchasable, non-transferable, non-convertible.
+- M3 release certification: fail-closed evidence matrix; source success is not runtime/device certification.
 
 ## 13. Open decisions
 

@@ -31,6 +31,9 @@ Current source progression:
 - M3.6 — child journey UX: next.
 - M3.7 — tablet performance profiles and capture.
 - M3.8 — vertical-slice certification.
+- M3.6 — child journey UX: source-complete pending native UE certification.
+- M3.7 — tablet performance profiles and capture: source-complete pending representative-device evidence.
+- M3.8 — vertical-slice certification infrastructure: source-complete; runtime/device certification blocked by Issue #9 and external evidence.
 
 Target outcomes:
 
@@ -38,10 +41,14 @@ Target outcomes:
 - Science/ecosystem learning hooks and missions embedded in play.
 - Building used as a causal tool for ecological problem solving.
 - Creative rewards expand possibilities without manipulative progression.
+- Child-facing journey translates trusted technical state into calm, understandable adventures.
 - Cultural/environmental provenance review.
 - Tablet performance capture.
+- Fail-closed certification matrix spanning source, native UE, manual smoke, integrated route, device performance, evidence integrity and privacy.
 
 ## M4 — Parent portal MVP
+
+Current source progression: **next** while M3 runtime/device evidence is completed independently.
 
 - Parent authentication boundary.
 - Child profile linking through explicit consent/authorization design.

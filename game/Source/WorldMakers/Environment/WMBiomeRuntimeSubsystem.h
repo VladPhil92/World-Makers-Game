@@ -54,6 +54,10 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Interaction")
     TArray<FName> GetObservedIds() const { return ExplorationProgress.GetObservedIds(); }
 
+    /** Stable observation IDs authored by the active biome. Read-only projection for journey UI and pedagogy adapters. */
+    UFUNCTION(BlueprintPure, Category = "World Makers|Interaction")
+    TArray<FName> GetKnownObservationIds() const;
+
     UFUNCTION(BlueprintPure, Category = "World Makers|Interaction")
     bool HasObserved(FName ObservationId) const { return ExplorationProgress.HasObserved(ObservationId); }
 

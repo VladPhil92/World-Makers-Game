@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.local/schema/tablet-performance-profiles.schema.json",
+  "title": "World Makers performance profiles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profiles"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "profiles": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"$ref": "#/$defs/profile"}
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "deviceClass", "tier", "targetFps", "frameTimeBudgetMs",
+        "maxWorldActors", "maxPlacedBuildPieces", "maxActiveInteractables",
+        "screenPercentage", "texturePoolMB", "viewDistanceQuality",
+        "antiAliasingQuality", "shadowQuality", "postProcessQuality",
+        "textureQuality", "effectsQuality", "foliageQuality",
+        "foliageDensityScale", "grassDensityScale", "shadowDistanceScale"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^performance\\.(tablet|desktop)\\.[a-z0-9-]+$"},
+        "deviceClass": {"enum": ["tablet", "desktop"]},
+        "tier": {"type": "string", "minLength": 2, "maxLength": 32},
+        "targetFps": {"type": "integer", "minimum": 30, "maximum": 120},
+        "frameTimeBudgetMs": {"type": "number", "minimum": 8, "maximum": 40},
+        "maxWorldActors": {"type": "integer", "minimum": 100, "maximum": 10000},
+        "maxPlacedBuildPieces": {"type": "integer", "minimum": 50, "maximum": 5000},
+        "maxActiveInteractables": {"type": "integer", "minimum": 1, "maximum": 256},
+        "screenPercentage": {"type": "integer", "minimum": 50, "maximum": 100},
+        "texturePoolMB": {"type": "integer", "minimum": 128, "maximum": 4096},
+        "viewDistanceQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "antiAliasingQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "shadowQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "postProcessQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "textureQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "effectsQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "foliageQuality": {"type": "integer", "minimum": 0, "maximum": 3},
+        "foliageDensityScale": {"type": "number", "minimum": 0.1, "maximum": 1.0},
+        "grassDensityScale": {"type": "number", "minimum": 0.1, "maximum": 1.0},
+        "shadowDistanceScale": {"type": "number", "minimum": 0.1, "maximum": 1.0}
+      }
+    }
+  }
+}

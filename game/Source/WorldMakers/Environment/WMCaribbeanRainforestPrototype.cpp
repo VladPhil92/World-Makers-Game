@@ -72,6 +72,14 @@ void AWMCaribbeanRainforestPrototype::OnConstruction(const FTransform& Transform
     RebuildPrototype();
 }
 
+void AWMCaribbeanRainforestPrototype::RefreshFromVisualProfile()
+{
+    if (bUseProfileDefaultQuality)
+    {
+        RebuildPrototype();
+    }
+}
+
 FVector AWMCaribbeanRainforestPrototype::RandomRingPoint(FRandomStream& Random, const float MinRadius, const float MaxRadius) const
 {
     const float Angle = Random.FRandRange(0.0f, 2.0f * PI);

@@ -11,6 +11,7 @@ class UTextBlock;
 class UWMBuildingComponent;
 class UWMMissionMeasurementComponent;
 class UWMInteractionComponent;
+class UWMChildJourneyWidget;
 
 UCLASS()
 class WORLDMAKERS_API UWMBuildHUDWidget : public UUserWidget
@@ -54,6 +55,7 @@ private:
     UFUNCTION()
     void HandleResetMeasurement();
 
+    /** Legacy handler name retained for M2.2 source compatibility; M3.6 opens My Adventures rather than blind mission cycling. */
     UFUNCTION()
     void HandleNextMission();
 
@@ -79,6 +81,9 @@ private:
     TWeakObjectPtr<UWMMissionMeasurementComponent> MissionMeasurementComponent;
     TWeakObjectPtr<UWMInteractionComponent> InteractionComponent;
     FTimerHandle StatusRefreshTimer;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UWMChildJourneyWidget> ChildJourneyWidget;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> EnvironmentStatusText;
