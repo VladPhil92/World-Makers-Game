@@ -71,7 +71,7 @@
       "additionalProperties": false,
       "required": ["evaluator", "rewardIds", "prototypeOnly"],
       "properties": {
-        "evaluator": { "enum": ["measure-and-build", "observe-ecosystem"] },
+        "evaluator": { "enum": ["measure-and-build", "observe-ecosystem", "composable"] },
         "targetSpanCm": { "type": "number", "minimum": 50, "maximum": 5000 },
         "toleranceCm": { "type": "number", "minimum": 0, "maximum": 500 },
         "observationRequirements": {
@@ -85,6 +85,34 @@
               "observationId": { "type": "string", "pattern": "^observation\\.[a-z0-9._-]+$" },
               "evidenceEventId": { "type": "string" },
               "objectiveId": { "type": "string" }
+            }
+          }
+        },
+        "evidencePrimitives": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["primitiveId", "evidenceEventId", "objectiveId"],
+            "properties": {
+              "primitiveId": {
+                "enum": [
+                  "construct-to-constraint",
+                  "observe-and-classify",
+                  "predict-test-revise",
+                  "sequence-and-infer",
+                  "communicate-in-language",
+                  "model-system",
+                  "solve-spatial-system",
+                  "interpret-text-world",
+                  "reason-through-dilemma",
+                  "argue-and-revise"
+                ]
+              },
+              "evidenceEventId": { "type": "string" },
+              "objectiveId": { "type": "string" },
+              "requiredCount": { "type": "integer", "minimum": 1, "maximum": 20 }
             }
           }
         },
