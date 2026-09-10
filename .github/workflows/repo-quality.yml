@@ -47,6 +47,8 @@ jobs:
         run: python scripts/validate-m3-7-tablet-performance.py
       - name: Validate M3.8 Vertical Slice Certification
         run: python scripts/validate-m3-8-vertical-slice-certification.py
+      - name: Validate M4.1 Parent Portal MVP
+        run: python scripts/validate-m4-parent-portal.py
 
   parent-portal:
     runs-on: ubuntu-latest

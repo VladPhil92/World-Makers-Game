@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: World Makers Parent Portal API
+  version: 0.1.0
+  description: >-
+    Provider-neutral parent/guardian boundary. Every child-scoped operation requires
+    server-side relationship authorization. The browser never talks directly to game databases.
+servers:
+  - url: https://api.worldmakers.invalid
+paths:
+  /v1/parent/session:
+    get:
+      summary: Read authenticated guardian session
+      security: [{ parentSession: [] }]
+      responses:
+        '200':
+          description: Authorized family/session read model
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParentSession' }
+        '401': { description: Authentication required }
+  /v1/parent/children/{childProfileId}/dashboard:
+    get:
+      summary: Read one authorized child dashboard
+      description: Missing and unauthorized child identifiers should be indistinguishable to callers.
+      security: [{ parentSession: [] }]
+      parameters:
+        - in: path
+          name: childProfileId
+          required: true
+          schema: { type: string, maxLength: 96 }
+      responses:
+        '200':
+          description: Minimized parent dashboard read model
+          content:
+            application/json:
+              schema: { $ref: './parent-family-dashboard.schema.json' }
+        '404': { description: Child profile unavailable to this guardian }
+  /v1/parent/child-link-requests:
+    post:
+      summary: Request child-profile linking
+      description: A link code starts verification; it never grants access by itself.
+      security: [{ parentSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [linkCode]
+              properties:
+                linkCode: { type: string, pattern: '^[A-Za-z0-9]{8}$' }
+      responses:
+        '202':
+          description: Verification requested
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [requestId, status]
+                properties:
+                  requestId: { type: string }
+                  status: { const: pending-backend-verification }
+        '400': { description: Invalid request }
+        '401': { description: Authentication required }
+  /v1/parent/privacy-requests:
+    post:
+      summary: Create an explicit guardian privacy request
+      security: [{ parentSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [childProfileId, operation, acknowledged]
+              properties:
+                childProfileId: { type: string, maxLength: 96 }
+                operation:
+                  enum: [export-child-data, delete-child-data, unlink-child-profile]
+                acknowledged: { const: true }
+      responses:
+        '202':
+          description: Request accepted for backend processing
+        '400': { description: Invalid or unacknowledged request }
+        '404': { description: Child profile unavailable to this guardian }
+components:
+  securitySchemes:
+    parentSession:
+      type: apiKey
+      in: cookie
+      name: wm_parent_session
+      description: HttpOnly, Secure in production, SameSite=Strict guardian session cookie.
+  schemas:
+    ParentSession:
+      type: object
+      additionalProperties: false
+      required: [authenticated, familyId, parentRole, children]
+      properties:
+        authenticated: { const: true }
+        familyId: { type: string, maxLength: 96 }
+        parentRole: { const: guardian }
+        children:
+          type: array
+          maxItems: 32
+          items:
+            type: object
+            additionalProperties: false
+            required: [childProfileId, displayAlias]
+            properties:
+              childProfileId: { type: string, maxLength: 96 }
+              displayAlias: { type: string, maxLength: 32 }

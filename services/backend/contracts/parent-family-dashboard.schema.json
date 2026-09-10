@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.local/schema/parent-family-dashboard.schema.json",
+  "title": "World Makers parent family dashboard read model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "child", "playTime", "learning", "recentBuilds", "adventures", "wellbeing"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["childProfileId", "displayAlias"],
+      "properties": {
+        "childProfileId": { "type": "string", "pattern": "^child\\.[a-z0-9._-]+$", "maxLength": 96 },
+        "displayAlias": { "type": "string", "minLength": 1, "maxLength": 32 }
+      }
+    },
+    "playTime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["last7DaysMinutes", "sessionsLast7Days"],
+      "properties": {
+        "last7DaysMinutes": { "type": "integer", "minimum": 0, "maximum": 10080 },
+        "sessionsLast7Days": { "type": "integer", "minimum": 0, "maximum": 1000 }
+      }
+    },
+    "learning": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["objectiveId", "label", "progressPercent", "state"],
+        "properties": {
+          "objectiveId": { "type": "string", "maxLength": 96 },
+          "label": { "type": "string", "maxLength": 80 },
+          "progressPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+          "state": { "enum": ["ready", "in-progress", "complete"] }
+        }
+      }
+    },
+    "recentBuilds": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["creationId", "label", "pieceCount", "biomeLabel"],
+        "properties": {
+          "creationId": { "type": "string", "maxLength": 96 },
+          "label": { "type": "string", "maxLength": 80 },
+          "pieceCount": { "type": "integer", "minimum": 0, "maximum": 5000 },
+          "biomeLabel": { "type": "string", "maxLength": 80 }
+        }
+      }
+    },
+    "adventures": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["adventureId", "label", "state"],
+        "properties": {
+          "adventureId": { "type": "string", "maxLength": 96 },
+          "label": { "type": "string", "maxLength": 80 },
+          "state": { "enum": ["ready", "in-progress", "complete"] }
+        }
+      }
+    },
+    "wellbeing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rightToStop", "pressureLoopsDetected"],
+      "properties": {
+        "rightToStop": { "const": true },
+        "pressureLoopsDetected": { "const": false }
+      }
+    }
+  }
+}
