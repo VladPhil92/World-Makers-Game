@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "runtimeId": "vfx.feedback.v1",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "evidenceAuthority": false,
+  "sourceFallback": "procedural-mesh",
+  "authoredNiagaraAssetsPresent": false,
+  "principles": {
+    "causalFeedbackOnly": true,
+    "noFakeScienceOutcome": true,
+    "noRewardAuthority": true,
+    "noChildAuthoredPayload": true,
+    "supportsReducedMotion": true,
+    "flashRequired": false,
+    "cameraShakeRequired": false,
+    "commerceHooks": false
+  },
+  "effects": [
+    {"id":"gameplay.build.place","domain":"gameplay","shape":"ring","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Build_Place"},
+    {"id":"gameplay.build.remove","domain":"gameplay","shape":"burst","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Build_Remove"},
+    {"id":"gameplay.build.move","domain":"gameplay","shape":"directional","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Build_Move"},
+    {"id":"mission.measure.reveal","domain":"gameplay","shape":"ring","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Measure_Reveal"},
+    {"id":"world.observe.reveal","domain":"gameplay","shape":"halo","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Observe_Reveal"},
+    {"id":"science.chemistry.dissolution","domain":"chemistry","shape":"halo","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Chem_Dissolution"},
+    {"id":"science.chemistry.saturation","domain":"chemistry","shape":"ring","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Chem_Saturation"},
+    {"id":"science.chemistry.filtration","domain":"chemistry","shape":"directional","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Chem_Filtration"},
+    {"id":"science.chemistry.reaction","domain":"chemistry","shape":"burst","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Chem_Reaction"},
+    {"id":"science.physics.force","domain":"physics","shape":"directional","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Physics_Force"},
+    {"id":"science.physics.circuit-flow","domain":"physics","shape":"ring","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Physics_CircuitFlow"},
+    {"id":"science.biology.cell-energy","domain":"biology","shape":"halo","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Bio_CellEnergy"},
+    {"id":"science.biology.plant-growth","domain":"biology","shape":"ring","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Bio_PlantGrowth"},
+    {"id":"science.ecology.recovery","domain":"ecology","shape":"halo","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Ecology_Recovery"},
+    {"id":"science.ecology.stress","domain":"ecology","shape":"burst","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Ecology_Stress"},
+    {"id":"fantasy.portal.open","domain":"fantasy","shape":"halo","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Fantasy_Portal"},
+    {"id":"fantasy.rune.activate","domain":"fantasy","shape":"burst","niagaraTarget":"/Game/WorldMakers/VFX/NS_WM_Fantasy_Rune"}
+  ],
+  "qualityTiers": {
+    "low": {"maxActiveProxyEffects":8,"maxEventsPerSecond":8,"maxDurationSeconds":1.15,"maxIntensity":0.85,"maxNiagaraParticlesPerEffect":48},
+    "mid": {"maxActiveProxyEffects":16,"maxEventsPerSecond":16,"maxDurationSeconds":1.5,"maxIntensity":1.0,"maxNiagaraParticlesPerEffect":96},
+    "high": {"maxActiveProxyEffects":28,"maxEventsPerSecond":28,"maxDurationSeconds":2.0,"maxIntensity":1.0,"maxNiagaraParticlesPerEffect":180}
+  },
+  "certificationBoundary": {
+    "sourceRuntimeCanBeValidatedInCI": true,
+    "proceduralFallbackPresent": true,
+    "niagaraSystemsAuthored": false,
+    "nativeUnrealVisualReviewRequired": true,
+    "representativeTabletProfilingRequired": true
+  }
+}
