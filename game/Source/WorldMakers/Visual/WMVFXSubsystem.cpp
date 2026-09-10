@@ -188,6 +188,7 @@ bool UWMVFXSubsystem::EmitEvent(const FWMVFXEvent& Event)
 
     ActiveProxyEffects.Add(Effect);
     LastAcceptedEventId = Accepted.EventId;
+    OnVFXAccepted.Broadcast(Accepted.EventId, Accepted.LocationCm, Accepted.Intensity);
     return true;
 }
 
