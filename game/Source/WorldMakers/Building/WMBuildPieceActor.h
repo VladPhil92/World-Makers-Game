@@ -47,6 +47,9 @@ protected:
     TObjectPtr<UStaticMeshComponent> Mesh;
 
 private:
+    void ApplyPlacedSurface();
+
+    FString PieceCategory = TEXT("Block");
     bool bIsPreview = false;
     bool bPreviewPlacementValid = false;
 };
