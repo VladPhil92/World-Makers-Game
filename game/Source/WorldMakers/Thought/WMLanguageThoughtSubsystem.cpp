@@ -1,5 +1,6 @@
 #include "Thought/WMLanguageThoughtSubsystem.h"
 
+#include "Adventure/WMAdventureRuntimeSubsystem.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -31,9 +32,22 @@ bool UWMLanguageThoughtSubsystem::ReloadLanguageThoughtCatalog()
     return true;
 }
 
-bool UWMLanguageThoughtSubsystem::SubmitEvidenceToActiveMission(const FWMThoughtEvidenceResult& Result)
+bool UWMLanguageThoughtSubsystem::SubmitEvidenceToActiveMission(const FWMThoughtEvidenceResult& Result, const FName ProducerRefId)
 {
-    if (!Result.bAccepted || Result.PrimitiveId.IsNone() || Result.EvidenceEventId.IsNone() || !GetWorld()) return false;
+    if (!Result.bAccepted || Result.PrimitiveId.IsNone() || Result.EvidenceEventId.IsNone() || ProducerRefId.IsNone() || !GetWorld())
+    {
+        return false;
+    }
+
+    if (UWMAdventureRuntimeSubsystem* AdventureSubsystem = GetWorld()->GetSubsystem<UWMAdventureRuntimeSubsystem>())
+    {
+        if (AdventureSubsystem->IsAdventureActive())
+        {
+            return AdventureSubsystem->RecordAdventureEvidence(
+                TEXT("thought"), ProducerRefId, Result.PrimitiveId, Result.EvidenceEventId, Result.NumericValue);
+        }
+    }
+
     UWMMissionRuntimeSubsystem* MissionSubsystem = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
     return MissionSubsystem && MissionSubsystem->RecordComposableEvidence(Result.PrimitiveId, Result.EvidenceEventId, Result.NumericValue);
 }
@@ -44,7 +58,8 @@ bool UWMLanguageThoughtSubsystem::EvaluateCommunicationAndRecord(const FName Cha
     const FWMCommunicationChallengeDefinition* Challenge = Catalog.FindCommunicationChallenge(ChallengeId);
     if (!Challenge) return false;
     FWMThoughtEvidenceResult Result;
-    return FWMLanguageThoughtRuntime::EvaluateCommunication(*Challenge, ChoiceId, Result) && SubmitEvidenceToActiveMission(Result);
+    return FWMLanguageThoughtRuntime::EvaluateCommunication(*Challenge, ChoiceId, Result) &&
+        SubmitEvidenceToActiveMission(Result, ChallengeId);
 }
 
 bool UWMLanguageThoughtSubsystem::TraverseNarrativeAndRecord(
@@ -59,7 +74,7 @@ bool UWMLanguageThoughtSubsystem::TraverseNarrativeAndRecord(
     if (!Story) return false;
     FWMThoughtEvidenceResult Result;
     if (!FWMLanguageThoughtRuntime::TraverseNarrative(*Story, CurrentNodeId, ChoiceId, Result)) return false;
-    if (!SubmitEvidenceToActiveMission(Result)) return false;
+    if (!SubmitEvidenceToActiveMission(Result, StoryId)) return false;
     OutNextNodeId = Result.NextNodeId;
     return true;
 }
@@ -77,7 +92,7 @@ bool UWMLanguageThoughtSubsystem::EvaluateEthicalReasoningAndRecord(
     FWMThoughtEvidenceResult Result;
     return FWMLanguageThoughtRuntime::EvaluateEthicalReasoning(
         *Dilemma, OptionId, ReasonIds, PerspectiveIds, bAcknowledgedTradeoff, Result) &&
-        SubmitEvidenceToActiveMission(Result);
+        SubmitEvidenceToActiveMission(Result, DilemmaId);
 }
 
 bool UWMLanguageThoughtSubsystem::EvaluatePhilosophicalArgumentAndRecord(
@@ -94,5 +109,5 @@ bool UWMLanguageThoughtSubsystem::EvaluatePhilosophicalArgumentAndRecord(
     FWMThoughtEvidenceResult Result;
     return FWMLanguageThoughtRuntime::EvaluatePhilosophicalArgument(
         *Problem, ClaimId, ReasonLinkIds, AssumptionIds, CounterexampleIds, RevisionCount, Result) &&
-        SubmitEvidenceToActiveMission(Result);
+        SubmitEvidenceToActiveMission(Result, ProblemId);
 }
