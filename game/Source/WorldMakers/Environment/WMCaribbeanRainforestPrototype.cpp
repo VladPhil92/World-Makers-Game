@@ -46,9 +46,12 @@ AWMCaribbeanRainforestPrototype::AWMCaribbeanRainforestPrototype()
     PrototypeSun = CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("PrototypeSun"));
     PrototypeSun->SetupAttachment(SceneRoot);
     PrototypeSun->SetRelativeRotation(FRotator(-42.0f, -28.0f, 0.0f));
+    PrototypeSun->SetAtmosphereSunLight(true);
+    PrototypeSun->SetAtmosphereSunLightIndex(0);
 
     PrototypeSkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("PrototypeSkyLight"));
     PrototypeSkyLight->SetupAttachment(SceneRoot);
+    PrototypeSkyLight->SetRealTimeCapture(false);
 
     PrototypeSkyAtmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("PrototypeSkyAtmosphere"));
     PrototypeSkyAtmosphere->SetupAttachment(SceneRoot);
