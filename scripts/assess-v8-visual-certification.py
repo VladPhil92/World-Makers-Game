@@ -97,6 +97,15 @@ def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, 
         "peakResidentTextureMB": "maxResidentTextureMB",
         "peakActiveVfx": "maxActiveVfx",
     }
+    positive_metrics = {
+        "p95FrameTimeMs",
+        "gameThreadP95Ms",
+        "renderThreadP95Ms",
+        "gpuP95Ms",
+        "peakDrawCalls",
+        "peakVisibleTriangles",
+        "peakResidentTextureMB",
+    }
     minimum_samples = int(matrix.get("minimumFrameSamplesPerScenario", MIN_FRAME_SAMPLES))
     for scenario_id in sorted(required):
         scenario = by_id.get(scenario_id)
@@ -104,12 +113,19 @@ def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, 
             continue
         if int(scenario.get("frameSamples", 0)) < minimum_samples:
             reasons.append(f"{path.name}: {scenario_id} has fewer than {minimum_samples} frames")
+        average = scenario.get("averageFrameTimeMs")
+        if not isinstance(average, (int, float)) or float(average) <= 0.0:
+            reasons.append(f"{path.name}: {scenario_id}.averageFrameTimeMs must be measured and positive")
         for sample_key, budget_key in numeric_limits.items():
             value = scenario.get(sample_key)
             if not isinstance(value, (int, float)) or value < 0:
                 reasons.append(f"{path.name}: {scenario_id}.{sample_key} invalid")
+            elif sample_key in positive_metrics and float(value) <= 0.0:
+                reasons.append(f"{path.name}: {scenario_id}.{sample_key} must be measured and positive")
             elif float(value) > float(budget[budget_key]):
                 reasons.append(f"{path.name}: {scenario_id}.{sample_key} exceeds {budget_key}")
+        if scenario_id == "visual.science.vfx-burst" and int(scenario.get("peakActiveVfx", 0)) < 1:
+            reasons.append(f"{path.name}: visual.science.vfx-burst must measure at least one active VFX")
 
     return not reasons, reasons, platform
 
