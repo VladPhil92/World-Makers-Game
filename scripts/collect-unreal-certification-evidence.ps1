@@ -12,6 +12,8 @@ New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 $MapPath = Join-Path $RepoRoot 'game\Content\WorldMakers\Maps\WM_PrototypeCertification.umap'
 $VersionFile = Join-Path $RepoRoot 'game\UNREAL_ENGINE_VERSION'
 $BuildVersionFile = Join-Path $EngineRoot 'Engine\Build\Build.version'
+$PerformanceSourcePath = Join-Path $RepoRoot 'game\Saved\WorldMakers\Performance'
+$PerformanceEvidencePath = Join-Path $EvidencePath 'performance'
 
 function Read-JsonIfPresent([string]$Path) {
     if (Test-Path $Path) { return Get-Content $Path -Raw | ConvertFrom-Json }
@@ -22,6 +24,16 @@ $Preflight = Read-JsonIfPresent (Join-Path $EvidencePath 'runner-preflight.json'
 $Build = Read-JsonIfPresent (Join-Path $EvidencePath 'build-result.json')
 $Automation = Read-JsonIfPresent (Join-Path $EvidencePath 'automation-result.json')
 $ManualSmoke = Read-JsonIfPresent (Join-Path $EvidencePath 'manual-smoke.json')
+
+$PerformanceCaptureFiles = @()
+if (Test-Path $PerformanceSourcePath) {
+    New-Item -ItemType Directory -Force -Path $PerformanceEvidencePath | Out-Null
+    foreach ($Capture in Get-ChildItem -Path $PerformanceSourcePath -Filter '*.json' -File | Sort-Object Name) {
+        $Destination = Join-Path $PerformanceEvidencePath $Capture.Name
+        Copy-Item -Force -Path $Capture.FullName -Destination $Destination
+        $PerformanceCaptureFiles += $Capture.Name
+    }
+}
 
 $ExpectedVersion = if (Test-Path $VersionFile) { (Get-Content $VersionFile -Raw).Trim() } else { $null }
 $ActualVersion = $null
@@ -57,6 +69,13 @@ foreach ($Name in $HashCandidates) {
         $HashEntries += [ordered]@{ file = $Name; sha256 = $Hash.Hash.ToLowerInvariant() }
     }
 }
+foreach ($Name in $PerformanceCaptureFiles) {
+    $Path = Join-Path $PerformanceEvidencePath $Name
+    if (Test-Path $Path) {
+        $Hash = Get-FileHash -Algorithm SHA256 -Path $Path
+        $HashEntries += [ordered]@{ file = "performance/$Name"; sha256 = $Hash.Hash.ToLowerInvariant() }
+    }
+}
 
 $MapHash = $null
 if (Test-Path $MapPath) {
@@ -80,6 +99,13 @@ $Manifest = [ordered]@{
     }
     manualSmoke = [ordered]@{
         status = if ($ManualPassed) { 'passed' } else { 'pending' }
+    }
+    performanceCapture = [ordered]@{
+        present = ($PerformanceCaptureFiles.Count -gt 0)
+        requiredForM3VerticalSlice = $true
+        enforcedByCurrentM1NativeGate = $false
+        source = 'game/Saved/WorldMakers/Performance/*.json'
+        files = $PerformanceCaptureFiles
     }
     runtimeCertification = [ordered]@{
         certified = $RuntimeCertified
