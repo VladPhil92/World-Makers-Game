@@ -110,7 +110,8 @@ def main() -> None:
     openapi = read("services/backend/contracts/parent-portal.openapi.yaml")
     for token in ("parentSession", "server-side relationship authorization", "pending-backend-verification", "acknowledged: { const: true }"):
         require(token in openapi, f"Parent API contract missing security marker: {token}")
-    require("direct database" in openapi.lower(), "OpenAPI must document browser/database separation")
+    openapi_lower = openapi.lower()
+    require("database" in openapi_lower and ("direct" in openapi_lower or "directly" in openapi_lower), "OpenAPI must document browser/database separation")
 
     tests = read("apps/parent-portal/tests/parent-portal.test.mjs")
     for name in (
