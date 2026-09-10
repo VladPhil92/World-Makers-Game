@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "prototypeOnly": true,
+  "safetyModel": "virtual-only-no-real-world-procedure",
+  "substances": [
+    {
+      "substanceId": "substance.water",
+      "molarMassGPerMol": 18.01528,
+      "meltingPointC": 0.0,
+      "boilingPointC": 100.0,
+      "solubilityGPer100MlWater": 1000000.0
+    },
+    {
+      "substanceId": "substance.sodium-chloride",
+      "molarMassGPerMol": 58.44,
+      "meltingPointC": 801.0,
+      "boilingPointC": 1465.0,
+      "solubilityGPer100MlWater": 35.9
+    },
+    {
+      "substanceId": "substance.iron",
+      "molarMassGPerMol": 55.845,
+      "meltingPointC": 1538.0,
+      "boilingPointC": 2862.0,
+      "solubilityGPer100MlWater": 0.0
+    },
+    {
+      "substanceId": "substance.oxygen",
+      "molarMassGPerMol": 31.998,
+      "meltingPointC": -218.79,
+      "boilingPointC": -182.95,
+      "solubilityGPer100MlWater": 0.004
+    },
+    {
+      "substanceId": "substance.iron-oxide-fe2o3",
+      "molarMassGPerMol": 159.687,
+      "meltingPointC": 1565.0,
+      "boilingPointC": 3000.0,
+      "solubilityGPer100MlWater": 0.0
+    }
+  ],
+  "reactions": [
+    {
+      "reactionId": "reaction.iron-oxidation",
+      "evidenceEventId": "science.chemistry.mass-conservation-demonstrated",
+      "reactants": [
+        { "substanceId": "substance.iron", "coefficient": 4 },
+        { "substanceId": "substance.oxygen", "coefficient": 3 }
+      ],
+      "products": [
+        { "substanceId": "substance.iron-oxide-fe2o3", "coefficient": 2 }
+      ]
+    }
+  ],
+  "plantSpecies": [
+    {
+      "speciesId": "plant.rainforest-learning-prototype",
+      "minTemperatureC": 15.0,
+      "optimalTemperatureC": 27.0,
+      "maxTemperatureC": 40.0,
+      "germinationHoursAtIdeal": 48.0,
+      "baseGrowthUnitsPerHour": 0.012,
+      "floweringBiomass": 1.0,
+      "fruitingBiomass": 1.5
+    }
+  ]
+}
