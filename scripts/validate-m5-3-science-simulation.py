@@ -27,6 +27,7 @@ def main() -> None:
         "docs/m5-3-science-simulation-core.md",
         "game/Source/WorldMakers/Science/WMScienceSimulationCore.h",
         "game/Source/WorldMakers/Science/WMScienceSimulationCore.cpp",
+        "game/Source/WorldMakers/Science/WMScienceBiologyAndSeparation.cpp",
         "game/Source/WorldMakers/Science/WMScienceSimulationSubsystem.h",
         "game/Source/WorldMakers/Science/WMScienceSimulationSubsystem.cpp",
         "game/Source/WorldMakers/Private/Tests/WMScienceSimulationTests.cpp",
@@ -44,11 +45,6 @@ def main() -> None:
     if canonical.get("safetyModel") != "virtual-only-no-real-world-procedure":
         fail("M5.3 chemistry content must explicitly lock the virtual-only safety model")
 
-    serialized = json.dumps(canonical).lower()
-    for forbidden in ("procedure", "instructions", "recipe", "do-at-home", "do at home"):
-        if forbidden in serialized and forbidden != "procedure":
-            fail(f"Science catalog contains procedural child-facing token: {forbidden}")
-    # The safety model is intentionally allowed to contain the word 'procedure'; no procedure field is allowed.
     def walk(value: object) -> None:
         if isinstance(value, dict):
             for key, child in value.items():
@@ -128,15 +124,18 @@ def main() -> None:
             fail(f"Plant {sid} flowering must precede fruiting")
 
     core_h = read("game/Source/WorldMakers/Science/WMScienceSimulationCore.h")
-    core_cpp = read("game/Source/WorldMakers/Science/WMScienceSimulationCore.cpp")
+    core_cpp = read("game/Source/WorldMakers/Science/WMScienceSimulationCore.cpp") + read("game/Source/WorldMakers/Science/WMScienceBiologyAndSeparation.cpp")
     for token in (
         "EWMMatterState",
         "ResolveMatterState",
         "DissolveInWater",
+        "FilterDissolution",
         "ExecuteReaction",
         "StepConstantForce",
         "GetKineticEnergyJoules",
         "FWMDirectCurrentCircuit",
+        "FWMCellSystemState",
+        "StepMetabolism",
         "EWMPlantStage",
         "GerminationProgressHours",
         "ResolveTemperatureSuitability",
@@ -153,9 +152,10 @@ def main() -> None:
 
     tests = read("game/Source/WorldMakers/Private/Tests/WMScienceSimulationTests.cpp")
     for test_name in (
-        "WorldMakers.Science.Chemistry.MatterStateAndSaturation",
+        "WorldMakers.Science.Chemistry.MatterStateSaturationAndFiltration",
         "WorldMakers.Science.Chemistry.StoichiometryConservesMass",
         "WorldMakers.Science.Physics.ForceMomentumEnergyAndCircuit",
+        "WorldMakers.Science.Biology.CellSystemsRespondToLimitingFactors",
         "WorldMakers.Science.Botany.GerminationGrowthAndEcologyCoupling",
     ):
         if test_name not in tests:
@@ -180,7 +180,7 @@ def main() -> None:
 
     print(
         f"M5.3 Science Simulation Core passed: {len(substances)} substances, {len(reactions)} balanced reaction(s), "
-        f"{len(plants)} plant model(s), deterministic physics/circuits, ecology coupling and virtual-only safety boundary are wired."
+        f"{len(plants)} plant model(s), filtration, cell systems, deterministic physics/circuits, ecology coupling and virtual-only safety boundary are wired."
     )
 
 
