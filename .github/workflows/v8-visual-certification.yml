@@ -35,14 +35,14 @@ jobs:
         run: |
           $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
           if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
-          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers." -TestExit="Automation Test Queue Empty" -log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Assess representative device evidence
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts\v8-visual-certification | Out-Null
-          python scripts/assess-v8-visual-certification.py --evidence-dir "$env:V8_DEVICE_EVIDENCE_ROOT" --output artifacts/v8-visual-certification/v8-visual-assessment.json --require-certified
+          python scripts/assess-v8-visual-certification.py --evidence-dir "$env:V8_DEVICE_EVIDENCE_ROOT" --expected-commit "${{ github.sha }}" --output artifacts/v8-visual-certification/v8-visual-assessment.json --require-certified
 
       - uses: actions/upload-artifact@v4
         if: always()
