@@ -65,7 +65,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Mathematics")
     bool RecordMeasurement(float MeasuredSpanCm);
 
-    /** Legacy source helper retained for M2.1 compatibility; child UI uses the interactive measurement component in M2.2. */
+    /** Legacy M2.2 catalog helper retained for compatibility; child UI uses the interactive measurement component. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Mathematics")
     bool RecordActiveGeometryMeasurement();
 
@@ -84,6 +84,22 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Science")
     int32 GetRecordedObservationCount() const { return Progress.GetRecordedObservationCount(); }
+
+    /**
+     * M5.2 generic mission evidence entry point. World systems submit only stable primitive/event IDs
+     * plus an optional numeric value; no free text or subject-specific payload is retained here.
+     */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Missions|Composable")
+    bool RecordComposableEvidence(FName PrimitiveId, FName EvidenceEventId, float NumericValue = 1.0f);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Composable")
+    bool IsComposableEvidenceRequired(FName PrimitiveId, FName EvidenceEventId) const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Composable")
+    TArray<FName> GetRequiredEvidencePrimitiveIds() const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Missions|Composable")
+    int32 GetRecordedComposableEvidenceCount(FName EvidenceEventId) const { return Progress.GetRecordedComposableEvidenceCount(EvidenceEventId); }
 
     void RegisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);
     void UnregisterMissionGeometry(AWMMissionGeometryActor* GeometryActor);
