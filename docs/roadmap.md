@@ -65,9 +65,9 @@ Purpose: transform the existing mission foundation into a multidisciplinary adve
 Current source progression:
 
 - M5.1 — curriculum architecture, 11 first-class learning streams and fantastic mission design contract: source-complete in PR #47.
-- M5.2 — composable Mission Runtime v2: implemented in source with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
-- M5.3 — Science Simulation Core: next.
-- M5.4 — Language, Literature and Thought Runtime: pending.
+- M5.2 — composable Mission Runtime v2: source-complete with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
+- M5.3 — Science Simulation Core: source-complete with data-driven matter/reaction catalog, solubility/filtration, stoichiometry and conservation, mechanics/energy, ideal DC circuits, cellular systems, plant lifecycle and ecology coupling; native Unreal execution remains required for runtime certification.
+- M5.4 — Language, Literature and Thought Runtime: next.
 - M5.5 — First Fantastic Adventure Pack: pending.
 - M5.6 — Cross-disciplinary epic adventures: pending.
 
@@ -127,15 +127,21 @@ See `docs/m5-2-composable-mission-runtime.md`.
 
 ### M5.3 — Science Simulation Core
 
-- Matter/substance identity and material properties.
-- Temperature and state transitions.
-- Mixtures, solutions and separation.
-- Safe virtual chemical reaction model and reaction evidence.
-- Force/motion/energy primitives.
-- Basic electricity/circuit model.
-- Biological system state and lifecycle primitives.
-- Plant growth/germination/light/water/nutrient model.
-- Persistent ecosystem coupling between organisms, water, soil, resources and player construction.
+Implementation status:
+
+- substance identity, molar mass and simplified phase transitions;
+- water solubility, saturation and conceptual filtration boundaries;
+- balanced reaction definitions, limiting-reagent execution and mass-conservation checks;
+- deterministic force/motion, momentum and kinetic-energy primitives;
+- ideal DC circuit relationships using Ohm's law and electrical power;
+- normalized cellular-system state covering membrane, energy, transport, information and waste;
+- plant lifecycle from seed through fruiting with water/light/nutrient/temperature/pollinator constraints;
+- bounded plant-to-ecosystem state coupling;
+- canonical and staged runtime science catalog parity;
+- virtual-only chemistry content boundary with no real-world procedural instructions;
+- Repository Quality gate and Unreal Automation coverage.
+
+See `docs/m5-3-science-simulation-core.md`.
 
 ### M5.4 — Language, Literature and Thought Runtime
 
@@ -184,8 +190,7 @@ See `docs/fantastic-learning-universe.md` and `content/learning-objectives/core-
 
 ## Suggested GitHub issue titles
 
-1. `M5.3: Implement science simulation core for chemistry, physics, biology and ecology`
-2. `M5.4: Implement bilingual language, literature, ethics and philosophy mission runtime`
-3. `M5.5: Build first fantastic multidisciplinary adventure pack`
-4. `M5.6: Build cross-disciplinary epic adventure framework`
-5. `M6: Implement parent-approved private multiplayer invitation flow`
+1. `M5.4: Implement bilingual language, literature, ethics and philosophy mission runtime`
+2. `M5.5: Build first fantastic multidisciplinary adventure pack`
+3. `M5.6: Build cross-disciplinary epic adventure framework`
+4. `M6: Implement parent-approved private multiplayer invitation flow`
