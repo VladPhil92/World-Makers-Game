@@ -62,7 +62,7 @@ namespace
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FWMScienceMatterAndSolubilityTest,
-    "WorldMakers.Science.Chemistry.MatterStateAndSaturation",
+    "WorldMakers.Science.Chemistry.MatterStateSaturationAndFiltration",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FWMScienceMatterAndSolubilityTest::RunTest(const FString& Parameters)
@@ -85,11 +85,16 @@ bool FWMScienceMatterAndSolubilityTest::RunTest(const FString& Parameters)
     Salt.BoilingPointC = 1465.0f;
     Salt.SolubilityGPer100MlWater = 35.9f;
 
-    FWMDissolutionResult Result;
-    TestTrue(TEXT("Dissolution simulation accepts bounded input"), FWMScienceSimulation::DissolveInWater(Salt, 50.0f, 100.0f, Result));
-    TestTrue(TEXT("Solution becomes saturated"), Result.bSaturated);
-    TestTrue(TEXT("Dissolved mass respects configured solubility"), FMath::IsNearlyEqual(Result.DissolvedMassG, 35.9f, 0.001f));
-    TestTrue(TEXT("Undissolved mass is conserved"), FMath::IsNearlyEqual(Result.UndissolvedMassG, 14.1f, 0.001f));
+    FWMDissolutionResult Dissolution;
+    TestTrue(TEXT("Dissolution simulation accepts bounded input"), FWMScienceSimulation::DissolveInWater(Salt, 50.0f, 100.0f, Dissolution));
+    TestTrue(TEXT("Solution becomes saturated"), Dissolution.bSaturated);
+    TestTrue(TEXT("Dissolved mass respects configured solubility"), FMath::IsNearlyEqual(Dissolution.DissolvedMassG, 35.9f, 0.001f));
+    TestTrue(TEXT("Undissolved mass is conserved"), FMath::IsNearlyEqual(Dissolution.UndissolvedMassG, 14.1f, 0.001f));
+
+    FWMFiltrationResult Filtration;
+    TestTrue(TEXT("Filtration accepts a valid dissolution result"), FWMScienceSimulation::FilterDissolution(Dissolution, Filtration));
+    TestTrue(TEXT("Filtration retains undissolved solid"), FMath::IsNearlyEqual(Filtration.RetainedSolidMassG, 14.1f, 0.001f));
+    TestTrue(TEXT("Filtration does not remove dissolved solute"), FMath::IsNearlyEqual(Filtration.DissolvedMassRemainingG, 35.9f, 0.001f));
     return true;
 }
 
@@ -144,6 +149,34 @@ bool FWMSciencePhysicsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Ideal DC circuit solves"), Circuit.Solve(Current, Power));
     TestTrue(TEXT("Ohm law current"), FMath::IsNearlyEqual(Current, 2.0f));
     TestTrue(TEXT("Electrical power"), FMath::IsNearlyEqual(Power, 24.0f));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FWMScienceCellBiologyTest,
+    "WorldMakers.Science.Biology.CellSystemsRespondToLimitingFactors",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FWMScienceCellBiologyTest::RunTest(const FString& Parameters)
+{
+    FWMCellSystemState HealthyCell;
+    FWMCellEnvironmentInput RichEnvironment;
+    RichEnvironment.NutrientAvailability = 1.0f;
+    RichEnvironment.OxygenAvailability = 1.0f;
+    RichEnvironment.TemperatureSuitability = 1.0f;
+
+    FWMCellStepResult RichResult;
+    TestTrue(TEXT("Cell metabolism accepts bounded environment"), HealthyCell.StepMetabolism(RichEnvironment, 1.0f, RichResult));
+    TestTrue(TEXT("Functional cell produces energy"), RichResult.EnergyProducedUnits > 0.0f);
+    TestEqual(TEXT("Healthy system emits interdependence evidence"), RichResult.EvidenceEventId, FName(TEXT("science.biology.cell-system-interdependence-demonstrated")));
+
+    FWMCellSystemState OxygenLimitedCell;
+    FWMCellEnvironmentInput OxygenLimited = RichEnvironment;
+    OxygenLimited.OxygenAvailability = 0.1f;
+    FWMCellStepResult LimitedResult;
+    TestTrue(TEXT("Limited cell step remains valid"), OxygenLimitedCell.StepMetabolism(OxygenLimited, 1.0f, LimitedResult));
+    TestTrue(TEXT("Oxygen limitation reduces energy production"), LimitedResult.EnergyProducedUnits < RichResult.EnergyProducedUnits);
+    TestEqual(TEXT("Limited system emits limiting-factor evidence"), LimitedResult.EvidenceEventId, FName(TEXT("science.biology.cell-limiting-factor-demonstrated")));
     return true;
 }
 
