@@ -52,11 +52,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FWMPresentationSemanticRoutingTest::RunTest(const FString& Parameters)
 {
-    TestEqual(TEXT("Build event routes to Build"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("gameplay.build.place")), EWMPresentationCameraMode::Build);
-    TestEqual(TEXT("Observation routes to Observe"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("world.observe.reveal")), EWMPresentationCameraMode::Observe);
-    TestEqual(TEXT("Science routes to Science"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("science.physics.force")), EWMPresentationCameraMode::Science);
-    TestEqual(TEXT("Fantasy routes to reveal"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("fantasy.portal.open")), EWMPresentationCameraMode::AdventureReveal);
-    TestEqual(TEXT("Unknown remains Explore"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("unknown.event")), EWMPresentationCameraMode::Explore);
+    TestTrue(TEXT("Build event routes to Build"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("gameplay.build.place")) == EWMPresentationCameraMode::Build);
+    TestTrue(TEXT("Observation routes to Observe"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("world.observe.reveal")) == EWMPresentationCameraMode::Observe);
+    TestTrue(TEXT("Science routes to Science"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("science.physics.force")) == EWMPresentationCameraMode::Science);
+    TestTrue(TEXT("Fantasy routes to reveal"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("fantasy.portal.open")) == EWMPresentationCameraMode::AdventureReveal);
+    TestTrue(TEXT("Unknown remains Explore"), FWMPresentationRuntime::ResolveModeForSemanticEvent(TEXT("unknown.event")) == EWMPresentationCameraMode::Explore);
     return true;
 }
 
