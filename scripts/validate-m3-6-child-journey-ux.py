@@ -149,8 +149,10 @@ def main() -> None:
         fail("M3.6 validator must run in Repository Quality and Unreal CI")
 
     roadmap = read("docs/roadmap.md")
-    if "M3.6 — child journey UX: source-complete" not in roadmap or "M3.7 — tablet performance profiles and capture: next" not in roadmap:
-        fail("Roadmap must mark M3.6 source-complete and M3.7 next")
+    if "M3.6 — child journey UX: source-complete" not in roadmap:
+        fail("Roadmap must preserve M3.6 as source-complete")
+    if "M3.7 — tablet performance profiles and capture:" not in roadmap:
+        fail("Roadmap must preserve the M3.7 successor phase")
 
     print("M3.6 Child Journey UX source contract validated: trusted read models composed, calm My Adventures UI present, no progress-domain mutation or pressure loop detected.")
 
