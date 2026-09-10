@@ -84,6 +84,19 @@ bool UWMEnvironmentStateSubsystem::ActivateProfile(const FName BiomeId)
     return true;
 }
 
+bool UWMEnvironmentStateSubsystem::BroadcastAcceptedMutation(const FName CausalId, const FName PreviousReactionId)
+{
+    const FWMEnvironmentStateSnapshot Snapshot = Model.GetSnapshot();
+    if (!Snapshot.IsBounded()) return false;
+
+    OnEnvironmentStateChanged.Broadcast(Snapshot);
+    if (Snapshot.ReactionId != PreviousReactionId)
+    {
+        OnEnvironmentReaction.Broadcast(CausalId, Snapshot.ReactionId);
+    }
+    return true;
+}
+
 bool UWMEnvironmentStateSubsystem::ApplyAction(const FName ActionId)
 {
     if (!Model.CanApplyAction(ActionId))
@@ -96,14 +109,25 @@ bool UWMEnvironmentStateSubsystem::ApplyAction(const FName ActionId)
     {
         return false;
     }
+    return BroadcastAcceptedMutation(ActionId, PreviousReactionId);
+}
 
-    const FWMEnvironmentStateSnapshot Snapshot = Model.GetSnapshot();
-    OnEnvironmentStateChanged.Broadcast(Snapshot);
-    if (Snapshot.ReactionId != PreviousReactionId)
+bool UWMEnvironmentStateSubsystem::ApplyTrustedEffect(
+    const FName EffectId,
+    const FWMEnvironmentStateDelta& Delta,
+    const int32 MaxApplications)
+{
+    if (!Model.CanApplyTrustedEffect(EffectId, MaxApplications) || !Delta.IsSane())
     {
-        OnEnvironmentReaction.Broadcast(ActionId, Snapshot.ReactionId);
+        return false;
     }
-    return true;
+
+    const FName PreviousReactionId = Model.GetSnapshot().ReactionId;
+    if (!Model.ApplyTrustedEffect(EffectId, Delta, MaxApplications))
+    {
+        return false;
+    }
+    return BroadcastAcceptedMutation(EffectId, PreviousReactionId);
 }
 
 void UWMEnvironmentStateSubsystem::EnsureActionTargets()

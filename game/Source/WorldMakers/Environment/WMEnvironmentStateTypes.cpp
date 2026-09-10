@@ -11,6 +11,11 @@ namespace
         return FMath::IsFinite(Value) && Value >= 0.0f && Value <= 1.0f;
     }
 
+    bool IsDeltaValue(const float Value)
+    {
+        return FMath::IsFinite(Value) && FMath::Abs(Value) <= 1.0f;
+    }
+
     bool ReadUnitField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float& OutValue)
     {
         double Value = 0.0;
@@ -52,6 +57,14 @@ namespace
     }
 }
 
+bool FWMEnvironmentStateDelta::IsSane() const
+{
+    const bool bHasDelta = !FMath::IsNearlyZero(VegetationHealth) || !FMath::IsNearlyZero(WaterFlow) ||
+        !FMath::IsNearlyZero(SoilProtection) || !FMath::IsNearlyZero(ShadeCoverage);
+    return IsDeltaValue(VegetationHealth) && IsDeltaValue(WaterFlow) && IsDeltaValue(SoilProtection) &&
+        IsDeltaValue(ShadeCoverage) && bHasDelta;
+}
+
 bool FWMEnvironmentStateSnapshot::IsBounded() const
 {
     return !BiomeId.IsNone() && IsUnitValue(VegetationHealth) && IsUnitValue(WaterFlow) &&
@@ -66,10 +79,8 @@ bool FWMEnvironmentActionDefinition::IsSane() const
         FMath::IsFinite(InteractionRadiusCm) && InteractionRadiusCm >= 100.0f && InteractionRadiusCm <= 1500.0f &&
         FMath::IsFinite(FocusRadiusCm) && FocusRadiusCm >= 20.0f && FocusRadiusCm <= 400.0f &&
         MaxApplications >= 1 && MaxApplications <= 5 &&
-        FMath::IsFinite(VegetationDelta) && FMath::Abs(VegetationDelta) <= 1.0f &&
-        FMath::IsFinite(WaterFlowDelta) && FMath::Abs(WaterFlowDelta) <= 1.0f &&
-        FMath::IsFinite(SoilProtectionDelta) && FMath::Abs(SoilProtectionDelta) <= 1.0f &&
-        FMath::IsFinite(ShadeCoverageDelta) && FMath::Abs(ShadeCoverageDelta) <= 1.0f && bHasDelta;
+        IsDeltaValue(VegetationDelta) && IsDeltaValue(WaterFlowDelta) &&
+        IsDeltaValue(SoilProtectionDelta) && IsDeltaValue(ShadeCoverageDelta) && bHasDelta;
 }
 
 bool FWMEnvironmentReactionBand::IsSane() const
@@ -322,18 +333,54 @@ bool FWMEnvironmentStateModel::ApplyAction(const FName ActionId)
         return false;
     }
 
-    Snapshot.VegetationHealth = FMath::Clamp(Snapshot.VegetationHealth + Action->VegetationDelta, 0.0f, 1.0f);
-    Snapshot.WaterFlow = FMath::Clamp(Snapshot.WaterFlow + Action->WaterFlowDelta, 0.0f, 1.0f);
-    Snapshot.SoilProtection = FMath::Clamp(Snapshot.SoilProtection + Action->SoilProtectionDelta, 0.0f, 1.0f);
-    Snapshot.ShadeCoverage = FMath::Clamp(Snapshot.ShadeCoverage + Action->ShadeCoverageDelta, 0.0f, 1.0f);
-    ApplicationCounts.FindOrAdd(ActionId) += 1;
+    FWMEnvironmentStateDelta Delta;
+    Delta.VegetationHealth = Action->VegetationDelta;
+    Delta.WaterFlow = Action->WaterFlowDelta;
+    Delta.SoilProtection = Action->SoilProtectionDelta;
+    Delta.ShadeCoverage = Action->ShadeCoverageDelta;
+    return ApplyDelta(ActionId, Delta, Action->MaxApplications);
+}
+
+bool FWMEnvironmentStateModel::CanApplyTrustedEffect(const FName EffectId, const int32 MaxApplications) const
+{
+    return bInitialized && !EffectId.IsNone() && MaxApplications >= 1 && MaxApplications <= 20 &&
+        ApplicationCounts.FindRef(EffectId) < MaxApplications;
+}
+
+bool FWMEnvironmentStateModel::ApplyTrustedEffect(
+    const FName EffectId,
+    const FWMEnvironmentStateDelta& Delta,
+    const int32 MaxApplications)
+{
+    if (!Delta.IsSane() || !CanApplyTrustedEffect(EffectId, MaxApplications))
+    {
+        return false;
+    }
+    return ApplyDelta(EffectId, Delta, MaxApplications);
+}
+
+bool FWMEnvironmentStateModel::ApplyDelta(
+    const FName CausalId,
+    const FWMEnvironmentStateDelta& Delta,
+    const int32 MaxApplications)
+{
+    if (!CanApplyTrustedEffect(CausalId, MaxApplications) || !Delta.IsSane())
+    {
+        return false;
+    }
+
+    Snapshot.VegetationHealth = FMath::Clamp(Snapshot.VegetationHealth + Delta.VegetationHealth, 0.0f, 1.0f);
+    Snapshot.WaterFlow = FMath::Clamp(Snapshot.WaterFlow + Delta.WaterFlow, 0.0f, 1.0f);
+    Snapshot.SoilProtection = FMath::Clamp(Snapshot.SoilProtection + Delta.SoilProtection, 0.0f, 1.0f);
+    Snapshot.ShadeCoverage = FMath::Clamp(Snapshot.ShadeCoverage + Delta.ShadeCoverage, 0.0f, 1.0f);
+    ApplicationCounts.FindOrAdd(CausalId) += 1;
     RefreshDerivedState();
     return Snapshot.IsBounded();
 }
 
-int32 FWMEnvironmentStateModel::GetAppliedCount(const FName ActionId) const
+int32 FWMEnvironmentStateModel::GetAppliedCount(const FName CausalId) const
 {
-    return ApplicationCounts.FindRef(ActionId);
+    return ApplicationCounts.FindRef(CausalId);
 }
 
 void FWMEnvironmentStateModel::RefreshDerivedState()

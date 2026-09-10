@@ -68,5 +68,56 @@
     "convertibleToMoney": false,
     "expiresAt": null,
     "streakRequired": false
+  },
+  {
+    "rewardId": "reward.eco.leaf-roof-unlock",
+    "type": "creative_unlock",
+    "trigger": {
+      "event": "environment.intervention-completed",
+      "objectiveId": "science.ecosystems.design-care-solution"
+    },
+    "payload": {
+      "unlockId": "eco.leaf-roof"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
+  },
+  {
+    "rewardId": "reward.eco.rainforest-planter-unlock",
+    "type": "creative_unlock",
+    "trigger": {
+      "event": "environment.intervention-completed",
+      "objectiveId": "science.ecosystems.design-care-solution"
+    },
+    "payload": {
+      "unlockId": "eco.rainforest-planter"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
+  },
+  {
+    "rewardId": "reward.eco.bamboo-bridge-unlock",
+    "type": "creative_unlock",
+    "trigger": {
+      "event": "environment.intervention-completed",
+      "objectiveId": "science.ecosystems.design-care-solution"
+    },
+    "payload": {
+      "unlockId": "eco.bamboo-bridge"
+    },
+    "deterministic": true,
+    "purchasable": false,
+    "transferable": false,
+    "convertibleToMoney": false,
+    "expiresAt": null,
+    "streakRequired": false
   }
 ]

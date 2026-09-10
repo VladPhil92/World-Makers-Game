@@ -39,6 +39,8 @@ jobs:
         run: python scripts/validate-m3-3-science-mission-runtime.py
       - name: Validate M3.4 Reactive Ecosystem
         run: python scripts/validate-m3-4-reactive-ecosystem.py
+      - name: Validate M3.5 Ecological Building
+        run: python scripts/validate-m3-5-ecological-building.py
 
   parent-portal:
     runs-on: ubuntu-latest

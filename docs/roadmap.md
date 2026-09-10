@@ -26,9 +26,9 @@ Current source progression:
 - M3.1 — semantic biome runtime, zones, POIs and exploration core: source-complete.
 - M3.2 — deliberate focus/observe interaction system: source-complete.
 - M3.3 — multi-evaluator mission runtime + first rainforest science mission: source-complete pending native UE certification.
-- M3.4 — reactive ecosystem state, care actions and visible reaction bands: source-complete pending native UE certification.
-- M3.5 — creative ecological interventions and unlocks: next.
-- M3.6 — child journey UX.
+- M3.4 — reactive ecosystem state and visible consequences: source-complete pending native UE certification.
+- M3.5 — spatial ecological building interventions + persistent creative unlocks: source-complete pending native UE certification.
+- M3.6 — child journey UX: next.
 - M3.7 — tablet performance profiles and capture.
 - M3.8 — vertical-slice certification.
 
@@ -36,6 +36,8 @@ Target outcomes:
 
 - Stylized premium biome with mobile-scalable lighting/materials.
 - Science/ecosystem learning hooks and missions embedded in play.
+- Building used as a causal tool for ecological problem solving.
+- Creative rewards expand possibilities without manipulative progression.
 - Cultural/environmental provenance review.
 - Tablet performance capture.
 
