@@ -1,0 +1,80 @@
+{
+  "id": "mission.prototype.eclipse-engine-composable-proof",
+  "axis": "science",
+  "discipline": "physics",
+  "secondaryDisciplines": [
+    "geometry",
+    "mathematics",
+    "philosophy-for-children"
+  ],
+  "conceptTags": [
+    "light",
+    "systems",
+    "prediction",
+    "spatial-reasoning",
+    "argument-revision"
+  ],
+  "depthLayers": [
+    "experience",
+    "concept",
+    "formalization"
+  ],
+  "ageBand": "9-10",
+  "learningObjectives": [
+    "physics.light.model-system",
+    "geometry.transformations.solve-spatial-system",
+    "philosophy.argument.revise-with-reasons"
+  ],
+  "playerGoalKey": "mission.prototype.eclipse-engine-composable-proof.goal",
+  "mechanics": [
+    "mirror-alignment",
+    "prediction-and-test",
+    "argument-revision"
+  ],
+  "evidenceEvents": [
+    "eclipse.light-model-completed",
+    "eclipse.mirror-system-solved",
+    "eclipse.explanation-revised"
+  ],
+  "difficulty": 5,
+  "scaffolds": [
+    "scaffold.eclipse.trace-ray",
+    "scaffold.eclipse.compare-angle",
+    "scaffold.eclipse.ask-why"
+  ],
+  "localizationKeys": [
+    "mission.prototype.eclipse-engine-composable-proof.goal"
+  ],
+  "analyticsClassification": "minimized-learning-evidence",
+  "review": {
+    "pedagogy": "draft",
+    "safety": "draft",
+    "cultural": "not-required"
+  },
+  "runtime": {
+    "evaluator": "composable",
+    "evidencePrimitives": [
+      {
+        "primitiveId": "model-system",
+        "evidenceEventId": "eclipse.light-model-completed",
+        "objectiveId": "physics.light.model-system",
+        "requiredCount": 2
+      },
+      {
+        "primitiveId": "solve-spatial-system",
+        "evidenceEventId": "eclipse.mirror-system-solved",
+        "objectiveId": "geometry.transformations.solve-spatial-system"
+      },
+      {
+        "primitiveId": "argue-and-revise",
+        "evidenceEventId": "eclipse.explanation-revised",
+        "objectiveId": "philosophy.argument.revise-with-reasons"
+      }
+    ],
+    "rewardIds": [
+      "reward.science.rainforest-observer-badge-01"
+    ],
+    "prerequisiteMissionIds": [],
+    "prototypeOnly": true
+  }
+}
