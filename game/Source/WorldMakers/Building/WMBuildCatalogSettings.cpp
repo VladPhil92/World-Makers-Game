@@ -7,10 +7,12 @@ bool FWMBuildPieceSpec::IsSane() const
     const bool bDimensionsPositive =
         DimensionsCm.X >= 10.0f && DimensionsCm.Y >= 10.0f && DimensionsCm.Z >= 10.0f &&
         DimensionsCm.X <= 2000.0f && DimensionsCm.Y <= 2000.0f && DimensionsCm.Z <= 2000.0f;
+    const bool bRewardGateSane = RequiredRewardId.IsNone() || RequiredRewardId.ToString().StartsWith(TEXT("reward."));
 
     return !PieceId.IsNone() &&
         bDimensionsFinite &&
         bDimensionsPositive &&
+        bRewardGateSane &&
         RotationStepDegrees >= 15.0f &&
         RotationStepDegrees <= 180.0f &&
         MinSurfaceUpDot >= 0.0f &&

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.invalid/schema/ecological-build-interventions.schema.json",
+  "title": "World Makers ecological build interventions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "biomeId", "prototypeOnly", "interventions"],
+  "properties": {
+    "schemaVersion": {"type": "integer", "const": 1},
+    "biomeId": {"type": "string", "pattern": "^biome\\.[a-z0-9.-]+$"},
+    "prototypeOnly": {"type": "boolean"},
+    "interventions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/intervention"}
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": "number"}
+    },
+    "delta": {"type": "number", "minimum": -1, "maximum": 1},
+    "stateDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vegetationHealth", "waterFlow", "soilProtection", "shadeCoverage"],
+      "properties": {
+        "vegetationHealth": {"$ref": "#/$defs/delta"},
+        "waterFlow": {"$ref": "#/$defs/delta"},
+        "soilProtection": {"$ref": "#/$defs/delta"},
+        "shadeCoverage": {"$ref": "#/$defs/delta"}
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pieceId", "minCount"],
+      "properties": {
+        "pieceId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+        "minCount": {"type": "integer", "minimum": 1, "maximum": 20}
+      }
+    },
+    "intervention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interventionId",
+        "anchorCm",
+        "radiusCm",
+        "prerequisiteInterventionIds",
+        "requirements",
+        "effectDelta",
+        "rewardId"
+      ],
+      "properties": {
+        "interventionId": {"type": "string", "pattern": "^intervention\\.[a-z0-9._-]+$"},
+        "anchorCm": {"$ref": "#/$defs/vector3"},
+        "radiusCm": {"type": "number", "minimum": 100, "maximum": 1500},
+        "prerequisiteInterventionIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^intervention\\.[a-z0-9._-]+$"}
+        },
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/requirement"}
+        },
+        "effectDelta": {"$ref": "#/$defs/stateDelta"},
+        "rewardId": {"type": "string", "pattern": "^reward\\.[a-z0-9._-]+$"}
+      }
+    }
+  }
+}

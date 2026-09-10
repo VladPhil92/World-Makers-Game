@@ -115,6 +115,7 @@ private:
     void DestroyAllPlacedPieces();
     float CalculateMissionScopedStructureSpan() const;
     void NotifyMissionOfStructureChange();
+    void PublishBuildWorldSnapshot() const;
 
     float CurrentYaw = 0.0f;
     bool bHasPlacementTarget = false;

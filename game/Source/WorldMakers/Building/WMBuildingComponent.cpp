@@ -2,8 +2,11 @@
 
 #include "Building/WMBuildGridLibrary.h"
 #include "Building/WMBuildPieceActor.h"
+#include "Building/WMBuildUnlockSubsystem.h"
+#include "Building/WMBuildWorldStateSubsystem.h"
 #include "Building/WMWorldSaveGame.h"
 #include "CollisionShape.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
@@ -46,6 +49,7 @@ void UWMBuildingComponent::BeginPlay()
     Super::BeginPlay();
     EnsurePreviewActor();
     SelectPiece(SelectedPieceId);
+    PublishBuildWorldSnapshot();
 }
 
 void UWMBuildingComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -64,7 +68,13 @@ void UWMBuildingComponent::TickComponent(const float DeltaTime, const ELevelTick
 bool UWMBuildingComponent::ResolvePieceSpec(const FName PieceId, FWMBuildPieceSpec& OutSpec) const
 {
     const UWMBuildCatalogSettings* Catalog = GetDefault<UWMBuildCatalogSettings>();
-    return Catalog && Catalog->FindPieceSpec(PieceId, OutSpec);
+    if (!Catalog || !Catalog->FindPieceSpec(PieceId, OutSpec)) return false;
+    if (OutSpec.RequiredRewardId.IsNone()) return true;
+
+    UWorld* World = GetWorld();
+    UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+    const UWMBuildUnlockSubsystem* Unlocks = GameInstance ? GameInstance->GetSubsystem<UWMBuildUnlockSubsystem>() : nullptr;
+    return Unlocks && Unlocks->IsRewardGranted(OutSpec.RequiredRewardId);
 }
 
 void UWMBuildingComponent::EnsurePreviewActor()
@@ -104,6 +114,11 @@ bool UWMBuildingComponent::CycleSelectedPiece(const int32 Direction)
 
     TArray<FName> PieceIds;
     Catalog->GetPieceIds(PieceIds);
+    PieceIds.RemoveAll([this](const FName PieceId)
+    {
+        FWMBuildPieceSpec Spec;
+        return !ResolvePieceSpec(PieceId, Spec);
+    });
     if (PieceIds.IsEmpty()) return false;
 
     int32 Index = PieceIds.IndexOfByKey(SelectedPieceId);
@@ -268,6 +283,36 @@ void UWMBuildingComponent::NotifyMissionOfStructureChange()
     }
 }
 
+void UWMBuildingComponent::PublishBuildWorldSnapshot() const
+{
+    UWorld* World = GetWorld();
+    UWMBuildWorldStateSubsystem* BuildState = World ? World->GetSubsystem<UWMBuildWorldStateSubsystem>() : nullptr;
+    const UWMBuildCatalogSettings* Catalog = GetDefault<UWMBuildCatalogSettings>();
+    if (!World || !BuildState || !Catalog) return;
+
+    TArray<AActor*> BuildActors;
+    UGameplayStatics::GetAllActorsOfClass(World, AWMBuildPieceActor::StaticClass(), BuildActors);
+    TArray<FWMPlacedBuildPieceSnapshot> Snapshot;
+    Snapshot.Reserve(BuildActors.Num());
+    for (AActor* Actor : BuildActors)
+    {
+        const AWMBuildPieceActor* Piece = Cast<AWMBuildPieceActor>(Actor);
+        FWMBuildPieceSpec Spec;
+        if (!IsValid(Piece) || Piece->IsPreview() || !Piece->ActorHasTag(AWMBuildPieceActor::PlacedBuildTag) ||
+            !Catalog->FindPieceSpec(Piece->PieceId, Spec))
+        {
+            continue;
+        }
+
+        FWMPlacedBuildPieceSnapshot Entry;
+        Entry.PieceId = Piece->PieceId;
+        Entry.LocationCm = Piece->GetActorLocation();
+        Entry.YawDegrees = Piece->GetActorRotation().Yaw;
+        if (Entry.IsSane()) Snapshot.Add(Entry);
+    }
+    BuildState->PublishSnapshot(Snapshot);
+}
+
 bool UWMBuildingComponent::UseMissionMeasurementTool()
 {
     if (!GetWorld()) return false;
@@ -300,6 +345,7 @@ bool UWMBuildingComponent::TryPlaceCurrentPiece()
     Command.ActiveActor = PlacedPiece;
     PushCommand(Command);
     NotifyMissionOfStructureChange();
+    PublishBuildWorldSnapshot();
     return true;
 }
 
@@ -319,6 +365,7 @@ bool UWMBuildingComponent::TryRemoveTargetPiece()
     TargetPiece->Destroy();
     PushCommand(Command);
     NotifyMissionOfStructureChange();
+    PublishBuildWorldSnapshot();
     return true;
 }
 
@@ -370,6 +417,7 @@ bool UWMBuildingComponent::CommitMove()
     MoveOriginalTransform = FTransform::Identity;
     UpdatePreviewTransform();
     NotifyMissionOfStructureChange();
+    PublishBuildWorldSnapshot();
     return true;
 }
 
@@ -428,6 +476,7 @@ bool UWMBuildingComponent::UndoLastAction()
     {
         RedoStack.Add(Command);
         NotifyMissionOfStructureChange();
+        PublishBuildWorldSnapshot();
     }
     else UndoStack.Add(Command);
     return bSucceeded;
@@ -466,6 +515,7 @@ bool UWMBuildingComponent::RedoLastAction()
     {
         UndoStack.Add(Command);
         NotifyMissionOfStructureChange();
+        PublishBuildWorldSnapshot();
     }
     else RedoStack.Add(Command);
     return bSucceeded;
@@ -522,6 +572,7 @@ bool UWMBuildingComponent::LoadWorld(const FString& SlotName)
         if (!SpawnPlacedPiece(Record.Transform, Record.PieceId))
         {
             DestroyAllPlacedPieces();
+            PublishBuildWorldSnapshot();
             return false;
         }
     }
@@ -529,5 +580,6 @@ bool UWMBuildingComponent::LoadWorld(const FString& SlotName)
     UndoStack.Reset();
     RedoStack.Reset();
     NotifyMissionOfStructureChange();
+    PublishBuildWorldSnapshot();
     return true;
 }

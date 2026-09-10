@@ -4,6 +4,26 @@
 #include "WMEnvironmentStateTypes.generated.h"
 
 USTRUCT(BlueprintType)
+struct WORLDMAKERS_API FWMEnvironmentStateDelta
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly, Category = "World Makers|Environment")
+    float VegetationHealth = 0.0f;
+
+    UPROPERTY(BlueprintReadOnly, Category = "World Makers|Environment")
+    float WaterFlow = 0.0f;
+
+    UPROPERTY(BlueprintReadOnly, Category = "World Makers|Environment")
+    float SoilProtection = 0.0f;
+
+    UPROPERTY(BlueprintReadOnly, Category = "World Makers|Environment")
+    float ShadeCoverage = 0.0f;
+
+    bool IsSane() const;
+};
+
+USTRUCT(BlueprintType)
 struct WORLDMAKERS_API FWMEnvironmentStateSnapshot
 {
     GENERATED_BODY()
@@ -127,17 +147,20 @@ struct WORLDMAKERS_API FWMEnvironmentStateDefinition
     static bool TryParseJson(const FString& Json, FWMEnvironmentStateDefinition& OutDefinition, FString& OutError);
 };
 
-/** Pure deterministic state model. Contains stable action IDs and bounded numeric state only. */
+/** Pure deterministic state model. Contains stable causal IDs and bounded numeric state only. */
 struct WORLDMAKERS_API FWMEnvironmentStateModel
 {
     bool Initialize(const FWMEnvironmentStateDefinition& InDefinition);
     bool CanApplyAction(FName ActionId) const;
     bool ApplyAction(FName ActionId);
-    int32 GetAppliedCount(FName ActionId) const;
+    bool CanApplyTrustedEffect(FName EffectId, int32 MaxApplications) const;
+    bool ApplyTrustedEffect(FName EffectId, const FWMEnvironmentStateDelta& Delta, int32 MaxApplications);
+    int32 GetAppliedCount(FName CausalId) const;
     const FWMEnvironmentStateSnapshot& GetSnapshot() const { return Snapshot; }
     const FWMEnvironmentStateDefinition& GetDefinition() const { return Definition; }
 
 private:
+    bool ApplyDelta(FName CausalId, const FWMEnvironmentStateDelta& Delta, int32 MaxApplications);
     void RefreshDerivedState();
 
     bool bInitialized = false;

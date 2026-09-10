@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "biomeId": "biome.caribbean-rainforest",
+  "prototypeOnly": true,
+  "interventions": [
+    {
+      "interventionId": "intervention.ecosystem.soil-buffer",
+      "anchorCm": [-450, -450, 0],
+      "radiusCm": 325,
+      "prerequisiteInterventionIds": [],
+      "requirements": [
+        {"pieceId": "prototype.wall", "minCount": 2}
+      ],
+      "effectDelta": {
+        "vegetationHealth": 0.03,
+        "waterFlow": 0.00,
+        "soilProtection": 0.18,
+        "shadeCoverage": 0.00
+      },
+      "rewardId": "reward.eco.leaf-roof-unlock"
+    },
+    {
+      "interventionId": "intervention.ecosystem.shade-shelter",
+      "anchorCm": [400, 350, 0],
+      "radiusCm": 325,
+      "prerequisiteInterventionIds": [
+        "intervention.ecosystem.soil-buffer"
+      ],
+      "requirements": [
+        {"pieceId": "prototype.pillar", "minCount": 2},
+        {"pieceId": "eco.leaf-roof", "minCount": 1}
+      ],
+      "effectDelta": {
+        "vegetationHealth": 0.04,
+        "waterFlow": 0.00,
+        "soilProtection": 0.00,
+        "shadeCoverage": 0.20
+      },
+      "rewardId": "reward.eco.rainforest-planter-unlock"
+    },
+    {
+      "interventionId": "intervention.ecosystem.habitat-garden",
+      "anchorCm": [-350, 350, 0],
+      "radiusCm": 325,
+      "prerequisiteInterventionIds": [
+        "intervention.ecosystem.shade-shelter"
+      ],
+      "requirements": [
+        {"pieceId": "eco.rainforest-planter", "minCount": 2},
+        {"pieceId": "prototype.floor", "minCount": 1}
+      ],
+      "effectDelta": {
+        "vegetationHealth": 0.18,
+        "waterFlow": 0.00,
+        "soilProtection": 0.04,
+        "shadeCoverage": 0.00
+      },
+      "rewardId": "reward.eco.bamboo-bridge-unlock"
+    }
+  ]
+}

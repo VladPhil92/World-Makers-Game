@@ -18,6 +18,10 @@ struct FWMBuildPieceSpec
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Building")
     FString Category = TEXT("Block");
 
+    /** Optional deterministic gameplay reward required before this creative piece is selectable/spawnable. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Building")
+    FName RequiredRewardId = NAME_None;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "World Makers|Building")
     FVector DimensionsCm = FVector(100.0f);
 

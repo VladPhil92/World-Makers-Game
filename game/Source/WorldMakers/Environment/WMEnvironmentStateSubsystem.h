@@ -43,6 +43,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Environment")
     bool ApplyAction(FName ActionId);
 
+    /** Native trusted-domain entrypoint for deterministic build/ecosystem effects. Not exposed to Blueprint. */
+    bool ApplyTrustedEffect(FName EffectId, const FWMEnvironmentStateDelta& Delta, int32 MaxApplications = 1);
+
     UFUNCTION(BlueprintCallable, Category = "World Makers|Environment")
     void EnsureActionTargets();
 
@@ -56,6 +59,7 @@ public:
     FWMEnvironmentReactionSignature OnEnvironmentReaction;
 
 private:
+    bool BroadcastAcceptedMutation(FName CausalId, FName PreviousReactionId);
     void ClearActionTargets();
 
     TMap<FName, FWMEnvironmentStateDefinition> ProfileCatalog;
