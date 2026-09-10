@@ -155,7 +155,8 @@ def main() -> None:
         "MaxActiveProxyEffects",
         "0.35f",
     )
-    require("reward" not in runtime_h.lower() + runtime_cpp.lower(), "V6 runtime must not contain reward authority")
+    for forbidden_call in ("GrantReward", "RecordComposableEvidence", "CompleteMission", "AddCurrency"):
+        require(forbidden_call not in runtime_h + runtime_cpp, f"V6 runtime must not own authority: {forbidden_call}")
 
     geometry_h = read("game/Source/WorldMakers/Visual/WMProceduralVFXGeometry.h")
     geometry_cpp = require_tokens(
@@ -199,7 +200,8 @@ def main() -> None:
         "science.ecology.recovery",
         "science.ecology.stress",
     )
-    require("Grant" not in subsystem_cpp and "RecordComposableEvidence" not in subsystem_cpp, "VFX subsystem must not mutate rewards/evidence")
+    for forbidden_call in ("GrantReward", "RecordComposableEvidence", "CompleteMission", "AddCurrency"):
+        require(forbidden_call not in subsystem_cpp, f"VFX subsystem must not own authority: {forbidden_call}")
 
     adapter_h = read("game/Source/WorldMakers/Science/WMScienceVFXAdapter.h")
     adapter_cpp = require_tokens(
