@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.invalid/schema/ecosystem-state.schema.json",
+  "title": "World Makers reactive ecosystem profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "biomeId", "prototypeOnly", "baseline", "actions", "reactionBands"],
+  "properties": {
+    "schemaVersion": {"type": "integer", "const": 1},
+    "biomeId": {"type": "string", "pattern": "^biome\\.[a-z0-9.-]+$"},
+    "prototypeOnly": {"type": "boolean"},
+    "baseline": {"$ref": "#/$defs/stateVector"},
+    "actions": {
+      "type": "array",
+      "minItems": 3,
+      "items": {"$ref": "#/$defs/action"}
+    },
+    "reactionBands": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"$ref": "#/$defs/reactionBand"}
+    }
+  },
+  "$defs": {
+    "unit": {"type": "number", "minimum": 0, "maximum": 1},
+    "delta": {"type": "number", "minimum": -1, "maximum": 1},
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": "number"}
+    },
+    "stateVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vegetationHealth", "waterFlow", "soilProtection", "shadeCoverage"],
+      "properties": {
+        "vegetationHealth": {"$ref": "#/$defs/unit"},
+        "waterFlow": {"$ref": "#/$defs/unit"},
+        "soilProtection": {"$ref": "#/$defs/unit"},
+        "shadeCoverage": {"$ref": "#/$defs/unit"}
+      }
+    },
+    "deltaVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vegetationHealth", "waterFlow", "soilProtection", "shadeCoverage"],
+      "properties": {
+        "vegetationHealth": {"$ref": "#/$defs/delta"},
+        "waterFlow": {"$ref": "#/$defs/delta"},
+        "soilProtection": {"$ref": "#/$defs/delta"},
+        "shadeCoverage": {"$ref": "#/$defs/delta"}
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "targetId", "promptKey", "locationCm", "interactionRadiusCm", "focusRadiusCm", "maxApplications", "delta"],
+      "properties": {
+        "actionId": {"type": "string", "pattern": "^action\\.[a-z0-9.-]+$"},
+        "targetId": {"type": "string", "pattern": "^target\\.[a-z0-9.-]+$"},
+        "promptKey": {"type": "string", "pattern": "^interaction\\.[a-z0-9.-]+$"},
+        "locationCm": {"$ref": "#/$defs/vector3"},
+        "interactionRadiusCm": {"type": "number", "minimum": 100, "maximum": 1500},
+        "focusRadiusCm": {"type": "number", "minimum": 20, "maximum": 400},
+        "maxApplications": {"type": "integer", "minimum": 1, "maximum": 5},
+        "delta": {"$ref": "#/$defs/deltaVector"}
+      }
+    },
+    "reactionBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reactionId", "maxHabitatQuality"],
+      "properties": {
+        "reactionId": {"type": "string", "pattern": "^reaction\\.[a-z0-9.-]+$"},
+        "maxHabitatQuality": {"$ref": "#/$defs/unit"}
+      }
+    }
+  }
+}

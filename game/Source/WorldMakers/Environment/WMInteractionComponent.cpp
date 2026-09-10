@@ -4,6 +4,9 @@
 #include "EngineUtils.h"
 #include "Environment/WMBiomeRuntimeSubsystem.h"
 #include "Environment/WMEnvironmentalInteractableActor.h"
+#include "Environment/WMEnvironmentActionActor.h"
+#include "Environment/WMEnvironmentStateSubsystem.h"
+#include "Environment/WMInteractable.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 
@@ -24,6 +27,10 @@ void UWMInteractionComponent::BeginPlay()
         if (UWMBiomeRuntimeSubsystem* Biomes = World->GetSubsystem<UWMBiomeRuntimeSubsystem>())
         {
             Biomes->EnsureInteractionTargets();
+        }
+        if (UWMEnvironmentStateSubsystem* EnvironmentState = World->GetSubsystem<UWMEnvironmentStateSubsystem>())
+        {
+            EnvironmentState->EnsureActionTargets();
         }
     }
     RefreshFocus();
@@ -80,7 +87,9 @@ void UWMInteractionComponent::ClearFocus()
     FocusedActor.Reset();
     FocusedPointId = NAME_None;
     FocusedPromptKey = NAME_None;
+    FocusedInteractionMode = NAME_None;
     FocusedObservationId = NAME_None;
+    FocusedActionId = NAME_None;
     bCanInteract = false;
 }
 
@@ -100,28 +109,32 @@ void UWMInteractionComponent::RefreshFocus()
     {
         Biomes->EnsureInteractionTargets();
     }
+    if (UWMEnvironmentStateSubsystem* EnvironmentState = World->GetSubsystem<UWMEnvironmentStateSubsystem>())
+    {
+        EnvironmentState->EnsureActionTargets();
+    }
 
     FVector ViewLocation;
     FRotator ViewRotation;
     PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
     const FVector ViewForward = ViewRotation.Vector();
 
-    AWMEnvironmentalInteractableActor* BestTarget = nullptr;
+    AActor* BestTarget = nullptr;
     float BestDot = -1.0f;
     float BestDistanceSquared = TNumericLimits<float>::Max();
 
-    for (TActorIterator<AWMEnvironmentalInteractableActor> It(World); It; ++It)
+    auto ConsiderTarget = [&](AActor* Target)
     {
-        AWMEnvironmentalInteractableActor* Target = *It;
-        if (!IsValid(Target) || !Target->CanInteract(OwnerPawn))
+        IWMInteractable* Interactable = Target ? Cast<IWMInteractable>(Target) : nullptr;
+        if (!Interactable || !Interactable->CanInteract(OwnerPawn))
         {
-            continue;
+            return;
         }
 
-        const FVector TargetLocation = Target->GetInteractionAnchorLocation();
+        const FVector TargetLocation = Interactable->GetInteractionAnchorLocation();
         if (!IsFocusCandidate(ViewLocation, ViewForward, TargetLocation, FocusMaxDistanceCm, MinimumFocusDot))
         {
-            continue;
+            return;
         }
 
         const FVector Delta = TargetLocation - ViewLocation;
@@ -134,18 +147,33 @@ void UWMInteractionComponent::RefreshFocus()
             BestDot = Dot;
             BestDistanceSquared = DistanceSquared;
         }
+    };
+
+    // Preserve the M3.2 observation target path.
+    for (TActorIterator<AWMEnvironmentalInteractableActor> It(World); It; ++It)
+    {
+        ConsiderTarget(*It);
     }
 
-    if (!BestTarget)
+    // M3.4 adds explicit ecosystem-care targets through the same focus contract.
+    for (TActorIterator<AWMEnvironmentActionActor> It(World); It; ++It)
+    {
+        ConsiderTarget(*It);
+    }
+
+    IWMInteractable* BestInteractable = BestTarget ? Cast<IWMInteractable>(BestTarget) : nullptr;
+    if (!BestInteractable)
     {
         return;
     }
 
     FocusedActor = BestTarget;
-    FocusedPointId = BestTarget->GetInteractionPointId();
-    FocusedPromptKey = BestTarget->GetInteractionPromptKey();
-    FocusedObservationId = BestTarget->GetInteractionObservationId();
-    bCanInteract = BestTarget->CanInteract(OwnerPawn);
+    FocusedPointId = BestInteractable->GetInteractionPointId();
+    FocusedPromptKey = BestInteractable->GetInteractionPromptKey();
+    FocusedInteractionMode = BestInteractable->GetInteractionMode();
+    FocusedObservationId = BestInteractable->GetInteractionObservationId();
+    FocusedActionId = BestInteractable->GetInteractionActionId();
+    bCanInteract = BestInteractable->CanInteract(OwnerPawn);
 }
 
 bool UWMInteractionComponent::TryInteractFocused()
@@ -168,13 +196,15 @@ bool UWMInteractionComponent::TryInteractFocused()
         return false;
     }
 
-    AWMEnvironmentalInteractableActor* Target = FocusedActor.Get();
-    if (!Target || !Target->Interact(GetOwner()))
+    AActor* Target = FocusedActor.Get();
+    IWMInteractable* Interactable = Target ? Cast<IWMInteractable>(Target) : nullptr;
+    if (!Interactable || !Interactable->Interact(GetOwner()))
     {
         return false;
     }
 
     LastInteractionTimeSeconds = CurrentTimeSeconds;
-    LastObservationId = Target->GetInteractionObservationId();
+    LastObservationId = Interactable->GetInteractionObservationId();
+    LastActionId = Interactable->GetInteractionActionId();
     return true;
 }

@@ -26,6 +26,7 @@ void AWMEnvironmentalInteractableActor::Configure(
 {
     PointId = Definition.PointId;
     PromptKey = Definition.PromptKey;
+    InteractionMode = Definition.InteractionMode;
     ObservationId = Definition.ObservationId;
     InteractionRadiusCm = Definition.InteractionRadiusCm;
     FocusRadiusCm = Definition.FocusRadiusCm;

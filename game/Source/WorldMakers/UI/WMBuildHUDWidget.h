@@ -30,6 +30,7 @@ private:
     UButton* CreateActionButton(UHorizontalBox* Row, FName WidgetName, const FText& Label);
     FText ResolveSelectedPieceLabel() const;
     FText ResolveInteractionPromptLabel() const;
+    FText ResolveInteractionActionLabel() const;
     void RefreshStatus();
 
     UFUNCTION()
@@ -80,6 +81,9 @@ private:
     FTimerHandle StatusRefreshTimer;
 
     UPROPERTY(Transient)
+    TObjectPtr<UTextBlock> EnvironmentStatusText;
+
+    UPROPERTY(Transient)
     TObjectPtr<UTextBlock> InteractionStatusText;
 
     UPROPERTY(Transient)
@@ -90,6 +94,9 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<UButton> ObserveButton;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTextBlock> InteractionActionText;
 
     UPROPERTY(Transient)
     TObjectPtr<UButton> ConfirmButton;
