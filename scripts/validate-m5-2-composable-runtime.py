@@ -109,10 +109,11 @@ def main() -> None:
         "RecordComposableEvidence",
         "IsComposableEvidenceRequired",
         "GetRequiredEvidencePrimitiveIds",
-        "GetRecordedComposableEvidenceCount",
     ):
         if token not in subsystem_h or token not in subsystem_cpp:
             fail(f"Mission subsystem missing composable API: {token}")
+    if "GetRecordedComposableEvidenceCount" not in subsystem_h:
+        fail("Mission subsystem missing composable evidence-count read API")
 
     tests = read("game/Source/WorldMakers/Private/Tests/WMMissionRuntimeTests.cpp")
     for test_name in (
