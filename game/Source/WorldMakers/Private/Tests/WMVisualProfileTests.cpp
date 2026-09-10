@@ -26,9 +26,14 @@ bool FWMVisualProfileBudgetTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("High budget is sane"), High.IsSane());
     TestTrue(TEXT("Tree density scales monotonically"), Low.TreeClusters <= Mid.TreeClusters && Mid.TreeClusters <= High.TreeClusters);
     TestTrue(TEXT("Rock density scales monotonically"), Low.RockClusters <= Mid.RockClusters && Mid.RockClusters <= High.RockClusters);
+    TestTrue(TEXT("Texture edge scales monotonically"), Low.MaxTextureEdgePx <= Mid.MaxTextureEdgePx && Mid.MaxTextureEdgePx <= High.MaxTextureEdgePx);
+    TestTrue(TEXT("Texture sample budget scales monotonically"), Low.MaxSampledTexturesPerMaterial <= Mid.MaxSampledTexturesPerMaterial && Mid.MaxSampledTexturesPerMaterial <= High.MaxSampledTexturesPerMaterial);
+    TestTrue(TEXT("Material slot budget remains disciplined"), High.MaxMaterialSlotsPerMesh <= 2);
     TestTrue(TEXT("Atmosphere look is sane"), Profile->Atmosphere.IsSane());
+    TestTrue(TEXT("Surface response is sane"), Profile->SurfaceResponse.IsSane());
     TestTrue(TEXT("Camera FOV stays tablet-readable"), Profile->Atmosphere.CameraFOVDegrees >= 60.0f && Profile->Atmosphere.CameraFOVDegrees <= 90.0f);
     TestTrue(TEXT("Fog remains restrained for gameplay readability"), Profile->Atmosphere.FogDensity <= 0.05f);
+    TestTrue(TEXT("Water stays visually smoother than terrain"), Profile->SurfaceResponse.WaterRoughness < Profile->SurfaceResponse.TerrainRoughness);
     TestEqual(TEXT("Default profile name is explicit"), Profile->ProfileName, FString(TEXT("CaribbeanRainforestPrototype")));
     return true;
 }
