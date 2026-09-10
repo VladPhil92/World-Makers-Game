@@ -34,7 +34,7 @@ void UWMPresentationSubsystem::Deinitialize()
             VFX->OnVFXAccepted.RemoveDynamic(this, &UWMPresentationSubsystem::HandleVFXAccepted);
         }
     }
-    if (Overlay)
+    if (IsValid(Overlay))
     {
         Overlay->RemoveFromParent();
     }
@@ -51,16 +51,16 @@ TStatId UWMPresentationSubsystem::GetStatId() const
 
 void UWMPresentationSubsystem::EnsurePresentationTargets()
 {
-    if (CameraBoom && Camera && Overlay) return;
+    if (IsValid(CameraBoom) && IsValid(Camera) && IsValid(Overlay)) return;
     UWorld* World = GetWorld();
     APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
     APawn* Pawn = PC ? PC->GetPawn() : nullptr;
     if (!Pawn) return;
 
-    if (!CameraBoom) CameraBoom = Pawn->FindComponentByClass<USpringArmComponent>();
-    if (!Camera) Camera = Pawn->FindComponentByClass<UCameraComponent>();
+    if (!IsValid(CameraBoom)) CameraBoom = Pawn->FindComponentByClass<USpringArmComponent>();
+    if (!IsValid(Camera)) Camera = Pawn->FindComponentByClass<UCameraComponent>();
 
-    if (!Overlay && PC && PC->IsLocalController())
+    if (!IsValid(Overlay) && PC && PC->IsLocalController())
     {
         Overlay = CreateWidget<UWMPresentationOverlayWidget>(PC, UWMPresentationOverlayWidget::StaticClass());
         if (Overlay)
@@ -69,7 +69,7 @@ void UWMPresentationSubsystem::EnsurePresentationTargets()
         }
     }
 
-    if (CameraBoom)
+    if (IsValid(CameraBoom))
     {
         CameraBoom->bDoCollisionTest = true;
         CameraBoom->ProbeSize = FMath::Max(CameraBoom->ProbeSize, 12.0f);
@@ -97,7 +97,7 @@ void UWMPresentationSubsystem::Tick(const float DeltaTime)
 
 void UWMPresentationSubsystem::ApplyCameraProfile(const float DeltaTime)
 {
-    if (!CameraBoom || !Camera || !ActiveProfile.IsSane()) return;
+    if (!IsValid(CameraBoom) || !IsValid(Camera) || !ActiveProfile.IsSane()) return;
 
     const float Blend = FMath::Max(ActiveProfile.BlendSeconds, 0.01f);
     const float InterpSpeed = 4.0f / Blend;
@@ -119,7 +119,7 @@ bool UWMPresentationSubsystem::PulseCameraMode(
         DurationSeconds > 0.0f ? DurationSeconds : Profile.HoldSeconds,
         bReducedMotion);
 
-    if (Overlay && !CueId.IsNone())
+    if (IsValid(Overlay) && !CueId.IsNone())
     {
         Overlay->ShowCue(CueId, PulseRemainingSeconds, bReducedMotion);
     }
@@ -138,7 +138,7 @@ void UWMPresentationSubsystem::SetReducedMotion(const bool bEnabled)
     }
     FWMPresentationRuntime::ResolveCameraProfile(EWMPresentationCameraMode::Explore, bReducedMotion, ActiveProfile);
     PulseRemainingSeconds = 0.0f;
-    if (Overlay) Overlay->DismissCue();
+    if (IsValid(Overlay)) Overlay->DismissCue();
 }
 
 FName UWMPresentationSubsystem::ResolveCueForEvent(const FName EventId) const
