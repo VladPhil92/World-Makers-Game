@@ -55,19 +55,41 @@ See `docs/v2-materials-surface-language.md` and `content/visual/materials/surfac
 
 ## V3 — Environment Art / Biome Production
 
-Goal: replace the Caribbean Rainforest primitive composition with authored modular environment families.
+V3 status: source-complete procedural art pass; authored DCC mesh replacement and native/device art certification pending.
 
-- terrain/ground family;
-- multiple tree trunk, canopy and root silhouettes;
-- understory vegetation and ground-cover families;
-- rock/cliff family;
-- authored water-edge and river geometry;
-- biome landmarks and exploration silhouettes;
-- HISM/ISM placement, LOD/HLOD and culling plans;
-- controlled density from quiet build clearing to richer perimeter;
-- weather/atmospheric variants without sacrificing gameplay readability.
+Goal: replace the visible Caribbean Rainforest primitive composition with an original modular environment language while keeping gameplay collision semantics independent from art iteration.
 
-Exit: no major visible rainforest family depends on `/Engine/BasicShapes/*` in the production visual path.
+Implemented source/runtime contract:
+
+- explicit `ProceduralMeshComponent` runtime dependency;
+- six render-only procedural art components for ground, terrain, bark/roots, foliage, stone and water;
+- original deterministic triangle builders instead of wrapping `/Engine/BasicShapes/*` in the new render path;
+- irregular ground silhouette and faceted terrain mounds;
+- tapered trunks with deterministic lean and width variation;
+- buttress roots and three distinct canopy silhouettes;
+- radial understory leaf clusters;
+- faceted asymmetric boulders;
+- continuous sinuous river-edge strip;
+- deterministic hero-ceiba landmark with six buttress roots and multi-mass crown;
+- V2 surface-role integration across all V3 visual families;
+- hidden Engine-primitive HISM path retained only for collision/fallback and reversible visual rollback;
+- quality-tier structural tessellation for ground, tree/canopy facets, river and understory density;
+- canonical/staged machine-readable environment-family manifest;
+- Unreal Automation tests for determinism, tree silhouette composition, understory and continuous river geometry;
+- dedicated Repository Quality V3 gate.
+
+Authored production target:
+
+- replace each procedural family with original DCC-authored static meshes under `/Game/WorldMakers/Environment/CaribbeanRainforest/...`;
+- preserve the V2 material-role contract when replacing geometry;
+- preserve quiet build clearing, denser perimeter framing, one-sided water boundary and hero-landmark readability;
+- add explicit LOD/HLOD or equivalent fallback strategy and cull distances per authored family;
+- add measured triangle, draw-call, texture and foliage-overdraw evidence on representative tablets;
+- retain gameplay collision independently from cosmetic silhouette where practical.
+
+Exit: no major visible rainforest family depends on `/Engine/BasicShapes/*` in the active V3 render path. Source exit may pass with procedural source art; final environment-art certification still requires authored `.uasset` families, native Unreal rendering and V8 device evidence.
+
+See `docs/v3-environment-art-biome-production.md` and `content/visual/environment/caribbean-rainforest-v3.json`.
 
 ## V4 — Character Art & Rig
 
