@@ -28,7 +28,7 @@ The browser never receives backend credentials and never talks directly to gamep
 
 ## Guardian session
 
-Production APIs fail closed until a provider exists. Local/demo authentication is enabled only with:
+Production APIs fail closed until a provider exists. The production identity boundary therefore **fails closed** rather than creating a permissive fallback. Local/demo authentication is enabled only with:
 
 `WORLD_MAKERS_ALLOW_DEMO_AUTH=true`
 
