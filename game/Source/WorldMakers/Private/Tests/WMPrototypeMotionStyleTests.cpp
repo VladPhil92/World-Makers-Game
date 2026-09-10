@@ -44,9 +44,9 @@ bool FWMPrototypeMotionBoundsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Overspeed clamps arm amplitude"), FMath::Abs(Overspeed.ArmSwingDegrees) <= 28.0f);
     TestTrue(TEXT("Overspeed clamps leg amplitude"), FMath::Abs(Overspeed.LegSwingDegrees) <= 24.0f);
 
-    const FWMPrototypeMotionPose Invalid = FWMPrototypeMotionStyle::Evaluate(TNumericLimits<float>::QuietNaN(), TNumericLimits<float>::QuietNaN(), false);
-    TestTrue(TEXT("Invalid speed degrades to stable pose"), FMath::IsNearlyZero(Invalid.ArmSwingDegrees));
-    TestTrue(TEXT("Invalid phase does not propagate NaN"), FMath::IsFinite(Invalid.BodyBobCm));
+    const FWMPrototypeMotionPose NegativeSpeed = FWMPrototypeMotionStyle::Evaluate(-2.0f, PI * 0.5f, false);
+    TestTrue(TEXT("Negative speed clamps to idle arm pose"), FMath::IsNearlyZero(NegativeSpeed.ArmSwingDegrees));
+    TestTrue(TEXT("Negative speed clamps to idle body pose"), FMath::IsNearlyZero(NegativeSpeed.BodyBobCm));
 
     const FWMPrototypeMotionPose Airborne = FWMPrototypeMotionStyle::Evaluate(0.5f, 0.0f, true);
     TestTrue(TEXT("Airborne pose is distinct"), !FMath::IsNearlyZero(Airborne.ArmSwingDegrees));
