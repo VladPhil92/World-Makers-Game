@@ -102,7 +102,7 @@ Surface variation should support silhouette and composition, not fight them. Mac
 
 ## Character proportions and rig
 
-The World Makers player avatar is child-proportioned, expressive and customizable rather than anatomically realistic. V4 establishes `ChildExplorerV1` as the first source-controlled character target.
+The World Makers player avatar is child-proportioned, expressive and customizable rather than anatomically realistic. The broader World Makers character family remains approximately **4.5–5 heads tall**; V4 establishes `ChildExplorerV1` as the first source-controlled character target and fixes that profile at exactly 5 heads tall.
 
 - 158 cm source reference height and exactly 5 heads tall;
 - enlarged head, hands and feet for tablet readability;
