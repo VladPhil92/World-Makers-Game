@@ -18,6 +18,8 @@
 #include "Mission/WMMissionMeasurementComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "TimerManager.h"
+#include "UI/WMChildJourneySubsystem.h"
+#include "UI/WMChildJourneyWidget.h"
 
 #define LOCTEXT_NAMESPACE "WorldMakersBuildHUD"
 
@@ -46,6 +48,18 @@ void UWMBuildHUDWidget::NativeOnInitialized()
 
     UCanvasPanel* RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("BuildHUDRoot"));
     WidgetTree->RootWidget = RootCanvas;
+
+    ChildJourneyWidget = CreateWidget<UWMChildJourneyWidget>(GetOwningPlayer(), UWMChildJourneyWidget::StaticClass());
+    if (ChildJourneyWidget)
+    {
+        UCanvasPanelSlot* JourneySlot = RootCanvas->AddChildToCanvas(ChildJourneyWidget);
+        JourneySlot->SetAnchors(FAnchors(0.0f, 0.0f));
+        JourneySlot->SetAlignment(FVector2D(0.0f, 0.0f));
+        JourneySlot->SetPosition(FVector2D(24.0f, 24.0f));
+        JourneySlot->SetAutoSize(true);
+        JourneySlot->SetZOrder(50);
+        ChildJourneyWidget->SetPanelOpen(false);
+    }
 
     UVerticalBox* ActionStack = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("BuildActionStack"));
     UCanvasPanelSlot* StackSlot = RootCanvas->AddChildToCanvas(ActionStack);
@@ -103,7 +117,8 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     ActionStack->AddChildToVerticalBox(MissionRow);
     UButton* MeasureButton = CreateActionButton(MissionRow, TEXT("MeasureTargetButton"), LOCTEXT("MeasurePoint", "Measure"));
     UButton* ResetMeasurementButton = CreateActionButton(MissionRow, TEXT("ResetMeasurementButton"), LOCTEXT("ResetMeasurement", "Reset measure"));
-    UButton* NextMissionButton = CreateActionButton(MissionRow, TEXT("NextMissionButton"), LOCTEXT("NextMission", "Next mission"));
+    // Legacy widget name retained for M2.2 compatibility; the child-facing action now opens the journey panel.
+    UButton* NextMissionButton = CreateActionButton(MissionRow, TEXT("NextMissionButton"), LOCTEXT("MyAdventuresButton", "My Adventures"));
 
     UHorizontalBox* PrimaryRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuildPrimaryRow"));
     ActionStack->AddChildToVerticalBox(PrimaryRow);
@@ -177,6 +192,9 @@ FText UWMBuildHUDWidget::ResolveSelectedPieceLabel() const
     if (PieceId == TEXT("prototype.floor")) return LOCTEXT("PieceFloor", "Floor");
     if (PieceId == TEXT("prototype.wall")) return LOCTEXT("PieceWall", "Wall");
     if (PieceId == TEXT("prototype.pillar")) return LOCTEXT("PiecePillar", "Pillar");
+    if (PieceId == TEXT("eco.leaf-roof")) return LOCTEXT("PieceLeafRoof", "Leaf Roof");
+    if (PieceId == TEXT("eco.rainforest-planter")) return LOCTEXT("PieceRainforestPlanter", "Rainforest Planter");
+    if (PieceId == TEXT("eco.bamboo-bridge")) return LOCTEXT("PieceBambooBridge", "Bamboo Bridge");
     return LOCTEXT("PieceGeneric", "Building piece");
 }
 
@@ -213,15 +231,15 @@ void UWMBuildHUDWidget::RefreshStatus()
             const FWMEnvironmentStateSnapshot Snapshot = EnvironmentState->GetStateSnapshot();
             if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.stressed")))
             {
-                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentStressed", "Ecosystem: stressed — your care can help."));
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentStressed", "The forest needs some care."));
             }
             else if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.recovering")))
             {
-                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentRecovering", "Ecosystem: recovering — your actions are helping."));
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentRecovering", "The forest is recovering. Your ideas are helping."));
             }
             else if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.thriving")))
             {
-                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentThriving", "Ecosystem: thriving — the habitat is healthier."));
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentThriving", "The forest is thriving."));
             }
             else
             {
@@ -266,25 +284,26 @@ void UWMBuildHUDWidget::RefreshStatus()
     {
         if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>())
         {
-            const FText MissionIdText = FText::FromString(Missions->GetActiveMissionId().ToString());
+            const FText MissionTitle = UWMChildJourneySubsystem::ResolveChildTitle(Missions->GetActiveMissionId());
             if (Missions->GetMissionState() == EWMMissionRuntimeState::Completed)
             {
                 MissionStatusText->SetText(FText::Format(
-                    LOCTEXT("MissionComplete", "{0}: mission complete — choose Next mission to continue."),
-                    MissionIdText));
+                    LOCTEXT("MissionComplete", "{0}: adventure complete. Open My Adventures whenever you want to choose what is next."),
+                    MissionTitle));
             }
             else if (Missions->GetActiveEvaluator() == FName(TEXT("observe-ecosystem")))
             {
                 const int32 RequiredCount = Missions->GetRequiredObservationIds().Num();
                 const int32 RecordedCount = Missions->GetRecordedObservationCount();
                 MissionStatusText->SetText(FText::Format(
-                    LOCTEXT("ScienceObserveProgress", "Rainforest mission — observe ecosystem clues: {0}/{1}. Look carefully, then tap Observe."),
+                    LOCTEXT("ScienceObserveProgress", "{0} — rainforest clues: {1} of {2}. Look carefully, then tap Observe."),
+                    MissionTitle,
                     FText::AsNumber(RecordedCount),
                     FText::AsNumber(RequiredCount)));
             }
             else if (!MissionMeasurementComponent.IsValid())
             {
-                MissionStatusText->SetText(LOCTEXT("MissionMeasurementUnavailable", "Mission measurement tools are unavailable."));
+                MissionStatusText->SetText(LOCTEXT("MissionMeasurementUnavailable", "Measuring tools are unavailable."));
             }
             else
             {
@@ -293,7 +312,7 @@ void UWMBuildHUDWidget::RefreshStatus()
                 {
                     MissionStatusText->SetText(FText::Format(
                         LOCTEXT("MissionMeasureSecond", "{0}: point A selected. Aim at point B inside the mission zone and tap Measure."),
-                        MissionIdText));
+                        MissionTitle));
                 }
                 else if (MeasurementState == EWMMissionMeasurementState::Complete || Missions->HasMeasurementEvidence())
                 {
@@ -301,7 +320,7 @@ void UWMBuildHUDWidget::RefreshStatus()
                     const float MeasuredMeters = Missions->GetLastMeasuredSpanCm() / 100.0f;
                     MissionStatusText->SetText(FText::Format(
                         LOCTEXT("MissionMeasuredBuildSpan", "{0} — Measured: {1} cm ({2} m). Build or adjust to about {3} cm."),
-                        MissionIdText,
+                        MissionTitle,
                         FText::AsNumber(MeasuredCm),
                         FText::AsNumber(MeasuredMeters),
                         FText::AsNumber(FMath::RoundToInt(Missions->GetTargetSpanCm()))));
@@ -310,7 +329,7 @@ void UWMBuildHUDWidget::RefreshStatus()
                 {
                     MissionStatusText->SetText(FText::Format(
                         LOCTEXT("MissionMeasureFirst", "{0}: aim at point A inside the mission zone and tap Measure."),
-                        MissionIdText));
+                        MissionTitle));
                 }
             }
         }
@@ -347,10 +366,9 @@ void UWMBuildHUDWidget::HandleObserve() { if (InteractionComponent.IsValid()) In
 
 void UWMBuildHUDWidget::HandleNextMission()
 {
-    if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->ResetMeasurement();
-    if (UWorld* World = GetWorld())
+    if (ChildJourneyWidget)
     {
-        if (UWMMissionRuntimeSubsystem* Missions = World->GetSubsystem<UWMMissionRuntimeSubsystem>()) Missions->CycleMission(1);
+        ChildJourneyWidget->SetPanelOpen(!ChildJourneyWidget->IsPanelOpen());
     }
     RefreshStatus();
 }

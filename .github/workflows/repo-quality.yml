@@ -41,6 +41,8 @@ jobs:
         run: python scripts/validate-m3-4-reactive-ecosystem.py
       - name: Validate M3.5 Ecological Building
         run: python scripts/validate-m3-5-ecological-building.py
+      - name: Validate M3.6 Child Journey UX
+        run: python scripts/validate-m3-6-child-journey-ux.py
 
   parent-portal:
     runs-on: ubuntu-latest

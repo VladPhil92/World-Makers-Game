@@ -28,8 +28,8 @@ Current source progression:
 - M3.3 — multi-evaluator mission runtime + first rainforest science mission: source-complete pending native UE certification.
 - M3.4 — reactive ecosystem state and visible consequences: source-complete pending native UE certification.
 - M3.5 — spatial ecological building interventions + persistent creative unlocks: source-complete pending native UE certification.
-- M3.6 — child journey UX: next.
-- M3.7 — tablet performance profiles and capture.
+- M3.6 — child journey UX: source-complete pending native UE certification.
+- M3.7 — tablet performance profiles and capture: next.
 - M3.8 — vertical-slice certification.
 
 Target outcomes:
@@ -38,6 +38,7 @@ Target outcomes:
 - Science/ecosystem learning hooks and missions embedded in play.
 - Building used as a causal tool for ecological problem solving.
 - Creative rewards expand possibilities without manipulative progression.
+- Child-facing journey translates trusted technical state into calm, understandable adventures.
 - Cultural/environmental provenance review.
 - Tablet performance capture.
 
