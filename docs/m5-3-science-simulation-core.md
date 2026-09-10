@@ -4,7 +4,7 @@
 
 M5.3 gives World Makers a deterministic scientific world model that can produce authentic gameplay evidence for the composable mission runtime introduced in M5.2.
 
-The design objective is not to imitate a school worksheet. Scientific ideas become properties of the world: matter changes state, solutes reach saturation, balanced reactions consume limiting reagents, forces change motion, circuits obey relationships among voltage/current/resistance, and plants respond to environmental constraints.
+The design objective is not to imitate a school worksheet. Scientific ideas become properties of the world: matter changes state, solutes reach saturation, filtration behaves differently from dissolution, balanced reactions consume limiting reagents, forces change motion, circuits obey relationships among voltage/current/resistance, cells depend on interacting systems, and plants respond to environmental constraints.
 
 ## Matter and chemistry
 
@@ -14,6 +14,7 @@ The first chemistry core includes:
 - molar mass;
 - melting and boiling thresholds for the simplified phase model;
 - water solubility and saturation;
+- conceptual filtration that retains undissolved solids while dissolved solute remains in the filtrate;
 - balanced reaction definitions;
 - stoichiometric coefficients;
 - limiting-reagent calculation;
@@ -48,6 +49,27 @@ These primitives are world mechanics. A future Moonforge mission can therefore r
 
 ## Biology and botany
 
+M5.3 now contains two biological layers.
+
+### Cellular systems
+
+`FWMCellSystemState` models the functional relationships among:
+
+- membrane integrity;
+- energy availability;
+- transport efficiency;
+- information integrity;
+- waste load;
+- nutrient availability;
+- oxygen availability;
+- temperature suitability.
+
+A metabolism step calculates energy production, transport work and waste production/clearance from those interacting constraints. This is the first technical foundation for **The City Inside a Cell**: restoring a cell will require repairing relationships among systems rather than matching organelle names in a quiz.
+
+The cellular quantities are a **normalized gameplay proxy**. They represent causal system state, not literal ATP counts, molecules, concentrations or biological time scales.
+
+### Plant lifecycle
+
 The plant model introduces a lifecycle state machine:
 
 `Seed -> Germinating -> Seedling -> Vegetative -> Flowering -> Fruiting`
@@ -56,7 +78,7 @@ Growth is constrained by water, nutrients, light and temperature suitability. Ge
 
 The current biomass, root, leaf, photosynthesis and demand quantities are a **normalized gameplay proxy**, not literal grams, leaf area, oxygen volume or nutrient concentration. Their purpose is to preserve causal biological relationships while allowing later species-specific calibration.
 
-Age bands must change scaffolding and formalization, not disable the underlying biological concept. The same system can support a young player noticing that a dry plant grows poorly and an older player reasoning about limiting factors, resource allocation and ecological interactions.
+Age bands must change scaffolding and formalization, not disable the underlying biological concept. The same system can support a young player noticing that a dry plant grows poorly and an older player reasoning about limiting factors, resource allocation, cellular interdependence and ecological interactions.
 
 ## Ecology coupling
 
@@ -82,6 +104,8 @@ Packaged runtime copy:
 
 `UWMScienceSimulationSubsystem` loads and semantically validates the staged catalog. Repository Quality requires canonical/runtime parity.
 
+The initial canonical catalog includes matter properties, one mass-balanced reaction and one configurable learning-plant profile. Physics and cellular-system models are generic deterministic laws rather than scenario-specific content, so adventures can provide their own initial conditions without changing the domain model.
+
 ## M5.2 integration
 
 M5.3 separates **simulation truth** from **mission evidence semantics**.
@@ -100,13 +124,14 @@ This prevents mission code from inventing scientific outcomes and prevents the s
 
 M5.3 source completion requires:
 
-- deterministic chemistry operations for matter state, saturation and at least one balanced transformation;
+- deterministic chemistry operations for matter state, saturation, filtration and at least one balanced transformation;
 - deterministic mechanics and ideal circuit relationships;
+- deterministic cellular-system behavior with limiting factors;
 - deterministic plant lifecycle/growth behavior;
 - explicit ecology coupling;
 - a staged data-driven science catalog;
 - source quality validation;
-- Unreal Automation tests for the four science domains;
+- Unreal Automation tests across chemistry, physics, biology and botany/ecology;
 - preservation of the M5.2 composable evidence boundary.
 
 Native Unreal and representative-device execution remain separate certification evidence. A green source gate must not be represented as device certification.
