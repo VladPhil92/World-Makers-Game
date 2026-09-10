@@ -165,17 +165,45 @@ See `docs/v6-vfx-scientific-fantastic-feedback.md` and `content/visual/vfx/vfx-f
 
 ## V7 — Camera, Cinematics & UI Motion
 
-Goal: create a coherent presentation language from free building to fantastic adventures.
+V7 status: source-complete presentation-runtime pass.
 
-- exploration/build camera tuning and collision behavior;
-- contextual framing for observation, science and dialogue;
-- short in-engine adventure reveals rather than interruptive long cinematics;
-- camera transitions with motion-sickness-safe defaults;
-- UI entrance/exit/progress motion system;
-- mission beat transitions synchronized with world feedback;
-- screenshot/trailer capture presets for consistent marketing evidence.
+Status: **source-complete on `feat/v7-camera-cinematics-ui-motion`; authored Level Sequences, final UI motion art and native/device comfort certification pending.**
 
-Exit: gameplay, adventures and UI transitions share one visual rhythm and camera grammar.
+Goal: establish one presentation grammar that frames exploration, building, science and adventure without taking control away from the player.
+
+Implemented source/runtime contract:
+
+- `FWMPresentationRuntime` with six camera modes: Explore, Build, Observe, Science, Dialogue and AdventureReveal;
+- bounded camera profiles for arm length, FOV, target offset, blend and hold duration;
+- `UWMPresentationSubsystem` as a tickable world-level coordinator for the local spring arm/camera;
+- spring-arm collision preserved; camera lag and rotation lag disabled in the source path to avoid secondary oscillation;
+- semantic downstream integration through V6 `OnVFXAccepted`, with no V6 -> V7 dependency;
+- build, observation, science/ecology and fantasy events select contextual framing without forcing controller rotation;
+- active-mission changes trigger short AdventureReveal presentation beats;
+- source microbeats limited to `enter -> hold -> exit` and <=2.5 seconds;
+- no `SetViewTarget`, input lock, forced yaw/pitch, gameplay time dilation or camera-shake requirement;
+- `UWMPresentationOverlayWidget` with six stable semantic UI cues;
+- source UI motion uses opacity plus <=18 px translation and 0.98 -> 1.0 scale settle;
+- reduced-motion removes UI translation/scale motion while preserving text and opacity communication;
+- reduced-motion camera limits of <=80 cm arm delta, <=3 degree FOV delta, <=16 cm offset delta, <=0.18 s blend and <=0.70 s contextual hold;
+- reduced-motion preference is forwarded to the V6 VFX subsystem;
+- canonical/staged `presentation-camera-ui-v7.json` manifest;
+- reserved camera data, Level Sequence and UI motion authored targets without claiming binary assets exist;
+- five Unreal Automation tests plus dedicated Repository Quality V7 gate.
+
+Authored production target:
+
+- create `/Game/WorldMakers/Presentation/DA_WM_CameraPresentation` using the six-mode contract;
+- author short adventure/science Level Sequences without normal-play input takeover;
+- create final UI presentation motion from the six semantic cue IDs;
+- preserve readable no-motion states for every cue;
+- add screenshot/trailer capture presets only after final authored environments/characters exist;
+- perform native camera collision, framing and motion-sickness review;
+- verify UI animation/frame pacing and camera transitions on representative tablets.
+
+Exit: gameplay, science, VFX, mission changes and UI share a source-controlled presentation language while child control remains authoritative. Final cinematic/UI certification still requires authored binary sequences, native Unreal review and representative-device comfort evidence.
+
+See `docs/v7-camera-cinematics-ui-motion.md` and `content/visual/presentation/presentation-camera-ui-v7.json`.
 
 ## V8 — Visual Optimization & Device Certification
 
