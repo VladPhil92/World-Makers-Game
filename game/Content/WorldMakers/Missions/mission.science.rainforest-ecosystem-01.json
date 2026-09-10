@@ -1,6 +1,21 @@
 {
   "id": "mission.science.rainforest-ecosystem-01",
   "axis": "science",
+  "discipline": "ecology",
+  "secondaryDisciplines": [
+    "biology"
+  ],
+  "conceptTags": [
+    "ecosystems",
+    "interdependence",
+    "living-and-nonliving-factors",
+    "plant-observation",
+    "habitat"
+  ],
+  "depthLayers": [
+    "experience",
+    "concept"
+  ],
   "ageBand": "7-8",
   "learningObjectives": [
     "science.ecosystems.observe-interdependence",
