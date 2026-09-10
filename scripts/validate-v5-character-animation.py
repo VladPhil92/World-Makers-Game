@@ -145,7 +145,7 @@ def main() -> None:
         "EWMLocomotionState::Land",
         "InteractionAlpha",
         "FMath::FInterpTo",
-        "Pose.IsBounded",
+        "FWMCharacterAnimationPose::IsBounded",
     )
     require("RootMotion" not in runtime_h + runtime_cpp, "Pure V5 runtime must not implement root-motion gameplay authority")
 
