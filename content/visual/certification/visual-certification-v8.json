@@ -49,6 +49,8 @@
   ],
   "certificationRules": {
     "allRequiredScenariosPerDevice": true,
+    "allTabletProfilesRequired": true,
+    "singleBuildCommitRequired": true,
     "allMetricsWithinBudget": true,
     "captureHashRequired": true,
     "screenshotHashRequired": true,
