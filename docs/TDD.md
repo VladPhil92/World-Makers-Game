@@ -21,6 +21,8 @@ Split into feature modules only when ownership/dependencies justify it. Candidat
 - Building subsystem — place/edit/serialize construction objects.
 - Mission subsystem — evaluate mission state from data-driven definitions.
 - Learning evidence subsystem — emit minimized objective evidence events.
+- Science simulation subsystem — deterministic matter, reaction, physics, cellular and plant models that produce stable evidence without embedding mission logic.
+- Language/thought subsystem — deterministic bilingual communication, narrative inference, ethical-reasoning and philosophy-argument models using stable IDs rather than retained child-authored free text.
 - Progression/reward subsystem — deterministic non-purchasable unlocks and mastery recognition.
 - Entitlement read subsystem — consume a server-authorized read model of content owned by the family; no checkout capability.
 - Save subsystem — local/prototype persistence evolving to authenticated cloud persistence.
@@ -33,7 +35,9 @@ The child-facing game runtime must never directly integrate payment-provider SDK
 
 ## 3. Data model
 
-Canonical pedagogical mission source lives under `content/missions`. Canonical gameplay reward definitions live under `content/economy/rewards` and must validate against the Trust Economy schema. Build/import tooling can convert approved source into Unreal Data Assets/Data Tables. Runtime should reference stable IDs rather than human-readable strings.
+Canonical pedagogical mission source lives under `content/missions`. Canonical gameplay reward definitions live under `content/economy/rewards` and must validate against the Trust Economy schema. Canonical simulation catalogs live under `content/science` and `content/thought`; their packaged copies are staged under `game/Content/WorldMakers` and must remain semantically identical. Build/import tooling can convert approved source into Unreal Data Assets/Data Tables. Runtime should reference stable IDs rather than human-readable strings.
+
+Language/thought evidence stores stable semantic and reasoning identifiers only. The M5.4 source baseline does not persist child-authored free text or voice transcripts; future free-form input requires an explicit privacy, moderation and retention design.
 
 Commerce offers are not gameplay reward definitions. Parent-facing commerce contracts live under `services/backend/contracts` and resolve platform SKU/price data through server/provider adapters.
 
@@ -146,6 +150,8 @@ Paid entitlement state is not authoritative inside local SaveGame. A local save 
 - Trust Economy schema/policy tests.
 - Negative tests proving child runtime cannot invoke payment flows.
 - Entitlement restore/revoke/refund tests.
+- Language/thought neutrality tests proving opposing ethical/philosophical positions can succeed when structurally reasoned.
+- Privacy gates proving structured thought catalogs do not introduce retained child free text or ideological/personality scoring fields.
 - Web unit/e2e tests once parent portal framework is selected.
 - Device performance smoke suite on representative tablets.
 - Security/privacy test cases for authorization boundaries.
@@ -154,7 +160,7 @@ Paid entitlement state is not authoritative inside local SaveGame. A local save 
 
 GitHub-hosted runners validate source/config/content and phase gates. Native certification uses a Windows x64 self-hosted runner with Unreal Engine 5.8.2. The runner must compile `WorldMakersEditor` and execute the complete `WorldMakers.*` automation namespace through `UnrealEditor-Cmd.exe`.
 
-Repository Quality also executes the Trust Economy policy validator. It fails if required commerce/reward contracts regress or if known payment/ad/premium-currency primitives appear in child runtime source/config/content.
+Repository Quality also executes the Trust Economy policy validator plus M5 science/thought source gates. It fails if required contracts regress, if canonical/runtime catalogs drift, or if prohibited privacy/neutrality fields appear in structured thought content.
 
 A lightweight GitHub check is never sufficient evidence of Unreal runtime certification. See `docs/prototype-certification.md`.
 
@@ -178,6 +184,8 @@ Representative-device evidence records non-unique engineering metadata only. Har
 - Child runtime direct payments: prohibited.
 - Paid content ownership: family entitlement model.
 - Gameplay rewards: deterministic, non-purchasable, non-transferable, non-convertible.
+- Structured thought baseline: stable IDs only; no persisted child-authored free text, voice transcript, ideological label or personality score.
+- Ethics/philosophy evaluation: quality of reasoning and revision, not ideological conformity.
 - M3 release certification: fail-closed evidence matrix; source success is not runtime/device certification.
 
 ## 13. Open decisions
@@ -190,3 +198,4 @@ Representative-device evidence records non-unique engineering metadata only. Har
 - Cloud save topology.
 - Analytics provider or in-house pipeline.
 - Production encryption/KMS/secrets platform.
+- Moderation/privacy architecture before any future child free-form text or voice evidence is retained.
