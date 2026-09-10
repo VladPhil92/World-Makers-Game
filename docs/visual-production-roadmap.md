@@ -81,18 +81,45 @@ See `docs/v4-character-art-rig.md` and `content/visual/character/avatar-rig-v4.j
 
 ## V5 — Character & Interaction Animation
 
-Goal: make the world feel responsive through readable authored motion.
+V5 status: source-complete animation-runtime pass.
 
-- idle, walk, jog/run, start/stop, turns, jump/fall/land;
-- additive look/aim and interaction poses;
-- build/place/remove/measure/observe interaction animations;
-- pickup, inspect and science manipulation actions;
-- contextual reactions and non-manipulative celebratory feedback;
-- animation blueprint/state-machine or equivalent production graph;
-- retargeting and montage conventions;
-- restrained secondary motion and animation LOD.
+Status: **source-complete on `feat/v5-character-interaction-animation`; authored clips/AnimBP/IK and native-device animation certification pending.**
 
-Exit: the primitive/procedural motion proof is no longer the production animation path.
+Goal: make the character feel responsive now while defining an asset-agnostic animation state/read-model that production clips can consume later.
+
+Implemented source/runtime contract:
+
+- deterministic `FWMCharacterAnimationRuntime` independent from animation assets;
+- `UWMCharacterAnimationComponent` bridge from `CharacterMovementComponent`, controller view and successful gameplay interactions;
+- nine stable locomotion states: idle, start, walk, run, stop, turn-in-place, jump, fall and land;
+- speed-normalized gait phase with explicit start/stop transitions;
+- jump/fall separation from vertical velocity and bounded landing compression;
+- additive head look from controller yaw/pitch divergence;
+- bounded source pose across root, pelvis, chest, head, arms, forearms, hands, thighs, calves and feet;
+- eight stable interaction actions: build-place, build-remove, build-move, measure, observe, inspect, pickup and science-manipulate;
+- successful gameplay actions trigger upper-body interaction layers without taking movement authority;
+- explicit Jump press/release binding; animation still derives airborne state from `CharacterMovementComponent`;
+- compact AnimBP read-model: locomotion state, speed, airborne, state age, aim yaw/pitch, interaction action and interaction alpha;
+- canonical/staged `character-animation-v5.json` production manifest;
+- reserved `ABP_WM_ChildExplorer`, animation-clip and interaction-montage asset paths;
+- Low/Mid/High pose-rate/layer planning budgets;
+- no camera-shake dependency, commerce animation hook, biometric mocap requirement or manipulative celebration loop;
+- five Unreal Automation tests plus dedicated Repository Quality V5 gate;
+- V1 `FWMPrototypeMotionStyle` retained only for the explicit legacy six-piece rollback path required by earlier contracts.
+
+Authored production target:
+
+- create locomotion clips and transitions for the nine-state vocabulary;
+- create `ABP_WM_ChildExplorer` consuming the V5 component read-model;
+- use upper-body slots/montages for build, measure, observe, pickup and science actions;
+- preserve root-motion-off gameplay authority unless a future isolated cinematic explicitly opts in;
+- add foot placement/retargeting through `IKR_WM_ChildExplorer`;
+- implement reduced-motion scaling without changing gameplay success or timing;
+- profile update rate, blend cost, skinning and foot sliding on representative devices.
+
+Exit: source-visible character motion is governed by the V5 state machine and semantic action layers, while production animation has a stable handoff contract. Final animation certification still requires authored binary clips, AnimBP/IK review, native Unreal execution and tablet evidence.
+
+See `docs/v5-character-interaction-animation.md` and `content/visual/character/character-animation-v5.json`.
 
 ## V6 — VFX & Fantastic/Scientific Feedback
 
