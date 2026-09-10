@@ -51,6 +51,8 @@ jobs:
         run: python scripts/validate-m4-parent-portal.py
       - name: Validate M5.2 Composable Mission Runtime
         run: python scripts/validate-m5-2-composable-runtime.py
+      - name: Validate M5.3 Science Simulation Core
+        run: python scripts/validate-m5-3-science-simulation.py
 
   parent-portal:
     runs-on: ubuntu-latest
