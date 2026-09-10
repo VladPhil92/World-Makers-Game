@@ -3,7 +3,9 @@
 #include "Building/WMBuildCatalogSettings.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Visual/WMStylizedSurfaceLibrary.h"
 
 const FName AWMBuildPieceActor::PlacedBuildTag(TEXT("WM_PlayerBuild"));
 
@@ -19,9 +21,14 @@ AWMBuildPieceActor::AWMBuildPieceActor()
     Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> ProxySurfaceMaterial(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
     if (CubeMesh.Succeeded())
     {
         Mesh->SetStaticMesh(CubeMesh.Object);
+    }
+    if (ProxySurfaceMaterial.Succeeded())
+    {
+        Mesh->SetMaterial(0, ProxySurfaceMaterial.Object);
     }
 }
 
@@ -33,8 +40,22 @@ void AWMBuildPieceActor::ApplyPieceSpec(const FWMBuildPieceSpec& Spec)
     }
 
     PieceId = Spec.PieceId;
+    PieceCategory = Spec.Category;
     PieceDimensionsCm = Spec.DimensionsCm;
     Mesh->SetRelativeScale3D(Spec.DimensionsCm / 100.0f);
+
+    if (!bIsPreview)
+    {
+        ApplyPlacedSurface();
+    }
+}
+
+void AWMBuildPieceActor::ApplyPlacedSurface()
+{
+    const bool bEcoSurface = PieceCategory.Equals(TEXT("Eco"), ESearchCase::IgnoreCase);
+    UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(
+        Mesh,
+        bEcoSurface ? EWMStylizedSurfaceRole::BuildEco : EWMStylizedSurfaceRole::BuildNeutral);
 }
 
 void AWMBuildPieceActor::SetPreviewState(const bool bPreview)
@@ -50,9 +71,13 @@ void AWMBuildPieceActor::SetPreviewState(const bool bPreview)
         Tags.Remove(PlacedBuildTag);
         SetPreviewValidity(false);
     }
-    else if (!Tags.Contains(PlacedBuildTag))
+    else
     {
-        Tags.Add(PlacedBuildTag);
+        ApplyPlacedSurface();
+        if (!Tags.Contains(PlacedBuildTag))
+        {
+            Tags.Add(PlacedBuildTag);
+        }
     }
 }
 
@@ -61,6 +86,10 @@ void AWMBuildPieceActor::SetPreviewValidity(const bool bValid)
     bPreviewPlacementValid = bValid;
     if (bIsPreview)
     {
+        // Color is supplemental only. Stencil identity remains independent so valid/invalid state is not color-only.
+        UWMStylizedSurfaceLibrary::ApplyConfiguredSurface(
+            Mesh,
+            bValid ? EWMStylizedSurfaceRole::PreviewValid : EWMStylizedSurfaceRole::PreviewInvalid);
         Mesh->SetRenderCustomDepth(true);
         Mesh->SetCustomDepthStencilValue(bValid ? 1 : 2);
     }
