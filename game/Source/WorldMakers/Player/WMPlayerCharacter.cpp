@@ -14,10 +14,12 @@
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "UI/WMBuildHUDWidget.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Visual/WMPrototypeMotionStyle.h"
+#include "Visual/WMVisualProfileSettings.h"
 
 AWMPlayerCharacter::AWMPlayerCharacter()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -100,13 +102,58 @@ AWMPlayerCharacter::AWMPlayerCharacter()
 void AWMPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+    ApplyVisualProfileToCamera();
     EnsureBuildHUD();
 }
 
 void AWMPlayerCharacter::PawnClientRestart()
 {
     Super::PawnClientRestart();
+    ApplyVisualProfileToCamera();
     EnsureBuildHUD();
+}
+
+void AWMPlayerCharacter::Tick(const float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    UpdatePrototypeMotion(DeltaSeconds);
+}
+
+void AWMPlayerCharacter::ApplyVisualProfileToCamera()
+{
+    const UWMVisualProfileSettings* Profile = GetDefault<UWMVisualProfileSettings>();
+    if (Profile && Profile->Atmosphere.IsSane() && FollowCamera)
+    {
+        FollowCamera->SetFieldOfView(Profile->Atmosphere.CameraFOVDegrees);
+    }
+}
+
+void AWMPlayerCharacter::UpdatePrototypeMotion(const float DeltaSeconds)
+{
+    if (!PrototypeBody || !PrototypeHead || !PrototypeLeftArm || !PrototypeRightArm || !PrototypeLeftLeg || !PrototypeRightLeg ||
+        !GetCharacterMovement() || !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.0f)
+    {
+        return;
+    }
+
+    const float MaxWalkSpeed = FMath::Max(GetCharacterMovement()->MaxWalkSpeed, 1.0f);
+    const float SpeedAlpha = FMath::Clamp(GetVelocity().Size2D() / MaxWalkSpeed, 0.0f, 1.0f);
+    const bool bAirborne = GetCharacterMovement()->IsFalling();
+
+    if (!bAirborne && SpeedAlpha > 0.01f)
+    {
+        const float CyclesPerSecond = FMath::Lerp(1.35f, 2.25f, SpeedAlpha);
+        PrototypeMotionPhase = FMath::Fmod(PrototypeMotionPhase + DeltaSeconds * CyclesPerSecond * 2.0f * PI, 2.0f * PI);
+    }
+
+    const FWMPrototypeMotionPose Pose = FWMPrototypeMotionStyle::Evaluate(SpeedAlpha, PrototypeMotionPhase, bAirborne);
+    PrototypeBody->SetRelativeLocation(FVector(0.0f, 0.0f, 12.0f + Pose.BodyBobCm));
+    PrototypeBody->SetRelativeRotation(FRotator(Pose.BodyLeanDegrees, 0.0f, 0.0f));
+    PrototypeHead->SetRelativeLocation(FVector(0.0f, 0.0f, 62.0f + Pose.HeadBobCm));
+    PrototypeLeftArm->SetRelativeRotation(FRotator(Pose.ArmSwingDegrees, 0.0f, -7.0f));
+    PrototypeRightArm->SetRelativeRotation(FRotator(-Pose.ArmSwingDegrees, 0.0f, 7.0f));
+    PrototypeLeftLeg->SetRelativeRotation(FRotator(Pose.LegSwingDegrees, 0.0f, 0.0f));
+    PrototypeRightLeg->SetRelativeRotation(FRotator(-Pose.LegSwingDegrees, 0.0f, 0.0f));
 }
 
 void AWMPlayerCharacter::EnsureBuildHUD()
