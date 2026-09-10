@@ -109,6 +109,26 @@ TArray<FName> UWMBiomeRuntimeSubsystem::GetNearbyPointOfInterestIds(const FVecto
     return Definition ? Definition->FindNearbyPointOfInterestIds(WorldLocation) : TArray<FName>();
 }
 
+TArray<FName> UWMBiomeRuntimeSubsystem::GetKnownObservationIds() const
+{
+    TArray<FName> ObservationIds;
+    const FWMBiomeRuntimeDefinition* Definition = GetActiveDefinition();
+    if (!Definition) return ObservationIds;
+
+    for (const FWMPointOfInterestDefinition& Point : Definition->PointsOfInterest)
+    {
+        if (Point.bRequiresInteraction && !Point.ObservationId.IsNone() && !ObservationIds.Contains(Point.ObservationId))
+        {
+            ObservationIds.Add(Point.ObservationId);
+        }
+    }
+    ObservationIds.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString() < B.ToString();
+    });
+    return ObservationIds;
+}
+
 TArray<FName> UWMBiomeRuntimeSubsystem::ObserveLocation(const FVector WorldLocation)
 {
     TArray<FName> NewDiscoveryIds;
