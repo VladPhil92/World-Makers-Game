@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "avatarId": "avatar.child-explorer.v1",
+  "profileName": "ChildExplorerV1",
+  "designIntent": {
+    "headsTall": 5.0,
+    "silhouette": "neutral-child-stylized",
+    "baseHeightCm": 158.0,
+    "collisionAuthority": "ACharacter.CapsuleComponent",
+    "visualAuthority": "procedural-fallback-until-authored-skeletal-mesh",
+    "genderDefault": "none"
+  },
+  "joints": [
+    {"id": "root", "parent": null},
+    {"id": "pelvis", "parent": "root"},
+    {"id": "spine", "parent": "pelvis"},
+    {"id": "chest", "parent": "spine"},
+    {"id": "neck", "parent": "chest"},
+    {"id": "head", "parent": "neck"},
+    {"id": "jaw", "parent": "head"},
+    {"id": "upperarm_l", "parent": "chest"},
+    {"id": "lowerarm_l", "parent": "upperarm_l"},
+    {"id": "hand_l", "parent": "lowerarm_l"},
+    {"id": "upperarm_r", "parent": "chest"},
+    {"id": "lowerarm_r", "parent": "upperarm_r"},
+    {"id": "hand_r", "parent": "lowerarm_r"},
+    {"id": "thigh_l", "parent": "pelvis"},
+    {"id": "calf_l", "parent": "thigh_l"},
+    {"id": "foot_l", "parent": "calf_l"},
+    {"id": "thigh_r", "parent": "pelvis"},
+    {"id": "calf_r", "parent": "thigh_r"},
+    {"id": "foot_r", "parent": "calf_r"}
+  ],
+  "customizationSlots": [
+    {"id": "body", "anchor": "root", "required": true},
+    {"id": "hair", "anchor": "head", "required": false},
+    {"id": "top", "anchor": "chest", "required": true},
+    {"id": "bottom", "anchor": "pelvis", "required": true},
+    {"id": "footwear", "anchor": "foot_l", "secondaryAnchor": "foot_r", "required": true},
+    {"id": "head-accessory", "anchor": "head", "required": false},
+    {"id": "back-accessory", "anchor": "chest", "required": false},
+    {"id": "hand-prop", "anchor": "hand_r", "secondaryAnchor": "hand_l", "required": false}
+  ],
+  "sockets": [
+    {"id": "socket_head", "joint": "head"},
+    {"id": "socket_back", "joint": "chest"},
+    {"id": "socket_hand_l", "joint": "hand_l"},
+    {"id": "socket_hand_r", "joint": "hand_r"}
+  ],
+  "authoredTargets": {
+    "skeletalMesh": "/Game/WorldMakers/Characters/Player/SK_WM_ChildExplorer",
+    "skeleton": "/Game/WorldMakers/Characters/Player/SKEL_WM_ChildExplorer",
+    "animationBlueprint": "/Game/WorldMakers/Characters/Player/ABP_WM_ChildExplorer",
+    "ikRig": "/Game/WorldMakers/Characters/Player/IKR_WM_ChildExplorer",
+    "physicsAsset": "/Game/WorldMakers/Characters/Player/PHYS_WM_ChildExplorer"
+  },
+  "lodBudgets": {
+    "low": {"maxTriangles": 6500, "maxBones": 48, "maxSkinInfluences": 4, "maxMaterialSlots": 3},
+    "mid": {"maxTriangles": 12000, "maxBones": 64, "maxSkinInfluences": 4, "maxMaterialSlots": 3},
+    "high": {"maxTriangles": 20000, "maxBones": 96, "maxSkinInfluences": 4, "maxMaterialSlots": 4}
+  },
+  "animationHandoff": {
+    "rootMotionDefault": false,
+    "movementAuthority": "CharacterMovementComponent",
+    "retargetPose": "neutral-a-pose",
+    "requiredChains": ["spine", "left-arm", "right-arm", "left-leg", "right-leg", "head"],
+    "v5OwnsAuthoredMotion": true
+  },
+  "privacyAndSafety": {
+    "appearanceData": "cosmetic-stable-ids-and-palette-only",
+    "biometricCapture": false,
+    "photoAvatarGeneration": false,
+    "childVoiceFaceTraining": false
+  }
+}

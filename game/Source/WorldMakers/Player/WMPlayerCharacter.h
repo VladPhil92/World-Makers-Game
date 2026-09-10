@@ -5,6 +5,8 @@
 #include "WMPlayerCharacter.generated.h"
 
 class UCameraComponent;
+class UProceduralMeshComponent;
+class USceneComponent;
 class USpringArmComponent;
 class UStaticMeshComponent;
 class UWMBuildingComponent;
@@ -21,28 +23,97 @@ class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
 public:
     AWMPlayerCharacter();
 
+    virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
     virtual void PawnClientRestart() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual void Tick(float DeltaSeconds) override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    /** Legacy six-piece visual fallback retained until a production Skeletal Mesh is authored and certified. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeBody;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeHead;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeLeftArm;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeRightArm;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeLeftLeg;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Legacy")
     TObjectPtr<UStaticMeshComponent> PrototypeRightLeg;
+
+    /** V4 source-visible hierarchy. Bone IDs mirror the authored skeletal handoff contract. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<USceneComponent> AvatarRigRoot;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<USceneComponent> AvatarPelvisRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarSpineRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<USceneComponent> AvatarChestRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<USceneComponent> AvatarNeckRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarHeadRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<USceneComponent> AvatarJawRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarUpperArmLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarLowerArmLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarHandLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarUpperArmRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarLowerArmRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarHandRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarThighLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarCalfLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarFootLeftRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarThighRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarCalfRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Rig")
+    TObjectPtr<UProceduralMeshComponent> AvatarFootRightRig;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Avatar|Art")
+    TObjectPtr<UProceduralMeshComponent> AvatarHairArt;
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Avatar")
+    void RefreshAvatarVisualPath();
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Avatar")
+    bool IsProceduralAvatarActive() const { return bProceduralAvatarActive; }
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Camera")
     TObjectPtr<USpringArmComponent> CameraBoom;
@@ -91,7 +162,10 @@ private:
     void ObserveWorld();
     void EnsureBuildHUD();
     void ApplyVisualProfileToCamera();
+    void BuildProceduralAvatarArt();
     void UpdatePrototypeMotion(float DeltaSeconds);
+    void SetLegacyAvatarVisible(bool bVisible);
+    void SetProceduralAvatarVisible(bool bVisible);
 
     void HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
     void HandleTouchRepeat(ETouchIndex::Type FingerIndex, FVector Location);
@@ -101,6 +175,8 @@ private:
     TObjectPtr<UWMBuildHUDWidget> BuildHUD;
 
     float PrototypeMotionPhase = 0.0f;
+    bool bProceduralAvatarReady = false;
+    bool bProceduralAvatarActive = false;
     bool bTouchTracking = false;
     bool bTouchDragging = false;
     ETouchIndex::Type ActiveTouchFinger = ETouchIndex::Touch1;

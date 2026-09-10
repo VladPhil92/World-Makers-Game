@@ -27,7 +27,7 @@ Examples: `SM_Jungle_Palm_A`, `M_Building_Wood`, `T_Building_Wood_BaseColor`, `M
 - Source DCC files may live in version control through Git LFS when they are necessary for reproducibility.
 - Imported Unreal assets live under `/Game/WorldMakers/...`.
 - Do not mix marketplace/vendor source content with custom assets without documenting license/provenance.
-- M1.8 Engine-primitives are composition proxies only. They are not production art and should be replaced asset-family by asset-family.
+- Engine primitives are composition/collision fallbacks only. They are not production art.
 
 ## Tablet optimization rules
 
@@ -42,9 +42,9 @@ Every production asset set must state:
 - Nanite eligibility plus non-Nanite fallback where required;
 - lighting assumptions and Lumen fallback where required.
 
-### M1.8 prototype density budgets
+### Environment density budgets
 
-These are **scene-density test budgets**, not final triangle or texture budgets. Representative hardware profiling must replace them with measured production limits.
+These are scene-density test budgets, not final triangle or texture budgets. Representative hardware profiling must replace them with measured production limits.
 
 | Tier | Target | Tree clusters | Rock clusters | Terrain mounds | Water markers | Purpose |
 |---|---:|---:|---:|---:|---:|---|
@@ -52,7 +52,7 @@ These are **scene-density test budgets**, not final triangle or texture budgets.
 | Mid | 30 FPS | 28 | 14 | 6 | 8 | default tablet composition proof |
 | High | 60 FPS | 42 | 20 | 8 | 10 | desktop/high-device composition proof |
 
-Use HISM/ISM for repeated environment families. Production foliage must have explicit LOD/cull behavior and must not rely on high-cost translucency or uncontrolled overdraw.
+Use HISM/ISM for repeated authored environment families where appropriate. Production foliage must have explicit LOD/cull behavior and must not rely on high-cost translucency or uncontrolled overdraw.
 
 ## Prototype palette — Caribbean Rainforest
 
@@ -95,35 +95,45 @@ Texture strategy:
 - baseline repeated architecture/props around 256 px/m;
 - hero/story assets may rise toward 512 px/m only where the gain survives gameplay viewing distance;
 - prefer packed masks and trim sheets/atlases for repeated construction families;
-- keep material slots at two or fewer in the current tablet-first target;
+- keep material slots at two or fewer in the current environment tablet-first target;
 - avoid parallax/height tricks, dense layered translucency and expensive microdetail as baseline identity.
 
 Surface variation should support silhouette and composition, not fight them. Macro color/roughness variation is preferred to noisy high-frequency detail.
 
-## Character proportions
+## Character proportions and rig
 
-The target avatar language is child-proportioned, expressive and customizable rather than anatomically realistic.
+The World Makers player avatar is child-proportioned, expressive and customizable rather than anatomically realistic. V4 establishes `ChildExplorerV1` as the first source-controlled character target.
 
-- approximately 4.5–5 heads tall for the eventual production character;
-- slightly enlarged head and hands for tablet readability;
-- compact torso and short limbs;
-- neutral base body with no forced gender markers;
-- gender expression, hair, clothing, skin tone and accessories belong to customization rather than the base silhouette;
-- locomotion should emphasize readable anticipation and follow-through over realistic micro-motion.
+- 158 cm source reference height and exactly 5 heads tall;
+- enlarged head, hands and feet for tablet readability;
+- compact tapered torso and readable limb segmentation;
+- neutral base silhouette with no forced gender marker;
+- gender expression, hair, clothing, skin tone and accessories belong to customization rather than the base body;
+- 19-joint semantic rig contract: root/pelvis/spine/chest/neck/head/jaw, bilateral arm chains and bilateral leg chains;
+- eight modular slots: body, hair, top, bottom, footwear, head accessory, back accessory and hand prop;
+- head/back/hand sockets must keep stable semantic names across authored replacements;
+- locomotion should emphasize anticipation, weight transfer and follow-through rather than realistic micro-motion;
+- gameplay capsule and `CharacterMovementComponent` remain independent from cosmetic silhouette and skinning.
 
-M1.8 uses a six-part primitive proxy (head, torso, two arms and two legs) to test camera scale and silhouette only.
+V4 uses original procedural low-poly geometry as the visible source fallback. The old six-piece primitive avatar is retained only as rollback infrastructure. The final asset target is `/Game/WorldMakers/Characters/Player/SK_WM_ChildExplorer` using the semantic joint chains in `content/visual/character/avatar-rig-v4.json`.
+
+Character production ceilings:
+
+| Tier | Max triangles | Max bones | Skin influences | Material slots |
+|---|---:|---:|---:|---:|
+| Low | 6,500 | 48 | 4 | 3 |
+| Mid | 12,000 | 64 | 4 | 3 |
+| High | 20,000 | 96 | 4 | 4 |
+
+These are authored-asset ceilings, not proof that those costs perform on target hardware. V8 must certify them on representative tablets.
+
+The authored character must use an animation-ready neutral A-pose, preserve clean deformation at shoulders/elbows/hips/knees, and keep hands readable for building/science interactions. Facial production should prioritize a small expressive set over expensive realism. Do not use child photos, biometric capture, face training or voice training as requirements for avatar customization.
 
 ## Caribbean Rainforest micro vertical slice
 
 ### Composition language
 
-The source-controlled M1.8 proof uses five environment archetypes:
-
-1. broad build clearing / ground plane;
-2. low terrain mounds framing the playable center;
-3. tree clusters with narrow trunks and large rounded canopies;
-4. asymmetric rock clusters;
-5. a water-edge band that creates a strong boundary on one side of the scene.
+The environment maintains five primary composition archetypes: broad build clearing, terrain framing, tree clusters, asymmetric rock groups and a one-sided water boundary. V3 replaces the active visible primitive representation with source-controlled procedural art while retaining primitive collision fallback.
 
 The center must remain visually quiet enough for building. Density should increase toward the perimeter so the environment frames rather than obscures construction.
 
@@ -133,7 +143,7 @@ The micro slice is an **environment/ecosystem proof**, not a historical reconstr
 
 ### Production handoff
 
-Before calling the visual slice production-ready, replace proxy families with authored meshes/materials and record:
+Before calling the visual slice production-ready, replace procedural/source fallback families with authored meshes/materials and record:
 
 - source/provenance;
 - LOD/HLOD plan;
