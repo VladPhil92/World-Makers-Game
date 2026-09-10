@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "world-makers.surface-language-v2",
+  "status": "source-contract",
+  "productionBoundary": "authored Unreal material assets require native editor creation and certification",
+  "proxyFallback": "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial",
+  "masterMaterials": [
+    {
+      "id": "world-makers-master-surface",
+      "targetPath": "/Game/WorldMakers/Materials/M_WM_MasterSurface",
+      "usage": ["ground", "terrain", "bark", "foliage", "stone", "construction", "fantasy-accent"],
+      "lowTierRule": "prefer opaque or masked shading; no bespoke shader per asset family"
+    },
+    {
+      "id": "world-makers-water",
+      "targetPath": "/Game/WorldMakers/Materials/M_WM_Water",
+      "usage": ["shallow-edge", "river", "scientific-state", "fantastic-state"],
+      "lowTierRule": "opaque stylized fallback is acceptable until translucent water is device-profiled"
+    }
+  ],
+  "customPrimitiveData": [
+    {"index": 0, "semantic": "baseColor.r"},
+    {"index": 1, "semantic": "baseColor.g"},
+    {"index": 2, "semantic": "baseColor.b"},
+    {"index": 3, "semantic": "baseColor.a"},
+    {"index": 4, "semantic": "roughness"},
+    {"index": 5, "semantic": "metallic"},
+    {"index": 6, "semantic": "emissiveStrength"},
+    {"index": 7, "semantic": "windResponse"},
+    {"index": 8, "semantic": "opacityIntent"},
+    {"index": 9, "semantic": "surfaceRoleNormalized"}
+  ],
+  "surfaceRoles": [
+    "ground-earth",
+    "terrain",
+    "bark",
+    "foliage",
+    "stone",
+    "water",
+    "build-neutral",
+    "build-eco",
+    "preview-valid",
+    "preview-invalid",
+    "magical-accent"
+  ],
+  "texturePacking": {
+    "baseColor": "optional stylized albedo/tint texture",
+    "normal": "optional restrained normal detail",
+    "masks": "R=ambientOcclusion,G=roughness,B=materialMask,A=reserved",
+    "trimSheetBaselineTexelDensityPxPerMeter": 256,
+    "heroTexelDensityCeilingPxPerMeter": 512
+  },
+  "accessibility": {
+    "placementFeedback": "surface tint plus independent custom-depth stencil identity",
+    "validStencil": 1,
+    "invalidStencil": 2,
+    "colorOnlyStateForbidden": true
+  }
+}
