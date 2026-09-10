@@ -7,108 +7,80 @@
 
 namespace
 {
-    const TSet<FName> AllowedProducerKinds = {
-        TEXT("building"), TEXT("science"), TEXT("thought"), TEXT("world")
-    };
-
-    const TSet<FName> AllowedDisciplines = {
+    const TSet<FName> FirstClassDisciplines = {
         TEXT("mathematics"), TEXT("geometry"), TEXT("english-language"), TEXT("spanish-language"),
         TEXT("literature"), TEXT("biology"), TEXT("chemistry"), TEXT("physics"), TEXT("ecology"),
         TEXT("ethics"), TEXT("philosophy-for-children")
     };
-
+    const TSet<FName> AllowedSecondaryDisciplines = {
+        TEXT("mathematics"), TEXT("geometry"), TEXT("english-language"), TEXT("spanish-language"),
+        TEXT("literature"), TEXT("biology"), TEXT("chemistry"), TEXT("physics"), TEXT("ecology"),
+        TEXT("ethics"), TEXT("philosophy-for-children"), TEXT("history-culture")
+    };
+    const TSet<FName> AllowedProducerKinds = { TEXT("building"), TEXT("science"), TEXT("thought"), TEXT("world") };
     const TSet<FName> AllowedAgeBands = { TEXT("4-6"), TEXT("7-8"), TEXT("9-10") };
 
-    bool ReadRequiredName(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, FName& OutValue)
+    bool NameField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FName& Out)
     {
         FString Value;
-        if (!Object.IsValid() || !Object->TryGetStringField(FieldName, Value) || Value.IsEmpty())
-        {
-            return false;
-        }
-        OutValue = FName(*Value);
-        return !OutValue.IsNone();
+        if (!Object.IsValid() || !Object->TryGetStringField(Field, Value) || Value.IsEmpty()) return false;
+        Out = FName(*Value);
+        return !Out.IsNone();
     }
 
-    bool ReadNameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, TArray<FName>& OutValues, const bool bAllowEmpty)
+    bool NameArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FName>& Out, const bool bAllowEmpty)
     {
         const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-        if (!Object.IsValid() || !Object->TryGetArrayField(FieldName, Values) || !Values)
-        {
-            return false;
-        }
-
-        OutValues.Reset();
+        if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values) || !Values) return false;
+        Out.Reset();
         TSet<FName> Seen;
         for (const TSharedPtr<FJsonValue>& Value : *Values)
         {
-            if (!Value.IsValid() || Value->Type != EJson::String || Value->AsString().IsEmpty())
-            {
-                return false;
-            }
-            const FName Name(*Value->AsString());
-            if (Name.IsNone() || Seen.Contains(Name))
-            {
-                return false;
-            }
-            Seen.Add(Name);
-            OutValues.Add(Name);
+            if (!Value.IsValid() || Value->Type != EJson::String || Value->AsString().IsEmpty()) return false;
+            const FName Id(*Value->AsString());
+            if (Id.IsNone() || Seen.Contains(Id)) return false;
+            Seen.Add(Id);
+            Out.Add(Id);
         }
-        return bAllowEmpty || !OutValues.IsEmpty();
+        return bAllowEmpty || !Out.IsEmpty();
     }
 
-    bool ParseBeat(const TSharedPtr<FJsonObject>& Object, FWMAdventureBeatDefinition& OutBeat)
+    bool ParseBeat(const TSharedPtr<FJsonObject>& Object, FWMAdventureBeatDefinition& Out)
     {
-        int32 RequiredCount = 0;
-        if (!ReadRequiredName(Object, TEXT("beatId"), OutBeat.BeatId) ||
-            !ReadRequiredName(Object, TEXT("primitiveId"), OutBeat.PrimitiveId) ||
-            !ReadRequiredName(Object, TEXT("evidenceEventId"), OutBeat.EvidenceEventId) ||
-            !ReadRequiredName(Object, TEXT("producerKind"), OutBeat.ProducerKind) ||
-            !ReadRequiredName(Object, TEXT("producerRefId"), OutBeat.ProducerRefId) ||
-            !ReadRequiredName(Object, TEXT("promptKey"), OutBeat.PromptKey) ||
-            !ReadRequiredName(Object, TEXT("formalizationKey"), OutBeat.FormalizationKey) ||
-            !Object->TryGetNumberField(TEXT("requiredCount"), RequiredCount))
-        {
-            return false;
-        }
-        OutBeat.RequiredCount = RequiredCount;
-        return OutBeat.IsSane();
+        int32 Count = 0;
+        if (!NameField(Object, TEXT("beatId"), Out.BeatId) ||
+            !NameField(Object, TEXT("primitiveId"), Out.PrimitiveId) ||
+            !NameField(Object, TEXT("evidenceEventId"), Out.EvidenceEventId) ||
+            !NameField(Object, TEXT("producerKind"), Out.ProducerKind) ||
+            !NameField(Object, TEXT("producerRefId"), Out.ProducerRefId) ||
+            !NameField(Object, TEXT("promptKey"), Out.PromptKey) ||
+            !NameField(Object, TEXT("formalizationKey"), Out.FormalizationKey) ||
+            !Object->TryGetNumberField(TEXT("requiredCount"), Count)) return false;
+        Out.RequiredCount = Count;
+        return Out.IsSane();
     }
 
-    bool ParseAdventure(const TSharedPtr<FJsonObject>& Object, FWMFantasticAdventureDefinition& OutAdventure)
+    bool ParseAdventure(const TSharedPtr<FJsonObject>& Object, FWMFantasticAdventureDefinition& Out)
     {
-        if (!ReadRequiredName(Object, TEXT("adventureId"), OutAdventure.AdventureId) ||
-            !ReadRequiredName(Object, TEXT("missionId"), OutAdventure.MissionId) ||
-            !ReadRequiredName(Object, TEXT("titleKey"), OutAdventure.TitleKey) ||
-            !ReadRequiredName(Object, TEXT("premiseKey"), OutAdventure.PremiseKey) ||
-            !ReadRequiredName(Object, TEXT("primaryDiscipline"), OutAdventure.PrimaryDiscipline) ||
-            !ReadRequiredName(Object, TEXT("ageBand"), OutAdventure.AgeBand) ||
-            !ReadNameArray(Object, TEXT("secondaryDisciplines"), OutAdventure.SecondaryDisciplines, true))
-        {
-            return false;
-        }
+        if (!NameField(Object, TEXT("adventureId"), Out.AdventureId) ||
+            !NameField(Object, TEXT("missionId"), Out.MissionId) ||
+            !NameField(Object, TEXT("titleKey"), Out.TitleKey) ||
+            !NameField(Object, TEXT("premiseKey"), Out.PremiseKey) ||
+            !NameField(Object, TEXT("primaryDiscipline"), Out.PrimaryDiscipline) ||
+            !NameField(Object, TEXT("ageBand"), Out.AgeBand) ||
+            !NameArray(Object, TEXT("secondaryDisciplines"), Out.SecondaryDisciplines, true)) return false;
 
         const TArray<TSharedPtr<FJsonValue>>* Beats = nullptr;
-        if (!Object->TryGetArrayField(TEXT("beats"), Beats) || !Beats || Beats->IsEmpty())
-        {
-            return false;
-        }
-
+        if (!Object->TryGetArrayField(TEXT("beats"), Beats) || !Beats || Beats->IsEmpty()) return false;
         for (const TSharedPtr<FJsonValue>& Value : *Beats)
         {
             const TSharedPtr<FJsonObject>* BeatObject = nullptr;
-            if (!Value.IsValid() || !Value->TryGetObject(BeatObject) || !BeatObject || !BeatObject->IsValid())
-            {
-                return false;
-            }
+            if (!Value.IsValid() || !Value->TryGetObject(BeatObject) || !BeatObject || !BeatObject->IsValid()) return false;
             FWMAdventureBeatDefinition Beat;
-            if (!ParseBeat(*BeatObject, Beat))
-            {
-                return false;
-            }
-            OutAdventure.Beats.Add(MoveTemp(Beat));
+            if (!ParseBeat(*BeatObject, Beat)) return false;
+            Out.Beats.Add(MoveTemp(Beat));
         }
-        return OutAdventure.IsSane();
+        return Out.IsSane();
     }
 }
 
@@ -127,31 +99,22 @@ const FWMAdventureBeatDefinition* FWMFantasticAdventureDefinition::FindBeat(cons
 bool FWMFantasticAdventureDefinition::IsSane() const
 {
     if (AdventureId.IsNone() || MissionId.IsNone() || TitleKey.IsNone() || PremiseKey.IsNone() ||
-        !AllowedDisciplines.Contains(PrimaryDiscipline) || !AllowedAgeBands.Contains(AgeBand) || Beats.IsEmpty())
-    {
-        return false;
-    }
+        !FirstClassDisciplines.Contains(PrimaryDiscipline) || !AllowedAgeBands.Contains(AgeBand) || Beats.IsEmpty()) return false;
 
-    TSet<FName> SecondarySet;
+    TSet<FName> Secondary;
     for (const FName Discipline : SecondaryDisciplines)
     {
-        if (!AllowedDisciplines.Contains(Discipline) || Discipline == PrimaryDiscipline || SecondarySet.Contains(Discipline))
-        {
-            return false;
-        }
-        SecondarySet.Add(Discipline);
+        if (!AllowedSecondaryDisciplines.Contains(Discipline) || Discipline == PrimaryDiscipline || Secondary.Contains(Discipline)) return false;
+        Secondary.Add(Discipline);
     }
 
     TSet<FName> BeatIds;
-    TSet<FName> EvidenceEventIds;
+    TSet<FName> EventIds;
     for (const FWMAdventureBeatDefinition& Beat : Beats)
     {
-        if (!Beat.IsSane() || BeatIds.Contains(Beat.BeatId) || EvidenceEventIds.Contains(Beat.EvidenceEventId))
-        {
-            return false;
-        }
+        if (!Beat.IsSane() || BeatIds.Contains(Beat.BeatId) || EventIds.Contains(Beat.EvidenceEventId)) return false;
         BeatIds.Add(Beat.BeatId);
-        EvidenceEventIds.Add(Beat.EvidenceEventId);
+        EventIds.Add(Beat.EvidenceEventId);
     }
     return true;
 }
@@ -168,11 +131,8 @@ bool FWMFantasticAdventurePack::IsSane() const
 {
     if (SchemaVersion != 1 || PackId != FName(TEXT("adventure-pack.first-fantastic-v1")) || !bPrototypeOnly ||
         DesignPrinciple != FName(TEXT("learning-is-structurally-necessary-to-play")) ||
-        ProgressionModel != FName(TEXT("ordered-beats")) ||
-        PrivacyModel != FName(TEXT("stable-ids-no-child-free-text")) || Adventures.Num() != 11)
-    {
-        return false;
-    }
+        ProgressionModel != FName(TEXT("ordered-beats")) || PrivacyModel != FName(TEXT("stable-ids-no-child-free-text")) ||
+        Adventures.Num() != 11) return false;
 
     TSet<FName> AdventureIds;
     TSet<FName> MissionIds;
@@ -180,15 +140,12 @@ bool FWMFantasticAdventurePack::IsSane() const
     for (const FWMFantasticAdventureDefinition& Adventure : Adventures)
     {
         if (!Adventure.IsSane() || AdventureIds.Contains(Adventure.AdventureId) || MissionIds.Contains(Adventure.MissionId) ||
-            PrimaryDisciplines.Contains(Adventure.PrimaryDiscipline))
-        {
-            return false;
-        }
+            PrimaryDisciplines.Contains(Adventure.PrimaryDiscipline)) return false;
         AdventureIds.Add(Adventure.AdventureId);
         MissionIds.Add(Adventure.MissionId);
         PrimaryDisciplines.Add(Adventure.PrimaryDiscipline);
     }
-    return PrimaryDisciplines.Num() == AllowedDisciplines.Num();
+    return PrimaryDisciplines.Num() == FirstClassDisciplines.Num();
 }
 
 bool FWMFantasticAdventurePack::TryParseJson(const FString& Json, FWMFantasticAdventurePack& OutPack, FString& OutError)
@@ -201,39 +158,35 @@ bool FWMFantasticAdventurePack::TryParseJson(const FString& Json, FWMFantasticAd
         return false;
     }
 
-    int32 SchemaVersion = 0;
-    bool bPrototypeOnly = true;
     FWMFantasticAdventurePack Candidate;
-    if (!Root->TryGetNumberField(TEXT("schemaVersion"), SchemaVersion) ||
-        !Root->TryGetBoolField(TEXT("prototypeOnly"), bPrototypeOnly) ||
-        !ReadRequiredName(Root, TEXT("packId"), Candidate.PackId) ||
-        !ReadRequiredName(Root, TEXT("designPrinciple"), Candidate.DesignPrinciple) ||
-        !ReadRequiredName(Root, TEXT("progressionModel"), Candidate.ProgressionModel) ||
-        !ReadRequiredName(Root, TEXT("privacyModel"), Candidate.PrivacyModel))
+    int32 Version = 0;
+    bool bPrototype = true;
+    if (!Root->TryGetNumberField(TEXT("schemaVersion"), Version) || !Root->TryGetBoolField(TEXT("prototypeOnly"), bPrototype) ||
+        !NameField(Root, TEXT("packId"), Candidate.PackId) || !NameField(Root, TEXT("designPrinciple"), Candidate.DesignPrinciple) ||
+        !NameField(Root, TEXT("progressionModel"), Candidate.ProgressionModel) || !NameField(Root, TEXT("privacyModel"), Candidate.PrivacyModel))
     {
         OutError = TEXT("Fantastic adventure pack header is invalid.");
         return false;
     }
-    Candidate.SchemaVersion = SchemaVersion;
-    Candidate.bPrototypeOnly = bPrototypeOnly;
+    Candidate.SchemaVersion = Version;
+    Candidate.bPrototypeOnly = bPrototype;
 
-    const TArray<TSharedPtr<FJsonValue>>* Adventures = nullptr;
-    if (!Root->TryGetArrayField(TEXT("adventures"), Adventures) || !Adventures || Adventures->IsEmpty())
+    const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+    if (!Root->TryGetArrayField(TEXT("adventures"), Values) || !Values || Values->IsEmpty())
     {
         OutError = TEXT("Fantastic adventure pack has no adventures.");
         return false;
     }
-
-    for (const TSharedPtr<FJsonValue>& Value : *Adventures)
+    for (const TSharedPtr<FJsonValue>& Value : *Values)
     {
-        const TSharedPtr<FJsonObject>* AdventureObject = nullptr;
-        if (!Value.IsValid() || !Value->TryGetObject(AdventureObject) || !AdventureObject || !AdventureObject->IsValid())
+        const TSharedPtr<FJsonObject>* Object = nullptr;
+        if (!Value.IsValid() || !Value->TryGetObject(Object) || !Object || !Object->IsValid())
         {
             OutError = TEXT("Fantastic adventure entry is invalid.");
             return false;
         }
         FWMFantasticAdventureDefinition Adventure;
-        if (!ParseAdventure(*AdventureObject, Adventure))
+        if (!ParseAdventure(*Object, Adventure))
         {
             OutError = TEXT("Fantastic adventure failed semantic validation.");
             return false;
@@ -246,7 +199,6 @@ bool FWMFantasticAdventurePack::TryParseJson(const FString& Json, FWMFantasticAd
         OutError = TEXT("Fantastic adventure pack failed semantic validation.");
         return false;
     }
-
     OutPack = MoveTemp(Candidate);
     OutError.Reset();
     return true;
@@ -255,10 +207,7 @@ bool FWMFantasticAdventurePack::TryParseJson(const FString& Json, FWMFantasticAd
 bool FWMAdventureProgressModel::Begin(const FWMFantasticAdventureDefinition& InDefinition)
 {
     Reset();
-    if (!InDefinition.IsSane())
-    {
-        return false;
-    }
+    if (!InDefinition.IsSane()) return false;
     Definition = InDefinition;
     bActive = true;
     return true;
@@ -266,39 +215,24 @@ bool FWMAdventureProgressModel::Begin(const FWMFantasticAdventureDefinition& InD
 
 const FWMAdventureBeatDefinition* FWMAdventureProgressModel::GetCurrentBeat() const
 {
-    if (!bActive || bCompleted || !Definition.Beats.IsValidIndex(CurrentBeatIndex))
-    {
-        return nullptr;
-    }
-    return &Definition.Beats[CurrentBeatIndex];
+    return bActive && !bCompleted && Definition.Beats.IsValidIndex(CurrentBeatIndex) ? &Definition.Beats[CurrentBeatIndex] : nullptr;
 }
 
 bool FWMAdventureProgressModel::CanAcceptEvidence(
-    const FName ProducerKind,
-    const FName ProducerRefId,
-    const FName PrimitiveId,
-    const FName EvidenceEventId) const
+    const FName ProducerKind, const FName ProducerRefId, const FName PrimitiveId, const FName EvidenceEventId) const
 {
     const FWMAdventureBeatDefinition* Beat = GetCurrentBeat();
     return Beat && Beat->ProducerKind == ProducerKind && Beat->ProducerRefId == ProducerRefId &&
-        Beat->PrimitiveId == PrimitiveId && Beat->EvidenceEventId == EvidenceEventId &&
-        CurrentBeatEvidenceCount < Beat->RequiredCount;
+        Beat->PrimitiveId == PrimitiveId && Beat->EvidenceEventId == EvidenceEventId && CurrentBeatEvidenceCount < Beat->RequiredCount;
 }
 
 bool FWMAdventureProgressModel::CommitEvidence(
-    const FName ProducerKind,
-    const FName ProducerRefId,
-    const FName PrimitiveId,
-    const FName EvidenceEventId)
+    const FName ProducerKind, const FName ProducerRefId, const FName PrimitiveId, const FName EvidenceEventId)
 {
-    if (!CanAcceptEvidence(ProducerKind, ProducerRefId, PrimitiveId, EvidenceEventId))
-    {
-        return false;
-    }
-
-    const FWMAdventureBeatDefinition* Beat = GetCurrentBeat();
+    if (!CanAcceptEvidence(ProducerKind, ProducerRefId, PrimitiveId, EvidenceEventId)) return false;
+    const int32 RequiredCount = Definition.Beats[CurrentBeatIndex].RequiredCount;
     ++CurrentBeatEvidenceCount;
-    if (Beat && CurrentBeatEvidenceCount >= Beat->RequiredCount)
+    if (CurrentBeatEvidenceCount >= RequiredCount)
     {
         ++CurrentBeatIndex;
         CurrentBeatEvidenceCount = 0;
@@ -315,23 +249,16 @@ float FWMAdventureProgressModel::GetProgressFraction() const
 {
     if (bCompleted) return 1.0f;
     if (!bActive || Definition.Beats.IsEmpty()) return 0.0f;
-
-    int32 TotalUnits = 0;
-    int32 CompletedUnits = 0;
+    int32 Total = 0;
+    int32 Complete = 0;
     for (int32 Index = 0; Index < Definition.Beats.Num(); ++Index)
     {
         const int32 Units = Definition.Beats[Index].RequiredCount;
-        TotalUnits += Units;
-        if (Index < CurrentBeatIndex)
-        {
-            CompletedUnits += Units;
-        }
-        else if (Index == CurrentBeatIndex)
-        {
-            CompletedUnits += CurrentBeatEvidenceCount;
-        }
+        Total += Units;
+        if (Index < CurrentBeatIndex) Complete += Units;
+        else if (Index == CurrentBeatIndex) Complete += CurrentBeatEvidenceCount;
     }
-    return TotalUnits > 0 ? static_cast<float>(CompletedUnits) / static_cast<float>(TotalUnits) : 0.0f;
+    return Total > 0 ? static_cast<float>(Complete) / static_cast<float>(Total) : 0.0f;
 }
 
 FWMAdventureProgressReadModel FWMAdventureProgressModel::BuildReadModel() const
@@ -343,10 +270,7 @@ FWMAdventureProgressReadModel FWMAdventureProgressModel::BuildReadModel() const
     Result.CurrentBeatEvidenceCount = CurrentBeatEvidenceCount;
     Result.ProgressFraction = GetProgressFraction();
     Result.bCompleted = bCompleted;
-    if (const FWMAdventureBeatDefinition* Beat = GetCurrentBeat())
-    {
-        Result.CurrentBeatId = Beat->BeatId;
-    }
+    if (const FWMAdventureBeatDefinition* Beat = GetCurrentBeat()) Result.CurrentBeatId = Beat->BeatId;
     return Result;
 }
 
