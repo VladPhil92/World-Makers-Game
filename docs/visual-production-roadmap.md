@@ -207,20 +207,44 @@ See `docs/v7-camera-cinematics-ui-motion.md` and `content/visual/presentation/pr
 
 ## V8 — Visual Optimization & Device Certification
 
-Goal: prove the visual target on representative hardware rather than assuming desktop/editor quality translates to tablets.
+V8 status: source-complete certification infrastructure.
 
-- measured GPU/CPU/frame-time captures by visual tier;
-- texture memory and streaming budgets;
-- draw-call/material-slot audit;
-- foliage overdraw audit;
-- LOD/HLOD/culling verification;
-- shadow and lighting scalability;
-- Nanite/Lumen eligibility with documented fallback paths;
-- representative iPadOS and Android visual/performance evidence;
-- authored certification map and deterministic screenshot route;
-- visual regression/reference capture set.
+Status: **source-complete on `feat/v8-visual-optimization-device-certification`; actual device certification remains blocked until representative evidence passes.**
 
-Exit: visual quality claims are backed by native Unreal and representative-device evidence. Issue #9 or its successor certification infrastructure must be resolved before this state can be claimed.
+Goal: turn V1–V7 into a measurable visual release contract rather than assuming desktop/editor quality translates to tablets.
+
+Implemented source/certification contract:
+
+- canonical/staged Low/Mid/High visual budgets aligned with 30/30/60 FPS targets;
+- p95 total frame, game-thread, render-thread and GPU ceilings;
+- peak draw-call, visible-triangle, resident-texture and active-VFX ceilings;
+- four mandatory stress routes: rainforest exploration, dense construction, science/VFX burst and adventure reveal;
+- minimum 1,800 frame samples per scenario;
+- deterministic `FWMVisualCertificationEvaluator` with a fail-closed aggregate verdict;
+- closed device-evidence schema with no serial number, device ID, advertising ID, account ID, child profile or biometric fields;
+- capture and screenshot SHA-256 integrity verification;
+- explicit human review for scene readability, UI legibility, camera comfort and critical rendering artifacts;
+- certification requires at least one representative iPadOS package and one representative Android package;
+- source CI cannot self-certify;
+- `assess-v8-visual-certification.py` with empty-evidence, one-platform, passing dual-platform and over-budget self-tests;
+- manual self-hosted Unreal certification workflow using `--require-certified`;
+- three Unreal Automation tests covering passing sample, minimum-sample failure and single-metric failure;
+- dedicated Repository Quality V8 source gate.
+
+Optimization order:
+
+- reduce avoidable draw calls/material slots and translucent overdraw first;
+- use bounded foliage/shadow scalability from M3.7;
+- reduce VFX concurrency/complexity without losing semantic feedback;
+- reduce texture residency and author proper LOD/HLOD/culling;
+- reduce visible triangles only where silhouette remains intact;
+- reduce screen percentage only within the existing tablet profile contract.
+
+Exit for source phase: budgets, evaluator, evidence integrity, dual-platform requirement, self-tests and manual certification workflow are versioned and source CI passes.
+
+Exit for actual certification: the manual V8 workflow returns `CERTIFIED` for real, hash-verified representative iPadOS and Android evidence on the captured build commit. Until that happens, visual/device certification remains blocked.
+
+See `docs/v8-visual-optimization-device-certification.md`, `content/visual/certification/visual-certification-v8.json` and `scripts/assess-v8-visual-certification.py`.
 
 ## Production principle
 
