@@ -10,30 +10,21 @@
       "requiredMeaningId": "meaning.ask-route-to-center",
       "acceptedRegisterIds": ["polite", "neutral"],
       "options": [
-        {
-          "choiceId": "choice.en.where-is-center",
-          "languageId": "en",
-          "meaningId": "meaning.ask-route-to-center",
-          "registerId": "polite",
-          "syntaxPatternId": "syntax.en.wh-question",
-          "evidenceEventId": "language.english.contextual-communication-demonstrated"
-        },
-        {
-          "choiceId": "choice.es.donde-centro",
-          "languageId": "es",
-          "meaningId": "meaning.ask-route-to-center",
-          "registerId": "polite",
-          "syntaxPatternId": "syntax.es.interrogative",
-          "evidenceEventId": "language.english.contextual-communication-demonstrated"
-        },
-        {
-          "choiceId": "choice.en-demand-open",
-          "languageId": "en",
-          "meaningId": "meaning.demand-gate-open",
-          "registerId": "abrupt",
-          "syntaxPatternId": "syntax.en.imperative",
-          "evidenceEventId": "language.english.contextual-communication-demonstrated"
-        }
+        {"choiceId":"choice.en.where-is-center","languageId":"en","meaningId":"meaning.ask-route-to-center","registerId":"polite","syntaxPatternId":"syntax.en.wh-question","evidenceEventId":"language.english.contextual-communication-demonstrated"},
+        {"choiceId":"choice.es.donde-centro","languageId":"es","meaningId":"meaning.ask-route-to-center","registerId":"polite","syntaxPatternId":"syntax.es.interrogative","evidenceEventId":"language.english.contextual-communication-demonstrated"},
+        {"choiceId":"choice.en-demand-open","languageId":"en","meaningId":"meaning.demand-gate-open","registerId":"abrupt","syntaxPatternId":"syntax.en.imperative","evidenceEventId":"language.english.contextual-communication-demonstrated"}
+      ]
+    },
+    {
+      "challengeId": "language.en.dragon-restore-command",
+      "targetLanguageId": "en",
+      "contextId": "context.dragon.restore-ancient-machine",
+      "requiredMeaningId": "meaning.ask-dragon-to-speak-access-phrase",
+      "acceptedRegisterIds": ["polite", "neutral"],
+      "options": [
+        {"choiceId":"choice.en.dragon-please-speak-phrase","languageId":"en","meaningId":"meaning.ask-dragon-to-speak-access-phrase","registerId":"polite","syntaxPatternId":"syntax.en.courteous-request","evidenceEventId":"language.english.dragon-contextual-command-demonstrated"},
+        {"choiceId":"choice.es.dragon-di-frase","languageId":"es","meaningId":"meaning.ask-dragon-to-speak-access-phrase","registerId":"polite","syntaxPatternId":"syntax.es.courteous-request","evidenceEventId":"language.english.dragon-contextual-command-demonstrated"},
+        {"choiceId":"choice.en.dragon-open-door","languageId":"en","meaningId":"meaning.ask-dragon-to-open-door","registerId":"neutral","syntaxPatternId":"syntax.en.courteous-request","evidenceEventId":"language.english.dragon-contextual-command-demonstrated"}
       ]
     },
     {
@@ -43,101 +34,45 @@
       "requiredMeaningId": "meaning.request-clue",
       "acceptedRegisterIds": ["polite", "neutral"],
       "options": [
-        {
-          "choiceId": "choice.es.pedir-pista",
-          "languageId": "es",
-          "meaningId": "meaning.request-clue",
-          "registerId": "polite",
-          "syntaxPatternId": "syntax.es.courteous-request",
-          "evidenceEventId": "language.spanish.contextual-communication-demonstrated"
-        },
-        {
-          "choiceId": "choice.en.request-clue",
-          "languageId": "en",
-          "meaningId": "meaning.request-clue",
-          "registerId": "polite",
-          "syntaxPatternId": "syntax.en.courteous-request",
-          "evidenceEventId": "language.spanish.contextual-communication-demonstrated"
-        },
-        {
-          "choiceId": "choice.es.pedir-salida",
-          "languageId": "es",
-          "meaningId": "meaning.request-exit",
-          "registerId": "neutral",
-          "syntaxPatternId": "syntax.es.courteous-request",
-          "evidenceEventId": "language.spanish.contextual-communication-demonstrated"
-        }
+        {"choiceId":"choice.es.pedir-pista","languageId":"es","meaningId":"meaning.request-clue","registerId":"polite","syntaxPatternId":"syntax.es.courteous-request","evidenceEventId":"language.spanish.contextual-communication-demonstrated"},
+        {"choiceId":"choice.en.request-clue","languageId":"en","meaningId":"meaning.request-clue","registerId":"polite","syntaxPatternId":"syntax.en.courteous-request","evidenceEventId":"language.spanish.contextual-communication-demonstrated"},
+        {"choiceId":"choice.es.pedir-salida","languageId":"es","meaningId":"meaning.request-exit","registerId":"neutral","syntaxPatternId":"syntax.es.courteous-request","evidenceEventId":"language.spanish.contextual-communication-demonstrated"}
       ]
     }
   ],
   "narrativeStories": [
     {
-      "storyId": "story.labyrinth-minotaur-prototype",
-      "traditionId": "tradition.ancient-greek",
-      "sourceClassId": "retelling",
-      "provenanceKey": "provenance.greek.minotaur.general-tradition",
-      "culturalReviewState": "draft",
-      "startNodeId": "node.labyrinth.gate",
-      "nodes": [
-        {"nodeId": "node.labyrinth.gate", "passageKey": "story.labyrinth.gate.passage", "pointOfViewId": "pov.third-person-observer"},
-        {"nodeId": "node.labyrinth.thread", "passageKey": "story.labyrinth.thread.passage", "pointOfViewId": "pov.ariadne"},
-        {"nodeId": "node.labyrinth.center", "passageKey": "story.labyrinth.center.passage", "pointOfViewId": "pov.theseus"}
+      "storyId":"story.labyrinth-minotaur-prototype","traditionId":"tradition.ancient-greek","sourceClassId":"retelling","provenanceKey":"provenance.greek.minotaur.general-tradition","culturalReviewState":"draft","startNodeId":"node.labyrinth.gate",
+      "nodes":[
+        {"nodeId":"node.labyrinth.gate","passageKey":"story.labyrinth.gate.passage","pointOfViewId":"pov.third-person-observer"},
+        {"nodeId":"node.labyrinth.thread","passageKey":"story.labyrinth.thread.passage","pointOfViewId":"pov.ariadne"},
+        {"nodeId":"node.labyrinth.center","passageKey":"story.labyrinth.center.passage","pointOfViewId":"pov.theseus"}
       ],
-      "choices": [
-        {"choiceId": "choice.follow-thread-clue", "fromNodeId": "node.labyrinth.gate", "toNodeId": "node.labyrinth.thread", "inferenceTag": "inference.symbol-as-navigation-clue", "evidenceEventId": "literature.inference.context-clue-used"},
-        {"choiceId": "choice.interpret-thread-purpose", "fromNodeId": "node.labyrinth.thread", "toNodeId": "node.labyrinth.center", "inferenceTag": "inference.object-function-from-context", "evidenceEventId": "literature.point-of-view-and-symbolism-interpreted"}
+      "choices":[
+        {"choiceId":"choice.follow-thread-clue","fromNodeId":"node.labyrinth.gate","toNodeId":"node.labyrinth.thread","inferenceTag":"inference.symbol-as-navigation-clue","evidenceEventId":"literature.inference.context-clue-used"},
+        {"choiceId":"choice.interpret-thread-purpose","fromNodeId":"node.labyrinth.thread","toNodeId":"node.labyrinth.center","inferenceTag":"inference.object-function-from-context","evidenceEventId":"literature.point-of-view-and-symbolism-interpreted"}
       ]
     }
   ],
   "ethicalDilemmas": [
     {
-      "dilemmaId": "ethics.bridge-two-villages-prototype",
-      "perspectiveIds": ["perspective.river-village", "perspective.hill-village", "perspective.bridge-builders"],
-      "requiredPerspectiveCount": 2,
-      "options": [
-        {
-          "optionId": "option.repair-river-first",
-          "supportedReasonIds": ["reason.immediate-need", "reason.prevent-isolation"],
-          "affectedPerspectiveIds": ["perspective.river-village", "perspective.hill-village", "perspective.bridge-builders"],
-          "tradeoffTags": ["tradeoff.speed-vs-equal-access"],
-          "consequenceProfile": {"fairness": -0.2, "welfare": 0.7, "consent": 0.1, "stewardship": 0.3, "common-good": 0.4},
-          "evidenceEventId": "ethics.multi-perspective-reasoning-demonstrated"
-        },
-        {
-          "optionId": "option.split-materials-equally",
-          "supportedReasonIds": ["reason.equal-share", "reason.visible-fairness"],
-          "affectedPerspectiveIds": ["perspective.river-village", "perspective.hill-village", "perspective.bridge-builders"],
-          "tradeoffTags": ["tradeoff.equality-vs-urgency"],
-          "consequenceProfile": {"fairness": 0.8, "welfare": 0.2, "consent": 0.2, "stewardship": 0.3, "common-good": 0.4},
-          "evidenceEventId": "ethics.multi-perspective-reasoning-demonstrated"
-        },
-        {
-          "optionId": "option.community-vote",
-          "supportedReasonIds": ["reason.shared-decision", "reason.legitimacy-through-participation"],
-          "affectedPerspectiveIds": ["perspective.river-village", "perspective.hill-village", "perspective.bridge-builders"],
-          "tradeoffTags": ["tradeoff.participation-vs-speed"],
-          "consequenceProfile": {"fairness": 0.5, "welfare": 0.1, "consent": 0.9, "stewardship": 0.2, "common-good": 0.5},
-          "evidenceEventId": "ethics.multi-perspective-reasoning-demonstrated"
-        }
+      "dilemmaId":"ethics.bridge-two-villages-prototype","perspectiveIds":["perspective.river-village","perspective.hill-village","perspective.bridge-builders"],"requiredPerspectiveCount":2,
+      "options":[
+        {"optionId":"option.repair-river-first","supportedReasonIds":["reason.immediate-need","reason.prevent-isolation"],"affectedPerspectiveIds":["perspective.river-village","perspective.hill-village","perspective.bridge-builders"],"tradeoffTags":["tradeoff.speed-vs-equal-access"],"consequenceProfile":{"fairness":-0.2,"welfare":0.7,"consent":0.1,"stewardship":0.3,"common-good":0.4},"evidenceEventId":"ethics.multi-perspective-reasoning-demonstrated"},
+        {"optionId":"option.split-materials-equally","supportedReasonIds":["reason.equal-share","reason.visible-fairness"],"affectedPerspectiveIds":["perspective.river-village","perspective.hill-village","perspective.bridge-builders"],"tradeoffTags":["tradeoff.equality-vs-urgency"],"consequenceProfile":{"fairness":0.8,"welfare":0.2,"consent":0.2,"stewardship":0.3,"common-good":0.4},"evidenceEventId":"ethics.multi-perspective-reasoning-demonstrated"},
+        {"optionId":"option.community-vote","supportedReasonIds":["reason.shared-decision","reason.legitimacy-through-participation"],"affectedPerspectiveIds":["perspective.river-village","perspective.hill-village","perspective.bridge-builders"],"tradeoffTags":["tradeoff.participation-vs-speed"],"consequenceProfile":{"fairness":0.5,"welfare":0.1,"consent":0.9,"stewardship":0.2,"common-good":0.5},"evidenceEventId":"ethics.multi-perspective-reasoning-demonstrated"}
       ]
     }
   ],
   "philosophyProblems": [
     {
-      "problemId": "philosophy.ship-theseus-prototype",
-      "claimIds": ["claim.same-ship-despite-replacement", "claim.different-ship-after-replacement"],
-      "assumptionIds": ["assumption.identity-can-persist-through-change", "assumption.material-continuity-defines-identity"],
-      "counterexampleIds": ["counterexample.reassembled-original-parts", "counterexample.gradual-human-cell-replacement"],
-      "reasonLinks": [
-        {"linkId": "link.function-continuity-supports-same", "fromPropositionId": "reason.function-and-history-continue", "toPropositionId": "claim.same-ship-despite-replacement", "relationId": "supports"},
-        {"linkId": "link.material-change-supports-different", "fromPropositionId": "reason.no-original-material-remains", "toPropositionId": "claim.different-ship-after-replacement", "relationId": "supports"},
-        {"linkId": "link.reassembled-parts-challenge-same", "fromPropositionId": "counterexample.reassembled-original-parts", "toPropositionId": "claim.same-ship-despite-replacement", "relationId": "challenges"}
+      "problemId":"philosophy.ship-theseus-prototype","claimIds":["claim.same-ship-despite-replacement","claim.different-ship-after-replacement"],"assumptionIds":["assumption.identity-can-persist-through-change","assumption.material-continuity-defines-identity"],"counterexampleIds":["counterexample.reassembled-original-parts","counterexample.gradual-human-cell-replacement"],
+      "reasonLinks":[
+        {"linkId":"link.function-continuity-supports-same","fromPropositionId":"reason.function-and-history-continue","toPropositionId":"claim.same-ship-despite-replacement","relationId":"supports"},
+        {"linkId":"link.material-change-supports-different","fromPropositionId":"reason.no-original-material-remains","toPropositionId":"claim.different-ship-after-replacement","relationId":"supports"},
+        {"linkId":"link.reassembled-parts-challenge-same","fromPropositionId":"counterexample.reassembled-original-parts","toPropositionId":"claim.same-ship-despite-replacement","relationId":"challenges"}
       ],
-      "minReasonLinks": 1,
-      "minAssumptions": 1,
-      "minCounterexamples": 1,
-      "minRevisions": 1,
-      "evidenceEventId": "philosophy.argument-revised-after-counterexample"
+      "minReasonLinks":1,"minAssumptions":1,"minCounterexamples":1,"minRevisions":1,"evidenceEventId":"philosophy.argument-revised-after-counterexample"
     }
   ]
 }

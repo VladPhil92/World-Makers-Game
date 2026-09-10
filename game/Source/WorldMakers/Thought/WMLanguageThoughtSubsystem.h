@@ -57,7 +57,8 @@ public:
     const FWMLanguageThoughtCatalog& GetCatalog() const { return Catalog; }
 
 private:
-    bool SubmitEvidenceToActiveMission(const FWMThoughtEvidenceResult& Result);
+    /** Routes M5.4 evidence through M5.5 ordered adventures when one is active; otherwise preserves legacy M5.2 behavior. */
+    bool SubmitEvidenceToActiveMission(const FWMThoughtEvidenceResult& Result, FName ProducerRefId);
 
     bool bCatalogLoaded = false;
     FWMLanguageThoughtCatalog Catalog;
