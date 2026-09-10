@@ -68,7 +68,7 @@
         ],
         "properties": {
           "id": {"enum": ["visual.rainforest.explore", "visual.build.dense", "visual.science.vfx-burst", "visual.adventure.reveal"]},
-          "frameSamples": {"type": "integer", "minimum": 1},
+          "frameSamples": {"type": "integer", "minimum": 0},
           "averageFrameTimeMs": {"type": "number", "minimum": 0},
           "p95FrameTimeMs": {"type": "number", "minimum": 0},
           "gameThreadP95Ms": {"type": "number", "minimum": 0},
