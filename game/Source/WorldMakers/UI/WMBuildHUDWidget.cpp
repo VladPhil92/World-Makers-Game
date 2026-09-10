@@ -13,6 +13,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Engine/World.h"
+#include "Environment/WMEnvironmentStateSubsystem.h"
 #include "Environment/WMInteractionComponent.h"
 #include "Mission/WMMissionMeasurementComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
@@ -54,6 +55,15 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     StackSlot->SetAutoSize(true);
     StackSlot->SetZOrder(10);
 
+    EnvironmentStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("EnvironmentStatus"));
+    EnvironmentStatusText->SetJustification(ETextJustify::Center);
+    EnvironmentStatusText->SetAutoWrapText(true);
+    if (UVerticalBoxSlot* EnvironmentStatusSlot = ActionStack->AddChildToVerticalBox(EnvironmentStatusText))
+    {
+        EnvironmentStatusSlot->SetHorizontalAlignment(HAlign_Fill);
+        EnvironmentStatusSlot->SetPadding(FMargin(8.0f, 4.0f));
+    }
+
     InteractionStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InteractionStatus"));
     InteractionStatusText->SetJustification(ETextJustify::Center);
     InteractionStatusText->SetAutoWrapText(true);
@@ -69,6 +79,7 @@ void UWMBuildHUDWidget::NativeOnInitialized()
         InteractionRowSlot->SetHorizontalAlignment(HAlign_Center);
     }
     ObserveButton = CreateActionButton(InteractionRow, TEXT("ObserveWorldButton"), LOCTEXT("ObserveWorld", "Observe"));
+    InteractionActionText = Cast<UTextBlock>(ObserveButton ? ObserveButton->GetChildAt(0) : nullptr);
 
     MissionStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MissionStatus"));
     MissionStatusText->SetJustification(ETextJustify::Center);
@@ -171,32 +182,75 @@ FText UWMBuildHUDWidget::ResolveSelectedPieceLabel() const
 
 FText UWMBuildHUDWidget::ResolveInteractionPromptLabel() const
 {
-    if (!InteractionComponent.IsValid()) return LOCTEXT("InteractionUnavailable", "Observe");
+    if (!InteractionComponent.IsValid()) return LOCTEXT("InteractionUnavailable", "Interact");
     const FName PromptKey = InteractionComponent->FocusedPromptKey;
     if (PromptKey == TEXT("interaction.rainforest.ceiba.observe")) return LOCTEXT("ObserveCeiba", "Observe the ceiba");
     if (PromptKey == TEXT("interaction.rainforest.bromeliad-cluster.observe")) return LOCTEXT("ObserveBromeliads", "Observe the bromeliads");
     if (PromptKey == TEXT("interaction.rainforest.water-edge.observe")) return LOCTEXT("ObserveWater", "Observe the water");
-    return LOCTEXT("ObserveFocused", "Observe what you found");
+    if (PromptKey == TEXT("interaction.rainforest.soil-care")) return LOCTEXT("CareSoil", "Protect the forest floor");
+    if (PromptKey == TEXT("interaction.rainforest.shade-care")) return LOCTEXT("CareShade", "Restore shade cover");
+    if (PromptKey == TEXT("interaction.rainforest.water-care")) return LOCTEXT("CareWater", "Clear the water path");
+    return LOCTEXT("InteractFocused", "Interact with what you found");
+}
+
+FText UWMBuildHUDWidget::ResolveInteractionActionLabel() const
+{
+    if (InteractionComponent.IsValid() && !InteractionComponent->FocusedActionId.IsNone())
+    {
+        return LOCTEXT("HelpAction", "Help");
+    }
+    return LOCTEXT("ObserveAction", "Observe");
 }
 
 void UWMBuildHUDWidget::RefreshStatus()
 {
-    if (!StatusText || !MissionStatusText || !InteractionStatusText || !ObserveButton || !ConfirmButton || !CancelButton) return;
+    if (!StatusText || !MissionStatusText || !EnvironmentStatusText || !InteractionStatusText || !ObserveButton || !ConfirmButton || !CancelButton) return;
+
+    if (UWorld* World = GetWorld())
+    {
+        if (UWMEnvironmentStateSubsystem* EnvironmentState = World->GetSubsystem<UWMEnvironmentStateSubsystem>())
+        {
+            const FWMEnvironmentStateSnapshot Snapshot = EnvironmentState->GetStateSnapshot();
+            if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.stressed")))
+            {
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentStressed", "Ecosystem: stressed — your care can help."));
+            }
+            else if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.recovering")))
+            {
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentRecovering", "Ecosystem: recovering — your actions are helping."));
+            }
+            else if (Snapshot.ReactionId == FName(TEXT("reaction.ecosystem.thriving")))
+            {
+                EnvironmentStatusText->SetText(LOCTEXT("EnvironmentThriving", "Ecosystem: thriving — the habitat is healthier."));
+            }
+            else
+            {
+                EnvironmentStatusText->SetText(FText::GetEmpty());
+            }
+        }
+        else
+        {
+            EnvironmentStatusText->SetText(FText::GetEmpty());
+        }
+    }
 
     if (InteractionComponent.IsValid())
     {
         InteractionComponent->RefreshFocus();
         if (InteractionComponent->CanInteractNow())
         {
+            const FText ActionLabel = ResolveInteractionActionLabel();
             InteractionStatusText->SetText(FText::Format(
-                LOCTEXT("InteractionReady", "{0} — tap Observe."),
-                ResolveInteractionPromptLabel()));
+                LOCTEXT("InteractionReady", "{0} — tap {1}."),
+                ResolveInteractionPromptLabel(),
+                ActionLabel));
+            if (InteractionActionText) InteractionActionText->SetText(ActionLabel);
             ObserveButton->SetVisibility(ESlateVisibility::Visible);
             ObserveButton->SetIsEnabled(true);
         }
         else
         {
-            InteractionStatusText->SetText(LOCTEXT("InteractionExplore", "Look around carefully. Something nearby may be worth observing."));
+            InteractionStatusText->SetText(LOCTEXT("InteractionExplore", "Look around carefully. You may find something to observe or care for."));
             ObserveButton->SetVisibility(ESlateVisibility::Collapsed);
             ObserveButton->SetIsEnabled(false);
         }

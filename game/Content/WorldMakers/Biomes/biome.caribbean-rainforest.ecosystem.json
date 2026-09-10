@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "biomeId": "biome.caribbean-rainforest",
+  "prototypeOnly": true,
+  "baseline": {
+    "vegetationHealth": 0.30,
+    "waterFlow": 0.30,
+    "soilProtection": 0.25,
+    "shadeCoverage": 0.35
+  },
+  "actions": [
+    {
+      "actionId": "action.ecosystem.protect-soil",
+      "targetId": "target.rainforest.soil-care",
+      "promptKey": "interaction.rainforest.soil-care",
+      "locationCm": [-1250, 500, 60],
+      "interactionRadiusCm": 475,
+      "focusRadiusCm": 120,
+      "maxApplications": 1,
+      "delta": {
+        "vegetationHealth": 0.08,
+        "waterFlow": 0.00,
+        "soilProtection": 0.45,
+        "shadeCoverage": 0.00
+      }
+    },
+    {
+      "actionId": "action.ecosystem.restore-shade",
+      "targetId": "target.rainforest.shade-care",
+      "promptKey": "interaction.rainforest.shade-care",
+      "locationCm": [1750, 850, 80],
+      "interactionRadiusCm": 500,
+      "focusRadiusCm": 130,
+      "maxApplications": 1,
+      "delta": {
+        "vegetationHealth": 0.09,
+        "waterFlow": 0.00,
+        "soilProtection": 0.00,
+        "shadeCoverage": 0.45
+      }
+    },
+    {
+      "actionId": "action.ecosystem.clear-water-path",
+      "targetId": "target.rainforest.water-care",
+      "promptKey": "interaction.rainforest.water-care",
+      "locationCm": [800, -2400, 50],
+      "interactionRadiusCm": 600,
+      "focusRadiusCm": 150,
+      "maxApplications": 1,
+      "delta": {
+        "vegetationHealth": 0.08,
+        "waterFlow": 0.45,
+        "soilProtection": 0.00,
+        "shadeCoverage": 0.00
+      }
+    }
+  ],
+  "reactionBands": [
+    {
+      "reactionId": "reaction.ecosystem.stressed",
+      "maxHabitatQuality": 0.34
+    },
+    {
+      "reactionId": "reaction.ecosystem.recovering",
+      "maxHabitatQuality": 0.64
+    },
+    {
+      "reactionId": "reaction.ecosystem.thriving",
+      "maxHabitatQuality": 1.0
+    }
+  ]
+}

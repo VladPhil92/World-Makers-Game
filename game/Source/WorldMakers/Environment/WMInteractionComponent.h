@@ -4,7 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "WMInteractionComponent.generated.h"
 
-class AWMEnvironmentalInteractableActor;
+class AActor;
 
 UCLASS(ClassGroup = (WorldMakers), meta = (BlueprintSpawnableComponent))
 class WORLDMAKERS_API UWMInteractionComponent : public UActorComponent
@@ -36,10 +36,19 @@ public:
     FName FocusedPromptKey;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
+    FName FocusedInteractionMode;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
     FName FocusedObservationId;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
+    FName FocusedActionId;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
     FName LastObservationId;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
+    FName LastActionId;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
     bool bCanInteract = false;
@@ -63,6 +72,6 @@ public:
 private:
     void ClearFocus();
 
-    TWeakObjectPtr<AWMEnvironmentalInteractableActor> FocusedActor;
+    TWeakObjectPtr<AActor> FocusedActor;
     double LastInteractionTimeSeconds = -1000000.0;
 };

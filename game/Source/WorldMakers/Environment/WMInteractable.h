@@ -17,7 +17,9 @@ class WORLDMAKERS_API IWMInteractable
 public:
     virtual FName GetInteractionPointId() const = 0;
     virtual FName GetInteractionPromptKey() const = 0;
+    virtual FName GetInteractionMode() const = 0;
     virtual FName GetInteractionObservationId() const = 0;
+    virtual FName GetInteractionActionId() const = 0;
     virtual float GetInteractionRadiusCm() const = 0;
     virtual FVector GetInteractionAnchorLocation() const = 0;
     virtual bool CanInteract(const AActor* Interactor) const = 0;
