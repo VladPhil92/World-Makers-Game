@@ -209,7 +209,7 @@ def main() -> None:
 
     roadmap = read("docs/roadmap.md")
     require("M3.7 — tablet performance profiles and capture: source-complete" in roadmap, "Roadmap must mark M3.7 source-complete")
-    require("M3.8 — vertical-slice certification: next" in roadmap, "Roadmap must mark M3.8 next")
+    require("M3.8 — vertical-slice certification" in roadmap, "Roadmap must retain the M3.8 certification phase")
 
     tdd = read("docs/TDD.md")
     for token in ("Tablet Low", "Tablet Medium", "Tablet High", "p95 frame time", "33.34 ms", "16.67 ms"):
