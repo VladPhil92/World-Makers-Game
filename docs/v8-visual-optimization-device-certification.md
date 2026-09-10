@@ -50,16 +50,24 @@ These are release thresholds to validate, not measured claims about current hard
 
 A device evidence JSON cannot certify by itself. It must reference both a native performance capture and a screenshot stored under the evidence root. `assess-v8-visual-certification.py` recalculates SHA-256 for both files and blocks certification if either payload is missing, escapes the evidence root or does not match its declared hash.
 
+Every evidence package also carries the full 40-character build commit. The manual certification workflow passes `${{ github.sha }}` to the assessor, and evidence from any other build is rejected. All accepted packages must therefore refer to one identical build commit.
+
 Evidence contains a generic device class/model and OS version but must not contain serial number, advertising ID, account ID, child profile, email, biometric data or other hardware/user identifiers.
 
-## Required device coverage
+## Required device and tier coverage
 
-Certification requires at least one valid evidence package for each platform:
+Certification requires both platform families:
 
 - representative **iPadOS** tablet;
 - representative **Android** tablet.
 
-A single platform can never produce `CERTIFIED`.
+It also requires evidence covering all three visual/performance tiers:
+
+- `performance.tablet.low`;
+- `performance.tablet.medium`;
+- `performance.tablet.high`.
+
+A single platform, a missing tier or evidence split across different build commits can never produce `CERTIFIED`. Multiple profile packages may be captured on the same representative device when appropriate, but the platform and all-tier coverage rules still apply.
 
 ## Human visual review
 
@@ -74,7 +82,7 @@ The review role may be visual QA, tech art, art director or product owner. This 
 
 ## Runtime/source contract
 
-`FWMVisualCertificationEvaluator` provides a deterministic C++ budget verdict for measured samples. It fails if the sample count is below the configured floor or any frame/thread/GPU/render-resource ceiling is exceeded.
+`FWMVisualCertificationEvaluator` provides a deterministic C++ budget verdict for measured samples. It fails if the sample count is below the configured floor, if rendered timing/resource metrics are zero, or if any frame/thread/GPU/render-resource ceiling is exceeded.
 
 This evaluator does not collect GPU metrics itself. Native Unreal tools such as Unreal Insights, CSV Profiler and ProfileGPU remain the measurement authority.
 
@@ -88,7 +96,7 @@ Actual certification uses `.github/workflows/v8-visual-certification.yml`, which
 - `UNREAL_ENGINE_ROOT`;
 - `V8_DEVICE_EVIDENCE_ROOT` containing the real iPadOS and Android evidence packages and referenced captures/screenshots.
 
-The workflow runs `WorldMakers.*` automation tests and then invokes the assessor with `--require-certified`. Missing evidence or failed budgets make the job fail.
+The workflow runs `WorldMakers.*` automation tests and then invokes the assessor with `--expected-commit "${{ github.sha }}" --require-certified`. Missing evidence, a missing tier, a mismatched build commit or failed budgets make the job fail.
 
 ## Accessibility / camera comfort
 
@@ -113,4 +121,4 @@ V8 can be **source-complete** while actual certification remains `BLOCKED`. Full
 
 ## After V8
 
-Once representative evidence passes, the V1–V8 visual-production track can be considered device-certified for the captured profiles and build commit. Future visual changes must either preserve the evidence contract or trigger new captures when they materially affect render cost or camera/UI comfort.
+Once representative evidence passes, the V1–V8 visual-production track can be considered device-certified for the three captured tablet profiles on that exact build commit. Future visual changes must either preserve the evidence contract or trigger new captures when they materially affect render cost or camera/UI comfort.
