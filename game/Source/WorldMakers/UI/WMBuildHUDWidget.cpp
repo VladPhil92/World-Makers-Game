@@ -13,6 +13,7 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Engine/World.h"
+#include "Environment/WMInteractionComponent.h"
 #include "Mission/WMMissionMeasurementComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "TimerManager.h"
@@ -31,6 +32,12 @@ void UWMBuildHUDWidget::BindMissionMeasurementComponent(UWMMissionMeasurementCom
     RefreshStatus();
 }
 
+void UWMBuildHUDWidget::BindInteractionComponent(UWMInteractionComponent* InInteractionComponent)
+{
+    InteractionComponent = InInteractionComponent;
+    RefreshStatus();
+}
+
 void UWMBuildHUDWidget::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
@@ -46,6 +53,22 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     StackSlot->SetPosition(FVector2D(0.0f, -24.0f));
     StackSlot->SetAutoSize(true);
     StackSlot->SetZOrder(10);
+
+    InteractionStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InteractionStatus"));
+    InteractionStatusText->SetJustification(ETextJustify::Center);
+    InteractionStatusText->SetAutoWrapText(true);
+    if (UVerticalBoxSlot* InteractionStatusSlot = ActionStack->AddChildToVerticalBox(InteractionStatusText))
+    {
+        InteractionStatusSlot->SetHorizontalAlignment(HAlign_Fill);
+        InteractionStatusSlot->SetPadding(FMargin(8.0f, 4.0f));
+    }
+
+    UHorizontalBox* InteractionRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("InteractionActionRow"));
+    if (UVerticalBoxSlot* InteractionRowSlot = ActionStack->AddChildToVerticalBox(InteractionRow))
+    {
+        InteractionRowSlot->SetHorizontalAlignment(HAlign_Center);
+    }
+    ObserveButton = CreateActionButton(InteractionRow, TEXT("ObserveWorldButton"), LOCTEXT("ObserveWorld", "Observe"));
 
     MissionStatusText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MissionStatus"));
     MissionStatusText->SetJustification(ETextJustify::Center);
@@ -88,6 +111,7 @@ void UWMBuildHUDWidget::NativeOnInitialized()
     UButton* RedoButton = CreateActionButton(EditRow, TEXT("RedoButton"), LOCTEXT("Redo", "Redo"));
     CancelButton = CreateActionButton(EditRow, TEXT("CancelButton"), LOCTEXT("Cancel", "Cancel"));
 
+    if (ObserveButton) ObserveButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleObserve);
     MeasureButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleMeasure);
     ResetMeasurementButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleResetMeasurement);
     NextMissionButton->OnClicked.AddDynamic(this, &UWMBuildHUDWidget::HandleNextMission);
@@ -145,9 +169,44 @@ FText UWMBuildHUDWidget::ResolveSelectedPieceLabel() const
     return LOCTEXT("PieceGeneric", "Building piece");
 }
 
+FText UWMBuildHUDWidget::ResolveInteractionPromptLabel() const
+{
+    if (!InteractionComponent.IsValid()) return LOCTEXT("InteractionUnavailable", "Observe");
+    const FName PromptKey = InteractionComponent->FocusedPromptKey;
+    if (PromptKey == TEXT("interaction.rainforest.ceiba.observe")) return LOCTEXT("ObserveCeiba", "Observe the ceiba");
+    if (PromptKey == TEXT("interaction.rainforest.bromeliad-cluster.observe")) return LOCTEXT("ObserveBromeliads", "Observe the bromeliads");
+    if (PromptKey == TEXT("interaction.rainforest.water-edge.observe")) return LOCTEXT("ObserveWater", "Observe the water");
+    return LOCTEXT("ObserveFocused", "Observe what you found");
+}
+
 void UWMBuildHUDWidget::RefreshStatus()
 {
-    if (!StatusText || !MissionStatusText || !ConfirmButton || !CancelButton) return;
+    if (!StatusText || !MissionStatusText || !InteractionStatusText || !ObserveButton || !ConfirmButton || !CancelButton) return;
+
+    if (InteractionComponent.IsValid())
+    {
+        InteractionComponent->RefreshFocus();
+        if (InteractionComponent->CanInteractNow())
+        {
+            InteractionStatusText->SetText(FText::Format(
+                LOCTEXT("InteractionReady", "{0} — tap Observe."),
+                ResolveInteractionPromptLabel()));
+            ObserveButton->SetVisibility(ESlateVisibility::Visible);
+            ObserveButton->SetIsEnabled(true);
+        }
+        else
+        {
+            InteractionStatusText->SetText(LOCTEXT("InteractionExplore", "Look around carefully. Something nearby may be worth observing."));
+            ObserveButton->SetVisibility(ESlateVisibility::Collapsed);
+            ObserveButton->SetIsEnabled(false);
+        }
+    }
+    else
+    {
+        InteractionStatusText->SetText(FText::GetEmpty());
+        ObserveButton->SetVisibility(ESlateVisibility::Collapsed);
+        ObserveButton->SetIsEnabled(false);
+    }
 
     if (UWorld* World = GetWorld())
     {
@@ -221,6 +280,7 @@ void UWMBuildHUDWidget::HandleRotateRight() { if (BuildingComponent.IsValid()) B
 void UWMBuildHUDWidget::HandleConfirm() { if (BuildingComponent.IsValid()) BuildingComponent->TryPlaceCurrentPiece(); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleMeasure() { if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->CapturePointFromView(); RefreshStatus(); }
 void UWMBuildHUDWidget::HandleResetMeasurement() { if (MissionMeasurementComponent.IsValid()) MissionMeasurementComponent->ResetMeasurement(); RefreshStatus(); }
+void UWMBuildHUDWidget::HandleObserve() { if (InteractionComponent.IsValid()) InteractionComponent->TryInteractFocused(); RefreshStatus(); }
 
 void UWMBuildHUDWidget::HandleNextMission()
 {

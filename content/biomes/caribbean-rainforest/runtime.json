@@ -45,25 +45,43 @@
       "id": "poi.rainforest.ceiba",
       "zoneId": "zone.rainforest.canopy-trail",
       "category": "tree",
-      "locationCm": [1450, 1050, 0],
+      "locationCm": [1450, 1050, 100],
       "discoveryRadiusCm": 325,
-      "discoveryId": "discovery.rainforest.ceiba"
+      "discoveryId": "discovery.rainforest.ceiba",
+      "requiresInteraction": true,
+      "interactionMode": "observe",
+      "interactionRadiusCm": 550,
+      "focusRadiusCm": 130,
+      "promptKey": "interaction.rainforest.ceiba.observe",
+      "observationId": "observation.rainforest.ceiba"
     },
     {
       "id": "poi.rainforest.bromeliad-cluster",
       "zoneId": "zone.rainforest.understory-west",
       "category": "plant",
-      "locationCm": [-1450, 700, 0],
+      "locationCm": [-1450, 700, 60],
       "discoveryRadiusCm": 275,
-      "discoveryId": "discovery.rainforest.bromeliad-cluster"
+      "discoveryId": "discovery.rainforest.bromeliad-cluster",
+      "requiresInteraction": true,
+      "interactionMode": "observe",
+      "interactionRadiusCm": 450,
+      "focusRadiusCm": 110,
+      "promptKey": "interaction.rainforest.bromeliad-cluster.observe",
+      "observationId": "observation.rainforest.bromeliad-cluster"
     },
     {
       "id": "poi.rainforest.water-edge",
       "zoneId": "zone.rainforest.water-edge",
       "category": "water",
-      "locationCm": [450, -2400, 0],
+      "locationCm": [450, -2400, 40],
       "discoveryRadiusCm": 350,
-      "discoveryId": "discovery.rainforest.water-edge"
+      "discoveryId": "discovery.rainforest.water-edge",
+      "requiresInteraction": true,
+      "interactionMode": "observe",
+      "interactionRadiusCm": 600,
+      "focusRadiusCm": 160,
+      "promptKey": "interaction.rainforest.water-edge.observe",
+      "observationId": "observation.rainforest.water-edge"
     }
   ]
 }

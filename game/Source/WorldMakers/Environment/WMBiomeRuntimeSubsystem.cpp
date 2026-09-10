@@ -1,5 +1,7 @@
 #include "Environment/WMBiomeRuntimeSubsystem.h"
 
+#include "Engine/World.h"
+#include "Environment/WMEnvironmentalInteractableActor.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -15,6 +17,17 @@ void UWMBiomeRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     ReloadAndActivatePrototypeBiome();
 }
 
+void UWMBiomeRuntimeSubsystem::Deinitialize()
+{
+    ClearInteractionTargets();
+    BiomeCatalog.Reset();
+    AvailableBiomeIds.Reset();
+    ActiveBiomeId = NAME_None;
+    CurrentZoneId = NAME_None;
+    ExplorationProgress.Reset();
+    Super::Deinitialize();
+}
+
 bool UWMBiomeRuntimeSubsystem::ReloadAndActivatePrototypeBiome()
 {
     return ReloadBiomeCatalog() && ActivateBiome(DefaultPrototypeBiomeId);
@@ -22,6 +35,7 @@ bool UWMBiomeRuntimeSubsystem::ReloadAndActivatePrototypeBiome()
 
 bool UWMBiomeRuntimeSubsystem::ReloadBiomeCatalog()
 {
+    ClearInteractionTargets();
     BiomeCatalog.Reset();
     AvailableBiomeIds.Reset();
     ActiveBiomeId = NAME_None;
@@ -71,6 +85,8 @@ bool UWMBiomeRuntimeSubsystem::ActivateBiome(const FName BiomeId)
     {
         return false;
     }
+
+    ClearInteractionTargets();
     ActiveBiomeId = BiomeId;
     CurrentZoneId = NAME_None;
     return true;
@@ -79,6 +95,12 @@ bool UWMBiomeRuntimeSubsystem::ActivateBiome(const FName BiomeId)
 const FWMBiomeRuntimeDefinition* UWMBiomeRuntimeSubsystem::GetActiveDefinition() const
 {
     return BiomeCatalog.Find(ActiveBiomeId);
+}
+
+const FWMPointOfInterestDefinition* UWMBiomeRuntimeSubsystem::FindPointOfInterest(const FName PointId) const
+{
+    const FWMBiomeRuntimeDefinition* Definition = GetActiveDefinition();
+    return Definition ? Definition->FindPointOfInterest(PointId) : nullptr;
 }
 
 TArray<FName> UWMBiomeRuntimeSubsystem::GetNearbyPointOfInterestIds(const FVector WorldLocation) const
@@ -106,6 +128,11 @@ TArray<FName> UWMBiomeRuntimeSubsystem::ObserveLocation(const FVector WorldLocat
 
     for (const FWMPointOfInterestDefinition& Point : Definition->PointsOfInterest)
     {
+        // M3.2: deliberate POIs require explicit player intent; proximity cannot satisfy observation.
+        if (Point.bRequiresInteraction)
+        {
+            continue;
+        }
         if (!Point.IsWithinDiscoveryRange(WorldLocation, Definition->OriginCm))
         {
             continue;
@@ -122,6 +149,107 @@ TArray<FName> UWMBiomeRuntimeSubsystem::ObserveLocation(const FVector WorldLocat
         return A.ToString() < B.ToString();
     });
     return NewDiscoveryIds;
+}
+
+bool UWMBiomeRuntimeSubsystem::RegisterDeliberateInteraction(
+    const FName PointId,
+    const FVector InteractorLocation,
+    FName& OutObservationId)
+{
+    OutObservationId = NAME_None;
+    const FWMBiomeRuntimeDefinition* Definition = GetActiveDefinition();
+    const FWMPointOfInterestDefinition* Point = Definition ? Definition->FindPointOfInterest(PointId) : nullptr;
+    if (!Definition || !Point || !Point->bRequiresInteraction ||
+        !Point->IsWithinInteractionRange(InteractorLocation, Definition->OriginCm))
+    {
+        return false;
+    }
+
+    OutObservationId = Point->ObservationId;
+    const bool bNewObservation = ExplorationProgress.RegisterObservation(Point->ObservationId);
+    const bool bNewDiscovery = ExplorationProgress.RegisterDiscovery(Point->DiscoveryId);
+
+    if (bNewObservation)
+    {
+        OnObservationRegistered.Broadcast(Point->PointId, Point->ObservationId);
+    }
+    if (bNewDiscovery)
+    {
+        OnDiscoveryRegistered.Broadcast(Point->DiscoveryId);
+    }
+
+    // Re-observation is allowed for learning/play, but stable evidence is never duplicated.
+    return true;
+}
+
+void UWMBiomeRuntimeSubsystem::EnsureInteractionTargets()
+{
+    UWorld* World = GetWorld();
+    const FWMBiomeRuntimeDefinition* Definition = GetActiveDefinition();
+    if (!World || !Definition)
+    {
+        return;
+    }
+
+    InteractionTargets.RemoveAll([](const TWeakObjectPtr<AWMEnvironmentalInteractableActor>& Target)
+    {
+        return !Target.IsValid();
+    });
+
+    for (const FWMPointOfInterestDefinition& Point : Definition->PointsOfInterest)
+    {
+        if (!Point.bRequiresInteraction)
+        {
+            continue;
+        }
+
+        const bool bAlreadyExists = InteractionTargets.ContainsByPredicate([&Point](const TWeakObjectPtr<AWMEnvironmentalInteractableActor>& Target)
+        {
+            return Target.IsValid() && Target->GetInteractionPointId() == Point.PointId;
+        });
+        if (bAlreadyExists)
+        {
+            continue;
+        }
+
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AWMEnvironmentalInteractableActor* Target = World->SpawnActor<AWMEnvironmentalInteractableActor>(
+            AWMEnvironmentalInteractableActor::StaticClass(),
+            Definition->OriginCm + Point.LocationCm,
+            FRotator::ZeroRotator,
+            SpawnParameters);
+        if (Target)
+        {
+            Target->Configure(Point, Definition->OriginCm);
+            InteractionTargets.Add(Target);
+        }
+    }
+}
+
+int32 UWMBiomeRuntimeSubsystem::GetInteractionTargetCount() const
+{
+    int32 Count = 0;
+    for (const TWeakObjectPtr<AWMEnvironmentalInteractableActor>& Target : InteractionTargets)
+    {
+        if (Target.IsValid())
+        {
+            ++Count;
+        }
+    }
+    return Count;
+}
+
+void UWMBiomeRuntimeSubsystem::ClearInteractionTargets()
+{
+    for (const TWeakObjectPtr<AWMEnvironmentalInteractableActor>& Target : InteractionTargets)
+    {
+        if (Target.IsValid())
+        {
+            Target->Destroy();
+        }
+    }
+    InteractionTargets.Reset();
 }
 
 void UWMBiomeRuntimeSubsystem::ResetSessionDiscoveries()

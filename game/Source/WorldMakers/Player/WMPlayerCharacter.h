@@ -11,6 +11,7 @@ class UWMBuildingComponent;
 class UWMBuildHUDWidget;
 class UWMMissionMeasurementComponent;
 class UWMExplorationComponent;
+class UWMInteractionComponent;
 
 UCLASS()
 class WORLDMAKERS_API AWMPlayerCharacter : public ACharacter
@@ -57,6 +58,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Exploration")
     TObjectPtr<UWMExplorationComponent> ExplorationComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
+    TObjectPtr<UWMInteractionComponent> InteractionComponent;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
     float TouchDragDeadZonePx = 24.0f;
 
@@ -83,6 +87,7 @@ private:
     void CaptureMissionMeasurementPoint();
     void ResetMissionMeasurement();
     void CycleMission();
+    void ObserveWorld();
     void EnsureBuildHUD();
 
     void HandleTouchPressed(ETouchIndex::Type FingerIndex, FVector Location);
