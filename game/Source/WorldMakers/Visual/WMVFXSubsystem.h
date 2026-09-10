@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Building/WMBuildWorldStateSubsystem.h"
+#include "Environment/WMEnvironmentStateTypes.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Visual/WMVFXRuntime.h"
 #include "WMVFXSubsystem.generated.h"
@@ -13,6 +15,7 @@ class WORLDMAKERS_API UWMVFXSubsystem : public UWorldSubsystem
     GENERATED_BODY()
 
 public:
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
     bool EmitEvent(const FWMVFXEvent& Event);
@@ -33,11 +36,20 @@ public:
     FName GetLastAcceptedEventId() const { return LastAcceptedEventId; }
 
 private:
+    UFUNCTION()
+    void HandleBuildWorldChanged(int32 Revision);
+
+    UFUNCTION()
+    void HandleEnvironmentStateChanged(FWMEnvironmentStateSnapshot Snapshot);
+
     FWMVFXBudget ResolveBudget() const;
     void PruneExpiredEffects();
 
     FWMVFXRuntime Runtime;
     TArray<TWeakObjectPtr<AWMProceduralVFXActor>> ActiveProxyEffects;
+    TArray<FWMPlacedBuildPieceSnapshot> LastBuildSnapshot;
+    FWMEnvironmentStateSnapshot LastEnvironmentSnapshot;
     FName LastAcceptedEventId = NAME_None;
+    bool bHasEnvironmentSnapshot = false;
     bool bReducedMotion = false;
 };
