@@ -1,69 +1,62 @@
 # World Makers
 
-**World Makers** is a child-safe 3D sandbox for children ages 4–10 focused on building, decorating, exploration, story-driven missions, and embedded learning.
+World Makers is a child-safe 3D open-world building, exploration and learning sandbox built in Unreal Engine. Children can build, destroy, explore and experiment freely, while optional fantastic adventures make authentic learning part of solving world problems rather than a worksheet layered on top of play.
 
-## Product pillars
+## Product principles
 
-- Build, decorate, explore, and complete missions.
-- No combat, item loss, theft mechanics, open stranger chat, loot boxes, or pay-to-win progression.
-- Curriculum by design: mathematics, science, language/narrative, and history/culture.
-- Closed multiplayer by approved invitation only.
-- Parent-facing progress and play-time reporting with privacy-first data separation.
-- Target platforms: Windows, macOS, iPadOS, and Android; consoles later.
+- **High conceptual ceiling, low interaction friction.** Children may encounter advanced ideas through direct experience before formal notation.
+- **Free World and Adventures are equally valid.** Open-ended creativity does not require mission completion.
+- **Learning is structural.** Missions should require observation, construction, experimentation, interpretation, communication or reasoning to progress.
+- **Child safety is architectural.** No third-party advertising in child gameplay, no purchasable premium currency, no paid randomness and no direct child payment flows.
+- **Privacy is minimized by default.** Learning evidence uses stable IDs and bounded numeric state; current thought-runtime evidence does not persist child-authored free text or voice transcripts.
 
-## Repository strategy
+## Learning universe
 
-This project uses a **modular monorepo** so a small cross-functional team can version gameplay, curriculum, parent-facing software, contracts, documentation, and build automation together while keeping deployable boundaries clear.
+First-class learning streams:
 
-```text
-game/                  Unreal Engine 5 project and gameplay code
-apps/parent-portal/    Parent-facing web application boundary
-services/backend/      Provider-neutral backend contracts and privacy boundary
-content/               Reviewable pedagogical, narrative, and biome source data
-docs/                  GDD, TDD, architecture, pedagogy, art, and roadmap
-scripts/               Validation and build helpers
-tests/                 Cross-component test strategy
-```
+1. Mathematics
+2. Geometry
+3. English language
+4. Spanish language
+5. Literature
+6. Biology
+7. Chemistry
+8. Physics
+9. Ecology
+10. Ethics
+11. Philosophy for children
 
-See [`docs/repository-tree.md`](docs/repository-tree.md) for the complete commented tree.
+History and culture operate as cross-curricular context layers.
 
-## Development requirements
+## Current architecture
 
-### Unreal game
+- `Building` — safe creative construction and world-state persistence.
+- `Mission` — legacy and composable mission evaluation, progression and minimized learning evidence.
+- `Environment` — biome, exploration, ecosystem state and ecological building interactions.
+- `Science` — deterministic matter, chemistry, physics, cellular and plant simulation.
+- `Thought` — contextual English/Spanish communication, provenance-aware narrative graphs, ethical reasoning and philosophy argument revision.
+- `Economy` — deterministic gameplay rewards separated from family-owned commerce entitlements.
+- `Performance` / `Visual` — tablet-aware runtime quality and visual-density profiles.
+- `apps/parent-portal` — parent-facing family/privacy/commerce boundary prototype.
 
-- **Unreal Engine 5.8** project association.
-- **Unreal Engine 5.8.2** exact patch for the current certification baseline; see `game/UNREAL_ENGINE_VERSION`.
-- Visual Studio 2022 with Desktop development with C++ and Game development with C++ on Windows.
-- Xcode toolchain on macOS.
-- Git LFS enabled before cloning assets: `git lfs install`.
+The M5 composable mission layer uses reusable gameplay/learning primitives such as `predict-test-revise`, `model-system`, `communicate-in-language`, `interpret-text-world`, `reason-through-dilemma` and `argue-and-revise`. Subject runtimes produce truthful domain outcomes; Mission Runtime attributes those outcomes to learning objectives and progression.
 
-Open `game/WorldMakers.uproject`. If prompted, generate project files and compile the `WorldMakers` editor target.
+## Content pipeline
 
-The M1 prototype is source-hardened but is not runtime-certified until the native UE build/test and authored-map gates in [`docs/prototype-certification.md`](docs/prototype-certification.md) are satisfied.
+Human-reviewable canonical content lives under `content/`. Runtime-staged JSON lives under `game/Content/WorldMakers/`. Repository Quality gates enforce schema/semantic contracts and canonical/runtime parity for staged science and thought catalogs.
 
-### Parent portal
+Key design references:
 
-The repository reserves `apps/parent-portal` for a web implementation. The initial scaffold is framework-light and can be upgraded to Next.js once product/auth requirements are confirmed.
+- `docs/GDD.md`
+- `docs/TDD.md`
+- `docs/roadmap.md`
+- `docs/fantastic-learning-universe.md`
+- `docs/m5-2-composable-mission-runtime.md`
+- `docs/m5-3-science-simulation-core.md`
+- `docs/m5-4-language-literature-thought-runtime.md`
 
-```bash
-cd apps/parent-portal
-npm ci
-npm run lint
-npm test
-```
+## Verification
 
-## Privacy baseline
+GitHub-hosted source CI validates content, policy and source contracts. Native runtime certification is separate: Unreal Engine 5.8.2 on the locked self-hosted environment must compile `WorldMakersEditor` and execute the full `WorldMakers.*` automation namespace. Representative-device evidence is required before claiming tablet certification.
 
-Child personal data must never be committed to this repository. Account identity, verified parental consent, contact details, and other PII belong behind the private identity boundary documented in `services/backend/privacy/README.md`. Gameplay services should use pseudonymous player/profile identifiers wherever possible.
-
-Legal review is required before production launch for COPPA, GDPR-K where applicable, Colombia Law 1581 of 2012 and related regulations, platform-store child-safety requirements, retention policy, and parental-consent flows.
-
-## Branching
-
-`main` is the integration trunk. Use short-lived branches such as `feat/...`, `fix/...`, `art/...`, and `content/...`; open a PR early and merge only after automated checks and the required discipline review.
-
-**Governance requirement:** `main` must be protected against direct pushes and must require the repository quality and Unreal source-validation checks. See `docs/prototype-certification.md` for the current enforcement status.
-
-## License
-
-No open-source license has been selected. See `LICENSE`.
+A green lightweight source check is therefore evidence of source integrity, not a substitute for native/device certification.
