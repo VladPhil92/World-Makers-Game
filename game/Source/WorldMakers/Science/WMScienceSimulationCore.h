@@ -88,6 +88,14 @@ struct WORLDMAKERS_API FWMDissolutionResult
     FName EvidenceEventId;
 };
 
+struct WORLDMAKERS_API FWMFiltrationResult
+{
+    bool bAccepted = false;
+    float RetainedSolidMassG = 0.0f;
+    float DissolvedMassRemainingG = 0.0f;
+    FName EvidenceEventId;
+};
+
 struct WORLDMAKERS_API FWMReactionResult
 {
     bool bAccepted = false;
@@ -117,6 +125,37 @@ struct WORLDMAKERS_API FWMDirectCurrentCircuit
     float ResistanceOhms = 1.0f;
 
     bool Solve(float& OutCurrentAmps, float& OutPowerWatts) const;
+};
+
+struct WORLDMAKERS_API FWMCellEnvironmentInput
+{
+    float NutrientAvailability = 1.0f;
+    float OxygenAvailability = 1.0f;
+    float TemperatureSuitability = 1.0f;
+
+    bool IsSane() const;
+};
+
+struct WORLDMAKERS_API FWMCellStepResult
+{
+    bool bAccepted = false;
+    float EnergyProducedUnits = 0.0f;
+    float WasteProducedUnits = 0.0f;
+    float TransportWorkUnits = 0.0f;
+    FName EvidenceEventId;
+};
+
+/** Normalized cellular-system model: relationships are causal; units are gameplay proxies, not literal ATP/molecule counts. */
+struct WORLDMAKERS_API FWMCellSystemState
+{
+    float MembraneIntegrity = 1.0f;
+    float EnergyAvailability = 0.25f;
+    float TransportEfficiency = 1.0f;
+    float InformationIntegrity = 1.0f;
+    float WasteLoad = 0.0f;
+
+    bool IsSane() const;
+    bool StepMetabolism(const FWMCellEnvironmentInput& Environment, float DeltaHours, FWMCellStepResult& OutResult);
 };
 
 struct WORLDMAKERS_API FWMPlantEnvironmentInput
@@ -164,6 +203,9 @@ struct WORLDMAKERS_API FWMScienceSimulation
         float SoluteMassG,
         float WaterVolumeMl,
         FWMDissolutionResult& OutResult);
+
+    /** Models the conceptual boundary of filtration: undissolved solid is retained; dissolved solute remains in the filtrate. */
+    static bool FilterDissolution(const FWMDissolutionResult& Dissolution, FWMFiltrationResult& OutResult);
 
     static bool ExecuteReaction(
         const FWMScienceSimulationCatalog& Catalog,
