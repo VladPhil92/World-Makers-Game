@@ -115,9 +115,22 @@ Commerce audit records belong to the parent/family trust zone and must not be ex
 
 ## 8. Rendering and performance
 
-Nanite/Lumen are optional high-tier features, not universal assumptions. Establish representative-device budgets for frame time, memory, texture pool, draw calls/material slots, shader complexity, dynamic lights/shadows, skeletal meshes/animation, effects/particles, and world streaming.
+Nanite/Lumen are optional high-tier features, not universal assumptions. Performance is governed by versioned World Makers profiles rather than one universal rendering assumption.
 
-[PLACEHOLDER: target FPS per device class and representative test devices]
+M3.7 source targets:
+
+| Tier | Target | p95 frame time | Screen percentage | Texture pool |
+| --- | ---: | ---: | ---: | ---: |
+| Tablet Low | 30 FPS | 33.34 ms | 70% | 384 MB |
+| Tablet Medium | 30 FPS | 33.34 ms | 85% | 512 MB |
+| Tablet High | 60 FPS | 16.67 ms | 100% | 768 MB |
+| Desktop Reference | 60 FPS | 16.67 ms | 100% | 1024 MB |
+
+The profile catalog also budgets maximum world actors, placed building pieces and active interactables. Rendering tiers control view distance, anti-aliasing, shadows, post-processing, textures, effects, foliage quality/density, grass density and shadow distance through a fixed CVar allowlist owned by code.
+
+The primary runtime fluidity gate is **p95 frame time**. Average frame time is retained for diagnostics but cannot hide intermittent slow frames. Performance capture is local engineering evidence only and contains no child identity, free text, learning responses, commerce or behavioral analytics.
+
+These values are engineering targets, not representative-device pass claims. M3.8 must execute the vertical slice on representative tablets and retain the resulting capture evidence before any tablet tier is called certified.
 
 ## 9. Save/version compatibility
 

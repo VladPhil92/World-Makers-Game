@@ -29,8 +29,8 @@ Current source progression:
 - M3.4 — reactive ecosystem state and visible consequences: source-complete pending native UE certification.
 - M3.5 — spatial ecological building interventions + persistent creative unlocks: source-complete pending native UE certification.
 - M3.6 — child journey UX: source-complete pending native UE certification.
-- M3.7 — tablet performance profiles and capture: next.
-- M3.8 — vertical-slice certification.
+- M3.7 — tablet performance profiles and capture: source-complete pending representative-device evidence.
+- M3.8 — vertical-slice certification: next.
 
 Target outcomes:
 

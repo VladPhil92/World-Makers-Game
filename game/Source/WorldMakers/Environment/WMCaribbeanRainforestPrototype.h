@@ -18,6 +18,10 @@ public:
     AWMCaribbeanRainforestPrototype();
     virtual void OnConstruction(const FTransform& Transform) override;
 
+    /** Rebuild the authored prototype from the current visual profile budget. Safe for performance-tier changes. */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Visual")
+    void RefreshFromVisualProfile();
+
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "World Makers|Visual")
     int32 Seed = 17062026;
 
