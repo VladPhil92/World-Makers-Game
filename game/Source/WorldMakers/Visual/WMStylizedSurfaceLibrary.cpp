@@ -101,9 +101,10 @@ bool UWMStylizedSurfaceLibrary::ApplyLook(UMeshComponent* Mesh, const EWMStylize
     Mesh->SetCustomPrimitiveDataFloat(WMStylizedSurface::EmissiveIndex, Look.EmissiveStrength);
     Mesh->SetCustomPrimitiveDataFloat(WMStylizedSurface::WindIndex, Look.WindResponse);
     Mesh->SetCustomPrimitiveDataFloat(WMStylizedSurface::OpacityIndex, Look.OpacityIntent);
-    Mesh->SetCustomPrimitiveDataFloat(
-        WMStylizedSurface::RoleIndex,
-        static_cast<float>(Role) / static_cast<float>(EWMStylizedSurfaceRole::MagicalAccent));
+
+    const float RoleOrdinal = static_cast<float>(static_cast<uint8>(Role));
+    const float MaxRoleOrdinal = static_cast<float>(static_cast<uint8>(EWMStylizedSurfaceRole::MagicalAccent));
+    Mesh->SetCustomPrimitiveDataFloat(WMStylizedSurface::RoleIndex, MaxRoleOrdinal > 0.0f ? RoleOrdinal / MaxRoleOrdinal : 0.0f);
     return true;
 }
 
