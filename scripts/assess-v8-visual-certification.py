@@ -12,6 +12,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MATRIX = ROOT / "content/visual/certification/visual-certification-v8.json"
 REQUIRED_TABLET_PLATFORMS = {"iPadOS", "Android"}
+REQUIRED_PROFILES = {
+    "performance.tablet.low",
+    "performance.tablet.medium",
+    "performance.tablet.high",
+}
 MIN_FRAME_SAMPLES = 1800
 
 
@@ -31,17 +36,24 @@ def load_matrix() -> dict:
     return json.loads(MATRIX.read_text(encoding="utf-8"))
 
 
-def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, list[str], str | None]:
+def validate_evidence_file(
+    path: Path,
+    root: Path,
+    matrix: dict,
+    expected_commit: str | None = None,
+) -> tuple[bool, list[str], str | None, str | None, str | None]:
     reasons: list[str] = []
     try:
         evidence = json.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:
-        return False, [f"{path.name}: invalid JSON: {exc}"], None
+        return False, [f"{path.name}: invalid JSON: {exc}"], None, None, None
 
     platform = evidence.get("platform")
     profile_id = evidence.get("profileId")
+    commit = evidence.get("buildCommit")
     budgets = {item["profileId"]: item for item in matrix["budgets"]}
     budget = budgets.get(profile_id)
+
     if evidence.get("schemaVersion") != 1:
         reasons.append(f"{path.name}: schemaVersion must be 1")
     if evidence.get("status") != "passed":
@@ -50,12 +62,13 @@ def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, 
         reasons.append(f"{path.name}: unsupported platform")
     if evidence.get("unrealVersion") != matrix.get("unrealVersion"):
         reasons.append(f"{path.name}: Unreal version mismatch")
-    commit = evidence.get("buildCommit", "")
     if not isinstance(commit, str) or len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit):
         reasons.append(f"{path.name}: buildCommit must be a full lowercase SHA")
-    if budget is None:
+    elif expected_commit and commit != expected_commit:
+        reasons.append(f"{path.name}: buildCommit does not match the certification commit")
+    if profile_id not in REQUIRED_PROFILES or budget is None:
         reasons.append(f"{path.name}: unknown performance profile")
-        return False, reasons, platform
+        return False, reasons, platform, profile_id, commit
 
     for key in ("captureFile", "screenshotFile"):
         rel = evidence.get(key)
@@ -81,7 +94,7 @@ def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, 
     scenarios = evidence.get("scenarios")
     if not isinstance(scenarios, list):
         reasons.append(f"{path.name}: scenarios missing")
-        return False, reasons, platform
+        return False, reasons, platform, profile_id, commit
     by_id = {item.get("id"): item for item in scenarios if isinstance(item, dict)}
     required = set(matrix["requiredScenarios"])
     if set(by_id) != required or len(scenarios) != len(required):
@@ -127,10 +140,10 @@ def validate_evidence_file(path: Path, root: Path, matrix: dict) -> tuple[bool, 
         if scenario_id == "visual.science.vfx-burst" and int(scenario.get("peakActiveVfx", 0)) < 1:
             reasons.append(f"{path.name}: visual.science.vfx-burst must measure at least one active VFX")
 
-    return not reasons, reasons, platform
+    return not reasons, reasons, platform, profile_id, commit
 
 
-def assess(evidence_dir: Path) -> dict:
+def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
     matrix = load_matrix()
     result = {
         "schemaVersion": 1,
@@ -138,10 +151,18 @@ def assess(evidence_dir: Path) -> dict:
         "certified": False,
         "evidenceIntegrity": False,
         "requiredPlatforms": sorted(REQUIRED_TABLET_PLATFORMS),
+        "requiredProfiles": sorted(REQUIRED_PROFILES),
         "platformsPresent": [],
+        "profilesPresent": [],
+        "buildCommitsPresent": [],
         "evidenceFiles": [],
         "reasons": [],
     }
+    if expected_commit is not None:
+        if len(expected_commit) != 40 or any(c not in "0123456789abcdef" for c in expected_commit):
+            fail_reason(result, "Expected commit must be a full lowercase SHA")
+            return result
+
     if not evidence_dir.is_dir():
         fail_reason(result, "Evidence directory does not exist")
         return result
@@ -152,50 +173,70 @@ def assess(evidence_dir: Path) -> dict:
         return result
 
     platforms: set[str] = set()
+    profiles: set[str] = set()
+    commits: set[str] = set()
     all_valid = True
     for path in files:
-        valid, reasons, platform = validate_evidence_file(path, evidence_dir, matrix)
+        valid, reasons, platform, profile_id, commit = validate_evidence_file(path, evidence_dir, matrix, expected_commit)
         result["evidenceFiles"].append({"file": path.name, "valid": valid})
         if platform in REQUIRED_TABLET_PLATFORMS:
             platforms.add(platform)
+        if profile_id in REQUIRED_PROFILES:
+            profiles.add(profile_id)
+        if isinstance(commit, str) and len(commit) == 40:
+            commits.add(commit)
         if not valid:
             all_valid = False
             result["reasons"].extend(reasons)
 
     result["platformsPresent"] = sorted(platforms)
+    result["profilesPresent"] = sorted(profiles)
+    result["buildCommitsPresent"] = sorted(commits)
+
     missing_platforms = REQUIRED_TABLET_PLATFORMS - platforms
     if missing_platforms:
         all_valid = False
         fail_reason(result, "Missing representative platform evidence: " + ", ".join(sorted(missing_platforms)))
 
+    missing_profiles = REQUIRED_PROFILES - profiles
+    if missing_profiles:
+        all_valid = False
+        fail_reason(result, "Missing tablet profile evidence: " + ", ".join(sorted(missing_profiles)))
+
+    if len(commits) != 1:
+        all_valid = False
+        fail_reason(result, "All V8 evidence packages must reference one identical build commit")
+
     result["evidenceIntegrity"] = all_valid
-    certified = all_valid and not missing_platforms
+    certified = all_valid and not missing_platforms and not missing_profiles and len(commits) == 1
     result["certified"] = certified
     result["status"] = "CERTIFIED" if certified else "BLOCKED"
     return result
 
 
-def write_synthetic_evidence(root: Path, platform: str, profile_id: str) -> None:
+def write_synthetic_evidence(root: Path, platform: str, profile_id: str) -> Path:
     matrix = load_matrix()
     budget = next(item for item in matrix["budgets"] if item["profileId"] == profile_id)
-    capture_rel = f"captures/{platform.lower()}.csv"
-    screenshot_rel = f"screenshots/{platform.lower()}.png"
+    tier = profile_id.rsplit(".", 1)[-1]
+    stem = f"{platform.lower()}-{tier}"
+    capture_rel = f"captures/{stem}.csv"
+    screenshot_rel = f"screenshots/{stem}.png"
     capture = root / capture_rel
     screenshot = root / screenshot_rel
     capture.parent.mkdir(parents=True, exist_ok=True)
     screenshot.parent.mkdir(parents=True, exist_ok=True)
-    capture.write_bytes(b"synthetic-v8-self-test-capture")
-    screenshot.write_bytes(b"synthetic-v8-self-test-screenshot")
+    capture.write_bytes(b"synthetic-v8-self-test-capture-" + stem.encode("utf-8"))
+    screenshot.write_bytes(b"synthetic-v8-self-test-screenshot-" + stem.encode("utf-8"))
     scenario = {
         "frameSamples": MIN_FRAME_SAMPLES,
-        "averageFrameTimeMs": min(10.0, budget["maxP95FrameTimeMs"]),
+        "averageFrameTimeMs": min(10.0, budget["maxP95FrameTimeMs"] * 0.7),
         "p95FrameTimeMs": budget["maxP95FrameTimeMs"] * 0.8,
         "gameThreadP95Ms": budget["maxGameThreadP95Ms"] * 0.8,
         "renderThreadP95Ms": budget["maxRenderThreadP95Ms"] * 0.8,
         "gpuP95Ms": budget["maxGpuP95Ms"] * 0.8,
-        "peakDrawCalls": int(budget["maxDrawCalls"] * 0.8),
-        "peakVisibleTriangles": int(budget["maxVisibleTriangles"] * 0.8),
-        "peakResidentTextureMB": int(budget["maxResidentTextureMB"] * 0.8),
+        "peakDrawCalls": max(1, int(budget["maxDrawCalls"] * 0.8)),
+        "peakVisibleTriangles": max(1, int(budget["maxVisibleTriangles"] * 0.8)),
+        "peakResidentTextureMB": max(1, int(budget["maxResidentTextureMB"] * 0.8)),
         "peakActiveVfx": max(1, int(budget["maxActiveVfx"] * 0.8)),
     }
     payload = {
@@ -221,30 +262,44 @@ def write_synthetic_evidence(root: Path, platform: str, profile_id: str) -> None
         },
         "scenarios": [{"id": sid, **scenario} for sid in matrix["requiredScenarios"]],
     }
-    (root / f"{platform.lower()}.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    evidence_path = root / f"{stem}.json"
+    evidence_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return evidence_path
 
 
 def self_test() -> int:
+    expected = "1" * 40
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp)
-        blocked = assess(root)
-        if blocked["status"] != "BLOCKED":
+        if assess(root, expected)["status"] != "BLOCKED":
             raise SystemExit("Empty evidence directory must fail closed")
+
         write_synthetic_evidence(root, "Android", "performance.tablet.low")
-        one_platform = assess(root)
-        if one_platform["status"] != "BLOCKED":
-            raise SystemExit("One platform must not certify")
+        if assess(root, expected)["status"] != "BLOCKED":
+            raise SystemExit("One platform/profile must not certify")
+
+        write_synthetic_evidence(root, "Android", "performance.tablet.medium")
+        if assess(root, expected)["status"] != "BLOCKED":
+            raise SystemExit("Missing iPadOS/high evidence must not certify")
+
         write_synthetic_evidence(root, "iPadOS", "performance.tablet.high")
-        certified = assess(root)
-        if certified["status"] != "CERTIFIED":
-            raise SystemExit("Synthetic two-platform compliant evidence should certify in self-test")
-        android = json.loads((root / "android.json").read_text(encoding="utf-8"))
-        android["scenarios"][0]["peakDrawCalls"] = 999999
-        (root / "android.json").write_text(json.dumps(android), encoding="utf-8")
-        over_budget = assess(root)
-        if over_budget["status"] != "BLOCKED":
+        if assess(root, expected)["status"] != "CERTIFIED":
+            raise SystemExit("Dual-platform all-tier compliant evidence should certify in self-test")
+
+        android_low = root / "android-low.json"
+        payload = json.loads(android_low.read_text(encoding="utf-8"))
+        payload["scenarios"][0]["peakDrawCalls"] = 999999
+        android_low.write_text(json.dumps(payload), encoding="utf-8")
+        if assess(root, expected)["status"] != "BLOCKED":
             raise SystemExit("Any over-budget metric must block certification")
-    print("V8 assessor self-test passed: fail-closed, dual-platform, integrity and budget rules verified.")
+
+        payload["scenarios"][0]["peakDrawCalls"] = 1
+        payload["buildCommit"] = "2" * 40
+        android_low.write_text(json.dumps(payload), encoding="utf-8")
+        if assess(root, expected)["status"] != "BLOCKED":
+            raise SystemExit("Evidence from another build commit must block certification")
+
+    print("V8 assessor self-test passed: fail-closed, dual-platform, all-tier, same-build, integrity and budget rules verified.")
     return 0
 
 
@@ -252,6 +307,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--evidence-dir", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--expected-commit")
     parser.add_argument("--require-certified", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
@@ -261,7 +317,7 @@ def main() -> int:
     if not args.evidence_dir:
         parser.error("--evidence-dir is required unless --self-test is used")
 
-    result = assess(args.evidence_dir)
+    result = assess(args.evidence_dir, args.expected_commit)
     rendered = json.dumps(result, indent=2, sort_keys=True)
     print(rendered)
     if args.output:
