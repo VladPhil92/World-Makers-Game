@@ -64,4 +64,14 @@ struct WORLDMAKERS_API FWMReferenceVisualPolishRuntime
     static FName FirstPersonModeToId(EWMFirstPersonVisualMode Mode);
     static FName MotionPersonalityToId(EWMExplorerMotionPersonality Personality);
     static bool IsContextPanelAllowed(EWMFirstPersonVisualMode Mode, FName PanelId);
+
+    static EWMFirstPersonVisualMode ResolveModeForSemanticEvent(const FName EventId)
+    {
+        const FString Id = EventId.ToString();
+        if (Id.StartsWith(TEXT("gameplay.build."))) return EWMFirstPersonVisualMode::Build;
+        if (Id == TEXT("mission.measure.reveal")) return EWMFirstPersonVisualMode::Measure;
+        if (Id == TEXT("world.observe.reveal")) return EWMFirstPersonVisualMode::Observe;
+        if (Id.StartsWith(TEXT("science."))) return EWMFirstPersonVisualMode::Scan;
+        return EWMFirstPersonVisualMode::Explore;
+    }
 };
