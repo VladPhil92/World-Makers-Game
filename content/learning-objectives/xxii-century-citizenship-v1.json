@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "objectiveSetId": "learning.xxii-century-citizenship-v1",
+  "ageBands": ["9-10", "11-12", "13-15"],
+  "progressionPrinciple": "experience-to-concept-to-formalization",
+  "objectives": [
+    {"objectiveId":"xxii.living-world.singularity","domainId":"domain.living-world","verb":"distinguish","concept":"different-living-beings-have-different-needs-capacities-and-vulnerabilities","evidencePrimitiveIds":["observe-and-classify","model-system"]},
+    {"objectiveId":"xxii.living-world.interdependence","domainId":"domain.living-world","verb":"model","concept":"changes-to-one-population-or-habitat-can-propagate-through-an-ecosystem","evidencePrimitiveIds":["model-system","predict-test-revise"]},
+    {"objectiveId":"xxii.commons.water","domainId":"domain.planetary-commons","verb":"trace","concept":"water-decisions-have-upstream-downstream-human-and-nonhuman-effects","evidencePrimitiveIds":["sequence-and-infer","reason-through-dilemma"]},
+    {"objectiveId":"xxii.commons.air-soil","domainId":"domain.planetary-commons","verb":"connect","concept":"air-soil-water-and-biodiversity-are-coupled-systems","evidencePrimitiveIds":["model-system","predict-test-revise"]},
+    {"objectiveId":"xxii.energy.balance","domainId":"domain.technology-energy","verb":"balance","concept":"generation-demand-storage-losses-and-resilience","evidencePrimitiveIds":["model-system","construct-to-constraint"]},
+    {"objectiveId":"xxii.technology.lifecycle","domainId":"domain.technology-energy","verb":"compare","concept":"technologies-have-material-land-water-energy-and-end-of-life-costs","evidencePrimitiveIds":["sequence-and-infer","reason-through-dilemma"]},
+    {"objectiveId":"xxii.ai.authority","domainId":"domain.responsible-intelligence","verb":"design","concept":"automated-systems-need-bounded-authority-human-accountability-auditability-and-fail-safe-controls","evidencePrimitiveIds":["construct-to-constraint","reason-through-dilemma"]},
+    {"objectiveId":"xxii.ai.data-bias","domainId":"domain.responsible-intelligence","verb":"evaluate","concept":"data-and-objectives-can-produce-unequal-or-unsafe-automated-decisions","evidencePrimitiveIds":["predict-test-revise","argue-and-revise"]},
+    {"objectiveId":"xxii.sovereignty.power","domainId":"domain.ethics-sovereignty-coexistence","verb":"identify","concept":"power-to-decide-does-not-by-itself-establish-legitimacy-to-decide-for-others","evidencePrimitiveIds":["reason-through-dilemma","argue-and-revise"]},
+    {"objectiveId":"xxii.hospitality.coexistence","domainId":"domain.ethics-sovereignty-coexistence","verb":"revise","concept":"responsible-coexistence-requires-attending-to-difference-affected-lives-tradeoffs-and-consequences","evidencePrimitiveIds":["reason-through-dilemma","argue-and-revise"]}
+  ],
+  "assessmentPolicy": {
+    "memorizationAloneSufficient": false,
+    "ideologicalAgreementRequired": false,
+    "structuredReasoningRequired": true,
+    "consequenceFeedbackRequired": true,
+    "revisionOpportunityRequired": true
+  }
+}

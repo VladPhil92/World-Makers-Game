@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "frameworkId": "citizenship.xxii-century.interspecies-v1",
+  "normative": true,
+  "prototypeOnly": true,
+  "privacyModel": "stable-ids-no-child-free-text",
+  "purpose": "educate-and-form-citizens-capable-of-inhabiting-the-xxii-century-with-ecological-technological-and-interspecies-responsibility",
+  "designThesis": "every-action-enters-a-web-of-relations",
+  "sourceGrounding": [
+    {
+      "sourceId": "source.valderrama.en-torno-al-animal",
+      "sourceClass": "primary-authorial-philosophy",
+      "title": "En torno al animal: una pregunta por la soberania humana",
+      "conceptIds": [
+        "concept.sovereignty-of-hospitality",
+        "concept.sovereignty-of-domination",
+        "concept.radical-singularity",
+        "concept.living-together",
+        "concept.responsibility-beyond-legal-minimum",
+        "concept.ecologically-sustainable-community"
+      ]
+    },
+    {
+      "sourceId": "source.valderrama.doctoral-extension-v2",
+      "sourceClass": "authorial-research-extension",
+      "title": "Soberania de la Hospitalidad: animalidad, inteligencia artificial y los limites de lo humano politico",
+      "conceptIds": [
+        "concept.ai-as-second-crisis-of-human-exception",
+        "concept.distributed-decision-and-responsibility",
+        "concept.computational-sovereignty",
+        "concept.more-than-human-community"
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "domainId": "domain.living-world",
+      "name": "Living World",
+      "coreQuestions": ["who-lives-here", "what-relations-sustain-them", "whose-flourishing-is-affected"],
+      "requiredConceptIds": ["concept.radical-singularity", "concept.habitat", "concept.interdependence", "concept.nonhuman-agency"]
+    },
+    {
+      "domainId": "domain.planetary-commons",
+      "name": "Planetary Commons",
+      "coreQuestions": ["what-happens-to-water", "what-happens-to-air", "what-happens-to-soil", "what-happens-downstream"],
+      "requiredConceptIds": ["concept.water-cycle", "concept.air-quality", "concept.soil-health", "concept.ecosystem-connectivity"]
+    },
+    {
+      "domainId": "domain.technology-energy",
+      "name": "Technology & Energy",
+      "coreQuestions": ["what-problem-does-it-solve", "what-materials-does-it-require", "what-does-it-displace", "how-resilient-is-it"],
+      "requiredConceptIds": ["concept.energy-balance", "concept.storage", "concept.lifecycle-impact", "concept.resilience", "concept.externality"]
+    },
+    {
+      "domainId": "domain.responsible-intelligence",
+      "name": "Responsible Intelligence",
+      "coreQuestions": ["who-authorized-the-system", "what-data-shaped-it", "who-can-audit-it", "who-is-responsible-if-it-fails"],
+      "requiredConceptIds": ["concept.bounded-authority", "concept.human-accountability", "concept.auditability", "concept.privacy-and-fairness", "concept.fail-safe", "concept.compute-ecological-cost"]
+    },
+    {
+      "domainId": "domain.ethics-sovereignty-coexistence",
+      "name": "Ethics, Sovereignty & Coexistence",
+      "coreQuestions": ["who-has-power-to-decide", "who-is-not-represented", "what-difference-is-being-erased", "can-the-decision-be-revised"],
+      "requiredConceptIds": ["concept.sovereignty-of-hospitality", "concept.power-asymmetry", "concept.radical-alterity", "concept.shared-world", "concept.revisability"]
+    }
+  ],
+  "citizenshipCompetencies": [
+    "competency.systems-interdependence",
+    "competency.interspecies-consideration",
+    "competency.commons-stewardship",
+    "competency.lifecycle-technology-reasoning",
+    "competency.energy-systems-literacy",
+    "competency.ai-governance-literacy",
+    "competency.power-and-sovereignty-analysis",
+    "competency.ethical-deliberation",
+    "competency.uncertainty-reasoning",
+    "competency.revision-after-consequences"
+  ],
+  "simulationHooks": [
+    "water-quality",
+    "air-quality",
+    "soil-health",
+    "biodiversity",
+    "habitat-connectivity",
+    "animal-stress",
+    "energy-reliability",
+    "material-demand",
+    "compute-energy-demand",
+    "human-wellbeing",
+    "civic-legitimacy"
+  ],
+  "responsibleAIGovernance": {
+    "humanResponsibilityRequired": true,
+    "boundedAuthorityRequired": true,
+    "auditabilityRequired": true,
+    "privacyAndFairnessRequired": true,
+    "failSafeRequired": true,
+    "ecologicalCostReviewRequired": true,
+    "machineMoralStatusAssumed": false,
+    "machineMoralStatusDenied": false,
+    "designRule": "do-not-resolve-metaphysical-status-by-game-score"
+  },
+  "pedagogyPolicy": {
+    "doctrinalComplianceScoring": false,
+    "evaluateReasoningNotConclusion": true,
+    "requireMultipleDefensibleOptions": true,
+    "noMoralRewardForAgreement": true,
+    "revisionCanImproveEvidence": true,
+    "minimumReasonIds": 2,
+    "minimumHumanPerspectives": 1,
+    "minimumNonHumanPerspectives": 1,
+    "minimumCommons": 1,
+    "minimumTradeoffs": 1,
+    "minimumUncertainties": 1,
+    "minimumRevisions": 1
+  },
+  "worldRule": {
+    "ruleId": "rule.every-action-enters-web-of-relations",
+    "causalChainExamples": [
+      ["construction", "territory", "water", "vegetation", "fauna"],
+      ["energy", "emissions", "air", "climate", "living-world"],
+      ["automation", "decision-authority", "accountability", "legitimacy"],
+      ["resource-extraction", "materials", "habitat", "biodiversity", "community"]
+    ]
+  }
+}
