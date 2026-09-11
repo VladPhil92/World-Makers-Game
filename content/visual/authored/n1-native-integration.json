@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "phase": "N1",
+  "name": "Native Authored Integration Candidate",
+  "unrealVersion": "5.8.2",
+  "activationPolicy": "all-or-nothing",
+  "automaticRegistryMutation": false,
+  "required": {
+    "p1RegistryAssets": 16,
+    "p2RainforestAssets": 9,
+    "p3CharacterModules": 8,
+    "p4AnimationAssets": 17,
+    "p4LevelSequences": 2,
+    "p5VfxAssets": 17,
+    "p5PresentationAssets": 7
+  },
+  "inputs": {
+    "p1Registry": "content/visual/authored/authored-assets-p1.json",
+    "p2NativeReport": "artifacts/n1/reports/p2-rainforest-import-report.json",
+    "p3NativeReport": "artifacts/n1/reports/p3-character-import-report.json",
+    "p4NativeReport": "artifacts/n1/reports/p4-native-report.json",
+    "p5NativeInventory": "artifacts/n1/reports/p5-native-inventory.json"
+  },
+  "outputs": {
+    "readinessReport": "artifacts/n1/n1-native-integration-readiness.json",
+    "activationCandidateManifest": "artifacts/n1/authored-assets-p1.activation-candidate.json"
+  },
+  "candidateRules": {
+    "sameBuildCommit": true,
+    "allP2ImportsPass": true,
+    "allP3ImportsPass": true,
+    "allP4AnimationImportsPass": true,
+    "allP4SequenceContainersPresent": true,
+    "allP5RegistryAssetsExist": true,
+    "allP5AnimationsExist": true,
+    "allP5VfxExist": true,
+    "allP5PresentationAssetsExist": true,
+    "candidateMayOnlySetAuthoredPresentTrue": true,
+    "candidateMustPreserveEveryOtherP1Field": true,
+    "humanReviewRequiredBeforeApplyingCandidate": true
+  },
+  "statusValues": ["BLOCKED", "ACTIVATION_CANDIDATE"]
+}
