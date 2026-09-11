@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -40,7 +41,15 @@ def arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fbx-dir", required=True)
     parser.add_argument("--report", required=True)
+    parser.add_argument("--commit-sha", default="")
     return parser.parse_args(argv)
+
+
+def normalized_commit(value: str) -> str:
+    value = value.strip().lower()
+    if value and not re.fullmatch(r"[0-9a-f]{40}", value):
+        raise ValueError("--commit-sha must be a full 40-character Git commit SHA")
+    return value
 
 
 def import_base(filename: Path, destination_path: str, destination_name: str, skeletal: bool, skeleton=None):
@@ -119,6 +128,7 @@ def main():
     report = {
         "schemaVersion": 1,
         "status": "imported-pending-human-review",
+        "commitSha": normalized_commit(args.commit_sha),
         "assets": {},
         "animations": {},
         "humanReviewApproved": False,

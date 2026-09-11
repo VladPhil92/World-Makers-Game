@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "activationId": "visual.first-person-native-activation.v1",
+  "status": "blocked",
+  "activated": false,
+  "targetCommitSha": "",
+  "nativeImportReportSha256": "",
+  "reviewEvidenceSha256": "",
+  "activationCandidateSha256": "",
+  "allFiveAssetsApproved": false,
+  "allNineAnimationsApproved": false,
+  "humanReviewApproved": false,
+  "deviceReviewApproved": false
+}

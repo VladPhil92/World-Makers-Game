@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "visual.first-person-native-review-evidence.v1",
+  "commitSha": "0000000000000000000000000000000000000000",
+  "nativeImportReportSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "captures": [
+    {"scenario": "explore-tool-raise-lower", "path": "captures/explore.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"scenario": "scan-anticipate-hold-settle", "path": "captures/scan.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"scenario": "build-point-confirm", "path": "captures/build.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"scenario": "measure-focus", "path": "captures/measure.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"scenario": "observe-focus", "path": "captures/observe.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"scenario": "reduced-motion-pass", "path": "captures/reduced-motion.png", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+  ],
+  "metrics": {
+    "maxHandToolGapCm": 0.0,
+    "maxToolPenetrationCm": 0.0,
+    "maxElbowStretchRatio": 1.0,
+    "maxWristTwistDegrees": 0.0,
+    "nearPlaneClipFrames": 0,
+    "reticleObstructionFrames": 0,
+    "maxToolScreenFraction": 0.0,
+    "materialSlotsArms": 1,
+    "materialSlotsScanner": 1,
+    "materialSlotsBuildTool": 1,
+    "materialSlotsMeasureTool": 1,
+    "materialSlotsWrist": 1
+  },
+  "checks": {
+    "automationTestsPassed": false,
+    "cameraComfortApproved": false,
+    "reducedMotionApproved": false,
+    "toolContactApproved": false,
+    "deformationApproved": false,
+    "humanReviewApproved": false,
+    "deviceReviewApproved": false
+  }
+}

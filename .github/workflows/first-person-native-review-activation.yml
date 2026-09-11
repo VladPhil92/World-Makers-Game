@@ -1,0 +1,69 @@
+name: First-Person Native Review Activation
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_commit:
+        description: Full 40-character commit SHA to rebuild and review
+        required: true
+        type: string
+      review_evidence_path:
+        description: Absolute or runner-accessible path to native-review-evidence.json and its captures
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  native-review-activation:
+    runs-on: [self-hosted, Windows, X64, Unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_commit }}
+          clean: true
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate source-authored pack
+        shell: pwsh
+        run: python scripts/validate-first-person-authored-pack.py
+      - name: Generate deterministic first-person source bundle
+        shell: pwsh
+        run: python scripts/generate-first-person-authored-source.py --output Build/FirstPersonAuthored/first-person-authored-source-v1.json
+      - name: Export authored FBX set with Blender
+        shell: pwsh
+        run: |
+          if (-not $env:BLENDER_EXE) { throw "BLENDER_EXE is required" }
+          & $env:BLENDER_EXE --background --python scripts/blender-build-first-person-authored.py -- --source Build/FirstPersonAuthored/first-person-authored-source-v1.json --output-dir Build/FirstPersonAuthored/FBX
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Import assets and animations into Unreal for exact commit
+        shell: pwsh
+        run: |
+          if (-not $env:UE_EDITOR_CMD) { throw "UE_EDITOR_CMD is required" }
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -ExecutePythonScript="scripts/unreal-import-first-person-authored.py -- --fbx-dir Build/FirstPersonAuthored/FBX --report Build/FirstPersonAuthored/native-import-report.json --commit-sha ${{ inputs.target_commit }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run first-person visual automation under review takeover
+        shell: pwsh
+        run: |
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -WMEnableFirstPersonAuthored -WMBuildCommit=${{ inputs.target_commit }} -ExecCmds="Automation RunTests WorldMakers.Visual.FirstPerson;Quit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Assess human and device review evidence
+        shell: pwsh
+        run: |
+          python scripts/assess-first-person-native-review.py --target-commit ${{ inputs.target_commit }} --native-report Build/FirstPersonAuthored/native-import-report.json --review-evidence "${{ inputs.review_evidence_path }}" --output Build/FirstPersonAuthored/first-person-native-activation-candidate-v1.json
+      - name: Prepare activation manifests without mutating source checkout
+        shell: pwsh
+        run: |
+          python scripts/prepare-first-person-native-activation.py --candidate Build/FirstPersonAuthored/first-person-native-activation-candidate-v1.json --output-dir Build/FirstPersonAuthored/ActivationPrepared
+      - name: Upload review and activation candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-person-native-activation-${{ inputs.target_commit }}
+          if-no-files-found: error
+          path: |
+            Build/FirstPersonAuthored/native-import-report.json
+            Build/FirstPersonAuthored/first-person-native-activation-candidate-v1.json
+            Build/FirstPersonAuthored/ActivationPrepared/**
