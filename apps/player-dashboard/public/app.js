@@ -31,6 +31,28 @@ function toast(message) {
   window.setTimeout(() => target.classList.remove('is-visible'), 2600);
 }
 
+function setProfileRevision(revision, updatedAt) {
+  if (!Number.isInteger(revision)) return;
+  state.dashboard.player.profileRevision = revision;
+  state.dashboard.profile.revision = revision;
+  if (updatedAt) {
+    state.dashboard.player.profileUpdatedAt = updatedAt;
+    state.dashboard.profile.updatedAt = updatedAt;
+  }
+  const sync = $('#profile-sync-status');
+  if (sync) sync.textContent = `Sincronizado · r${revision}`;
+}
+
+async function recoverConflict() {
+  try {
+    state.dashboard = await api('/api/profile');
+    renderAll();
+    toast('Tu perfil cambió en otra sesión. Sincronizamos la versión más reciente.');
+  } catch {
+    toast('No fue posible resincronizar tu perfil.');
+  }
+}
+
 function titleForView(view) {
   return ({ home: 'Inicio', avatar: 'Mi personaje', modes: 'Modos de juego', worlds: 'Mis mundos', store: 'Store' })[view] ?? 'Player Hub';
 }
@@ -181,12 +203,13 @@ function renderStore() {
 
 function renderProgress() {
   const progress = state.dashboard.player.progress.currentAdventure;
-  const mission = state.dashboard.catalog.missions.find((item) => item.id === progress.missionId);
-  const world = state.dashboard.catalog.worlds.find((item) => item.id === progress.worldId);
-  $('#continue-title').textContent = mission?.name ?? 'Tu última aventura';
+  const mission = progress ? state.dashboard.catalog.missions.find((item) => item.id === progress.missionId) : null;
+  const world = progress ? state.dashboard.catalog.worlds.find((item) => item.id === progress.worldId) : null;
+  $('#continue-title').textContent = mission?.name ?? 'Tu próxima aventura';
   $('#continue-meta').textContent = world?.name ?? 'World Makers';
-  $('#continue-progress').style.width = `${progress.progressPercent}%`;
-  $('#continue-percent').textContent = `${progress.progressPercent}%`;
+  const percent = progress?.progressPercent ?? 0;
+  $('#continue-progress').style.width = `${percent}%`;
+  $('#continue-percent').textContent = `${percent}%`;
 }
 
 function renderLaunch() {
@@ -194,12 +217,13 @@ function renderLaunch() {
   const world = currentWorld();
   $('#launch-summary').textContent = `${mode?.name ?? 'Modo'} · ${world?.name ?? 'Mundo'}`;
   const ready = state.dashboard.launch.ready;
-  $('#launch-readiness').textContent = ready ? 'Contexto seguro listo para Unreal.' : 'El servidor de lanzamiento todavía no tiene firma configurada.';
+  $('#launch-readiness').textContent = ready ? `Perfil r${state.dashboard.player.profileRevision} confirmado · contexto seguro listo.` : 'El servidor de lanzamiento todavía no tiene firma configurada.';
   $('#play-button').classList.toggle('is-not-ready', !ready);
 }
 
 function renderAll() {
   $('#player-name').textContent = state.dashboard.player.displayName;
+  setProfileRevision(state.dashboard.player.profileRevision, state.dashboard.player.profileUpdatedAt);
   renderAvatarPreview();
   renderAvatarControls();
   renderModes();
@@ -210,8 +234,12 @@ function renderAll() {
 }
 
 async function persistSelection(selection) {
-  const payload = await api('/api/selection', { method: 'PATCH', body: JSON.stringify({ selection }) });
+  const payload = await api('/api/selection', {
+    method: 'PATCH',
+    body: JSON.stringify({ selection, profileRevision: state.dashboard.player.profileRevision }),
+  });
   state.dashboard.player.selection = payload.selection;
+  setProfileRevision(payload.profileRevision, payload.profileUpdatedAt);
   renderModes();
   renderWorlds();
   renderLaunch();
@@ -227,7 +255,10 @@ async function selectMode(modeId) {
   try {
     await persistSelection({ modeId, worldId: world.id, missionId });
     toast(`${mode.name} seleccionado.`);
-  } catch { toast('No se pudo cambiar el modo.'); }
+  } catch (error) {
+    if (error.code === 'profile_conflict') return recoverConflict();
+    toast('No se pudo cambiar el modo.');
+  }
 }
 
 async function selectWorld(worldId) {
@@ -237,7 +268,10 @@ async function selectWorld(worldId) {
   try {
     await persistSelection({ modeId, worldId, missionId });
     toast('Mundo seleccionado.');
-  } catch { toast('Ese mundo no está disponible para el modo actual.'); }
+  } catch (error) {
+    if (error.code === 'profile_conflict') return recoverConflict();
+    toast('Ese mundo no está disponible para el modo actual.');
+  }
 }
 
 async function selectMission(missionId) {
@@ -245,7 +279,10 @@ async function selectMission(missionId) {
   try {
     await persistSelection(selection);
     toast('Aventura preparada.');
-  } catch { toast('No se pudo preparar esa aventura.'); }
+  } catch (error) {
+    if (error.code === 'profile_conflict') return recoverConflict();
+    toast('No se pudo preparar esa aventura.');
+  }
 }
 
 async function saveCosmetic(slot, value) {
@@ -256,12 +293,14 @@ async function saveCosmetic(slot, value) {
   try {
     const payload = await api('/api/avatar/loadout', {
       method: 'PATCH',
-      body: JSON.stringify({ loadout: state.dashboard.player.loadout }),
+      body: JSON.stringify({ loadout: state.dashboard.player.loadout, profileRevision: state.dashboard.player.profileRevision }),
     });
     state.dashboard.player.loadout = payload.loadout;
-    $('#avatar-save-status').textContent = 'Guardado';
-  } catch {
+    setProfileRevision(payload.profileRevision, payload.profileUpdatedAt);
+    $('#avatar-save-status').textContent = 'Guardado y sincronizado';
+  } catch (error) {
     state.dashboard.player.loadout[slot] = previous;
+    if (error.code === 'profile_conflict') return recoverConflict();
     renderAvatarControls();
     renderAvatarPreview();
     $('#avatar-save-status').textContent = 'No se pudo guardar';
@@ -270,11 +309,18 @@ async function saveCosmetic(slot, value) {
 
 async function requestStoreItem(itemId) {
   try {
-    const request = await api('/api/store/requests', { method: 'POST', body: JSON.stringify({ itemId }) });
-    state.dashboard.storeRequests.push(request);
+    const payload = await api('/api/store/requests', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, profileRevision: state.dashboard.player.profileRevision }),
+    });
+    if (!state.dashboard.storeRequests.some((request) => request.requestId === payload.request.requestId)) state.dashboard.storeRequests.push(payload.request);
+    setProfileRevision(payload.profileRevision, payload.profileUpdatedAt);
     renderStore();
-    toast('Solicitud enviada para aprobación parental.');
-  } catch { toast('No se pudo enviar la solicitud.'); }
+    toast('Solicitud persistida y enviada para aprobación parental.');
+  } catch (error) {
+    if (error.code === 'profile_conflict') return recoverConflict();
+    toast('No se pudo enviar la solicitud.');
+  }
 }
 
 async function launchGame() {
@@ -285,6 +331,7 @@ async function launchGame() {
     const safePreview = {
       protocol: payload.protocol,
       playerId: payload.context.playerId,
+      profileRevision: payload.context.profileRevision,
       avatarId: payload.context.avatarId,
       selectedMode: payload.context.selectedMode,
       selectedWorld: payload.context.selectedWorld,
@@ -301,7 +348,7 @@ async function launchGame() {
 }
 
 async function signInDemo() {
-  $('#auth-status').textContent = 'Abriendo tu Player Hub…';
+  $('#auth-status').textContent = 'Abriendo tu perfil persistente…';
   try {
     state.dashboard = await api('/api/demo/session', { method: 'POST', body: '{}' });
     $('#auth-view').hidden = true;
@@ -311,7 +358,9 @@ async function signInDemo() {
   } catch (error) {
     $('#auth-status').textContent = error.code === 'identity_provider_required'
       ? 'El proveedor de identidad todavía no está conectado. El modo demo está desactivado.'
-      : 'No fue posible iniciar sesión.';
+      : error.code === 'profile_store_not_configured'
+        ? 'El almacén persistente de perfiles no está configurado.'
+        : 'No fue posible iniciar sesión.';
   }
 }
 

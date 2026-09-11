@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.ctgone.com/contracts/player-profile.schema.json",
+  "title": "World Makers Player Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "playerProfileId", "identityLinkId", "displayName", "avatarId", "loadout", "selection", "entitlements", "progress", "preferences", "storeRequests", "revision", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "playerProfileId": { "type": "string", "pattern": "^player\\.[A-Za-z0-9._:-]{3,120}$" },
+    "identityLinkId": { "type": "string", "pattern": "^identity-link\\." },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "avatarId": { "const": "avatar.child-explorer.v1" },
+    "loadout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hair", "top", "bottom", "footwear", "head-accessory", "back-accessory", "hand-prop"],
+      "properties": {
+        "hair": { "type": "string" },
+        "top": { "type": "string" },
+        "bottom": { "type": "string" },
+        "footwear": { "type": "string" },
+        "head-accessory": { "type": "string" },
+        "back-accessory": { "type": "string" },
+        "hand-prop": { "type": "string" }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modeId", "worldId", "missionId"],
+      "properties": {
+        "modeId": { "enum": ["free-explore", "missions", "laboratory"] },
+        "worldId": { "type": "string" },
+        "missionId": { "type": ["string", "null"] }
+      }
+    },
+    "entitlements": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "progress": { "type": "object" },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reducedMotion", "preferredModeId", "preferredWorldId"],
+      "properties": {
+        "reducedMotion": { "type": "boolean" },
+        "preferredModeId": { "type": ["string", "null"] },
+        "preferredWorldId": { "type": ["string", "null"] }
+      }
+    },
+    "storeRequests": { "type": "array", "items": { "type": "object" } },
+    "revision": { "type": "integer", "minimum": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}
