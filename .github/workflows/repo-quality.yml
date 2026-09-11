@@ -49,6 +49,8 @@ jobs:
         run: python scripts/validate-m3-8-vertical-slice-certification.py
       - name: Validate M4.1 Parent Portal MVP
         run: python scripts/validate-m4-parent-portal.py
+      - name: Validate D1 Player Dashboard Foundation
+        run: python scripts/validate-player-dashboard-d1.py
       - name: Validate M5.2 Composable Mission Runtime
         run: python scripts/validate-m5-2-composable-runtime.py
       - name: Validate M5.3 Science Simulation Core
@@ -110,6 +112,22 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/parent-portal/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  player-dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/player-dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/player-dashboard/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm test
