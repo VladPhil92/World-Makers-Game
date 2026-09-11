@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "visual.first-person-native-review.v1",
+  "status": "normative",
+  "sourcePack": "content/visual/first-person/first-person-authored-pack-v1.json",
+  "requiredEvidence": {
+    "nativeImportReport": true,
+    "reviewCaptureCountMinimum": 6,
+    "allFiveAssetsImported": true,
+    "allNineAnimationsImported": true,
+    "automationTestsPassed": true,
+    "humanReviewApproved": true
+  },
+  "qualityThresholds": {
+    "maxHandToolGapCm": 1.5,
+    "maxToolPenetrationCm": 0.5,
+    "maxElbowStretchRatio": 1.10,
+    "maxWristTwistDegrees": 75.0,
+    "maxNearPlaneClipFrames": 0,
+    "maxReticleObstructionFrames": 0,
+    "maxToolScreenFraction": 0.22,
+    "maxMaterialSlotsArms": 1,
+    "maxMaterialSlotsTool": 3,
+    "maxMaterialSlotsWrist": 2,
+    "cameraComfortRequired": true,
+    "reducedMotionRequired": true,
+    "toolContactReviewRequired": true,
+    "deformationReviewRequired": true
+  },
+  "reviewScenarios": [
+    "explore-tool-raise-lower",
+    "scan-anticipate-hold-settle",
+    "build-point-confirm",
+    "measure-focus",
+    "observe-focus",
+    "reduced-motion-pass"
+  ],
+  "activationPolicy": {
+    "exactCommitRequired": true,
+    "nativeReportHashRequired": true,
+    "reviewEvidenceHashRequired": true,
+    "allOrNothing": true,
+    "partialActivationAllowed": false,
+    "reviewModeMayUseExplicitFlag": true,
+    "productionModeRequiresActivationManifest": true
+  }
+}
