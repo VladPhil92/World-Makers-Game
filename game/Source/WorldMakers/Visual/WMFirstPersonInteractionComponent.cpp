@@ -1,13 +1,13 @@
 #include "Visual/WMFirstPersonInteractionComponent.h"
 
 #include "Camera/CameraComponent.h"
-#include "Components/ProceduralMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Player/WMPlayerCharacter.h"
+#include "ProceduralMeshComponent.h"
 #include "UI/WMFirstPersonContextWidget.h"
 #include "Visual/WMPresentationSubsystem.h"
 
@@ -155,6 +155,18 @@ bool UWMFirstPersonInteractionComponent::ActivateMode(
     ModeRemainingSeconds = bPersistent ? 0.0f : FMath::Clamp(FMath::IsFinite(DurationSeconds) ? DurationSeconds : 0.85f, 0.25f, 3.0f);
     Runtime.Trigger(Action, bPersistent ? 1.20f : ModeRemainingSeconds);
 
+    if (ToolProxy)
+    {
+        if (Mode == EWMFirstPersonVisualMode::Build)
+        {
+            ToolProxy->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder")));
+        }
+        else if (Mode == EWMFirstPersonVisualMode::Scan || Mode == EWMFirstPersonVisualMode::Measure)
+        {
+            ToolProxy->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube")));
+        }
+    }
+
     if (UWorld* World = GetWorld())
     {
         if (UWMPresentationSubsystem* Presentation = World->GetSubsystem<UWMPresentationSubsystem>())
@@ -227,9 +239,9 @@ void UWMFirstPersonInteractionComponent::ExitFirstPersonInteraction()
 
 bool UWMFirstPersonInteractionComponent::ResolveReducedMotion() const
 {
-    if (const UWorld* World = GetWorld())
+    if (UWorld* World = GetWorld())
     {
-        if (const UWMPresentationSubsystem* Presentation = World->GetSubsystem<UWMPresentationSubsystem>())
+        if (UWMPresentationSubsystem* Presentation = World->GetSubsystem<UWMPresentationSubsystem>())
         {
             return Presentation->IsReducedMotion();
         }
@@ -246,9 +258,19 @@ void UWMFirstPersonInteractionComponent::ApplyViewModelPose(const FWMFirstPerson
 
     if (ToolProxy)
     {
+        FVector BaseScale(0.07f, 0.07f, 0.22f);
+        if (ActiveMode == EWMFirstPersonVisualMode::Scan)
+        {
+            BaseScale = FVector(0.13f, 0.045f, 0.07f);
+        }
+        else if (ActiveMode == EWMFirstPersonVisualMode::Measure)
+        {
+            BaseScale = FVector(0.16f, 0.025f, 0.025f);
+        }
+
         ToolProxy->SetRelativeLocation(ActiveProfile.ToolOffsetCm + Pose.ToolTranslationCm);
         ToolProxy->SetRelativeRotation(ActiveProfile.ToolRotationDegrees + Pose.ToolRotationDegrees);
-        ToolProxy->SetRelativeScale3D(FVector(0.07f, 0.07f, 0.22f) * Pose.ToolScale);
+        ToolProxy->SetRelativeScale3D(BaseScale * Pose.ToolScale);
         ToolProxy->SetVisibility(ActiveProfile.bToolVisible, true);
     }
     if (WristDeviceProxy)
