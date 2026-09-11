@@ -17,8 +17,8 @@ class UWMFirstPersonInteractionComponent;
 /**
  * Production-art bridge for the source-proxy first-person kit.
  * Review mode is explicitly opt-in with -WMEnableFirstPersonAuthored.
- * Production takeover is fail-closed unless the packaged native activation manifest is approved
- * for the exact build commit supplied through -WMBuildCommit=<sha>.
+ * Production takeover requires an activated manifest plus build-time provenance binding the
+ * packaged build to the source commit that actually received native review.
  */
 UCLASS()
 class WORLDMAKERS_API UWMFirstPersonAuthoredBridgeSubsystem : public UTickableWorldSubsystem
@@ -50,6 +50,7 @@ private:
     void ApplyAuthoredTakeover();
     void ApplyProxyFallback();
     void PlayActionIfChanged(FName ActionId);
+    void WriteTakeoverReport() const;
     UStaticMeshComponent* FindStaticMeshComponent(FName ComponentName) const;
     UStaticMesh* ResolveAuthoredTool(FName ModeId) const;
 
@@ -100,7 +101,9 @@ private:
 
     FWMFirstPersonAuthoredAvailability Availability;
     FWMFirstPersonNativeActivationState ActivationState;
-    FString BuildCommitSha;
+    FWMFirstPersonBuildProvenance BuildProvenance;
+    FString RequestedBuildCommitSha;
+    FString TakeoverReportPath;
     FName LastPlayedActionId = NAME_None;
     bool bLoadAttempted = false;
     bool bReviewTakeoverEnabled = false;
