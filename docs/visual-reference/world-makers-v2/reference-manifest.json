@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "referenceSet": "world-makers-v2",
+  "supersedes": "world-makers-v1",
+  "source": "user-provided visual direction, second approved generation batch",
+  "storagePolicy": "original PNG masters are committed byte-for-byte, unmodified, with the repository-wide Git LFS filter explicitly unset for this directory so raw.githubusercontent.com serves the literal image bytes",
+  "assets": [
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/logo-primary.png",
+      "sha256": "e4aed835fc09b721634a1a32b06cd6c01a5a331d468807b414a32bbdaca4a5f7",
+      "bytes": 3085871,
+      "width": 1024,
+      "height": 1536,
+      "format": "png",
+      "purpose": "approved World Makers wordmark / primary logo"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/hero-banner.png",
+      "sha256": "54e2bba30f01009e6e2acdbb0ef9be1faf6fd1dc9eaec4147e4c6aaee6ddda0d",
+      "bytes": 2826864,
+      "width": 1672,
+      "height": 941,
+      "format": "png",
+      "purpose": "approved marketing hero banner"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/gameplay-overview.png",
+      "sha256": "096f46abcff8c9af44f96c6b6cd51607e72c9b4e3967bd099e0f1229652de9c3",
+      "bytes": 2867982,
+      "width": 1536,
+      "height": 1024,
+      "format": "png",
+      "purpose": "approved gameplay-modes composite"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/gameplay-science.png",
+      "sha256": "6e8aa993796dc241db52bf706f3b1e1b959ce8e691c410c1a62e628ba8eae1e0",
+      "bytes": 2919571,
+      "width": 1672,
+      "height": 941,
+      "format": "png",
+      "purpose": "approved first-person science mission screenshot"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/gameplay-build.png",
+      "sha256": "31e6bb072af775081602cb304d8ed5a4356167539aae8dec09cea473af0d4181",
+      "bytes": 2821294,
+      "width": 1672,
+      "height": 941,
+      "format": "png",
+      "purpose": "approved first-person build-mode screenshot"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/universe-overview.png",
+      "sha256": "dc9a7f162903d5fd44989d9e060ffc9143fde2b0223e097f84840962522b4f73",
+      "bytes": 2274563,
+      "width": 1024,
+      "height": 1536,
+      "format": "png",
+      "purpose": "approved universe/world overview poster"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/visual-identity-guide.png",
+      "sha256": "8082c4f66bb199e9b9b002aba80e42b4b3ab9f031292e442410c9d24ffdcdd75",
+      "bytes": 2202962,
+      "width": 1312,
+      "height": 1199,
+      "format": "png",
+      "purpose": "approved brand guide: palette, shapes, style summary"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/forms-style-policy.png",
+      "sha256": "acc31c94f351ad0af8204447c85ae03fd4b1f48280bfadc7d6a9c2dd4917b706",
+      "bytes": 1578526,
+      "width": 1774,
+      "height": 887,
+      "format": "png",
+      "purpose": "approved shape/style policy sheet"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/character-01-curious-explorer.png",
+      "sha256": "8a65096c86db99516e4a24d3eab28a506f2a2f9521a038d0b9a12856094dfebb",
+      "bytes": 1208651,
+      "width": 1086,
+      "height": 1448,
+      "format": "png",
+      "purpose": "approved main explorer character reference"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/character-02-scientist-inventor.png",
+      "sha256": "a2741007b01455e823fe4a0c6c55b6cc17284e649d5a9603fc181780807399a7",
+      "bytes": 1475220,
+      "width": 1024,
+      "height": 1536,
+      "format": "png",
+      "purpose": "approved scientist/inventor character reference"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/character-03-nature-guardian.png",
+      "sha256": "38a645775b6ba8269815dcd0cbe67df5ebeb81cb3d261fcb5ba2dd2a3930044a",
+      "bytes": 1322980,
+      "width": 1086,
+      "height": 1448,
+      "format": "png",
+      "purpose": "approved nature-guardian character reference"
+    },
+    {
+      "repositoryAsset": "docs/visual-reference/world-makers-v2/character-04-luna-explorer.png",
+      "sha256": "301a9fcbf880b6b92b2e799a834a090c49bbd57d0b1b600274e4756ad6dbc285",
+      "bytes": 1226131,
+      "width": 1086,
+      "height": 1448,
+      "format": "png",
+      "purpose": "approved complementary explorer character reference"
+    }
+  ]
+}
