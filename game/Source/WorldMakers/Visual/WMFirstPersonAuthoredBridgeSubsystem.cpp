@@ -36,6 +36,7 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Initialize(FSubsystemCollectionBase&
     Super::Initialize(Collection);
 
     bReviewTakeoverEnabled = FParse::Param(FCommandLine::Get(), TEXT("WMEnableFirstPersonAuthored"));
+    bCertificationMode = FParse::Param(FCommandLine::Get(), TEXT("WMFirstPersonTakeoverCertificationMode"));
     FParse::Value(FCommandLine::Get(), TEXT("WMBuildCommit="), RequestedBuildCommitSha);
     FParse::Value(FCommandLine::Get(), TEXT("WMFirstPersonTakeoverReport="), TakeoverReportPath);
     RequestedBuildCommitSha = RequestedBuildCommitSha.ToLower();
@@ -81,6 +82,7 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Deinitialize()
     TakeoverReportPath.Reset();
     bReviewTakeoverEnabled = false;
     bProductionActivationApproved = false;
+    bCertificationMode = false;
     Super::Deinitialize();
 }
 
@@ -299,6 +301,7 @@ void UWMFirstPersonAuthoredBridgeSubsystem::WriteTakeoverReport() const
     Root->SetStringField(TEXT("activationCandidateSha256"), BuildProvenance.ActivationCandidateSha256);
     Root->SetBoolField(TEXT("reviewTakeoverEnabled"), bReviewTakeoverEnabled);
     Root->SetBoolField(TEXT("productionActivationApproved"), bProductionActivationApproved);
+    Root->SetBoolField(TEXT("certificationMode"), bCertificationMode);
     Root->SetBoolField(TEXT("authoredSetComplete"), bAuthoredSetComplete);
     Root->SetNumberField(TEXT("animationCount"), Availability.AnimationCount);
     Root->SetBoolField(TEXT("firstPersonInteractionActive"), bFirstPersonActive);
@@ -327,6 +330,11 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Tick(const float DeltaTime)
     if (!FMath::IsFinite(DeltaTime) || DeltaTime <= 0.0f) return;
     EnsureTargets();
     TryLoadAuthoredAssets();
+
+    if (bCertificationMode && Interaction && !Interaction->IsFirstPersonInteractionActive())
+    {
+        Interaction->SetPersistentModeById(TEXT("firstperson.scan"), true);
+    }
 
     if (!Interaction || !Interaction->IsFirstPersonInteractionActive())
     {
