@@ -7,7 +7,7 @@
   "sourceKit": "content/visual/first-person/first-person-interaction-kit-v1.json",
   "sourceGenerator": "scripts/generate-first-person-authored-source.py",
   "generatedBundle": "Build/FirstPersonAuthored/first-person-authored-source-v1.json",
-  "expectedGeneratedSha256": "184df7d7b99238c595134268f82d8eb6c1f2c6fbe79bc9bdbed905a3720c82b6",
+  "expectedGeneratedSha256": "ef435b8f27333ba03de3b5021fdc0eed37497f9fbcd4f79bf02c11e69053b6ff",
   "coordinateContract": {
     "units": "centimeters",
     "forward": "+X",
