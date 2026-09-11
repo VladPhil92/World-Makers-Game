@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#061d2b">
+  <title>World Makers · Player Hub</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
+    <div class="brand-mark" aria-hidden="true"><span>W</span><span>M</span></div>
+    <p class="eyebrow">WORLD MAKERS</p>
+    <h1 id="auth-title">Tu mundo empieza aquí.</h1>
+    <p class="auth-copy">Inicia sesión para preparar tu personaje, elegir cómo jugar y entrar al mundo con todo listo.</p>
+    <button id="demo-login" class="primary-button" type="button">Entrar al Player Hub</button>
+    <p id="auth-status" class="status" aria-live="polite"></p>
+  </section>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar" aria-label="Navegación principal">
+      <button class="brand-button" data-view="home" type="button" aria-label="Ir al inicio">
+        <span class="brand-mark compact" aria-hidden="true"><span>W</span><span>M</span></span>
+      </button>
+      <nav class="nav-stack">
+        <button class="nav-item is-active" data-view="home" type="button"><span>⌂</span><b>Inicio</b></button>
+        <button class="nav-item" data-view="avatar" type="button"><span>◌</span><b>Personaje</b></button>
+        <button class="nav-item" data-view="modes" type="button"><span>◇</span><b>Jugar</b></button>
+        <button class="nav-item" data-view="worlds" type="button"><span>◎</span><b>Mundos</b></button>
+        <button class="nav-item" data-view="store" type="button"><span>✦</span><b>Store</b></button>
+      </nav>
+      <button id="logout" class="nav-item nav-bottom" type="button"><span>↙</span><b>Salir</b></button>
+    </aside>
+
+    <main id="main" class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">WORLD MAKERS · PLAYER HUB</p>
+          <h2 id="view-title">Inicio</h2>
+        </div>
+        <div class="player-chip">
+          <span class="player-orb" aria-hidden="true"></span>
+          <span><small>Explorer</small><strong id="player-name">Player</strong></span>
+        </div>
+      </header>
+
+      <section id="view-home" class="view is-visible" aria-labelledby="home-heading">
+        <div class="hero-grid">
+          <article class="avatar-hero glass-panel">
+            <div class="hero-copy">
+              <p class="eyebrow">TU EXPLORADOR</p>
+              <h3 id="home-heading">Listo para crear.</h3>
+              <p>Configura tu estilo antes de entrar al mundo.</p>
+              <button class="secondary-button" data-view="avatar" type="button">Personalizar personaje</button>
+            </div>
+            <div id="avatar-preview-home" class="avatar-preview" aria-label="Vista previa estilizada del personaje">
+              <div class="avatar-glow"></div>
+              <div class="avatar-head"></div>
+              <div class="avatar-body"><span class="avatar-pack"></span></div>
+              <div class="avatar-legs"></div>
+              <span class="avatar-tool"></span>
+            </div>
+          </article>
+
+          <article class="continue-card glass-panel">
+            <div class="card-kicker"><span class="pulse-dot"></span> CONTINUAR AVENTURA</div>
+            <h3 id="continue-title">The Forest of a Thousand Voices</h3>
+            <p id="continue-meta">Rainforest World</p>
+            <div class="progress-track"><span id="continue-progress"></span></div>
+            <div class="continue-footer"><strong id="continue-percent">0%</strong><span>progreso</span></div>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <div><p class="eyebrow">ELIGE CÓMO JUGAR</p><h3>Tres formas de entrar al mundo.</h3></div>
+          <button class="text-button" data-view="modes" type="button">Ver todos →</button>
+        </div>
+        <div id="home-mode-grid" class="mode-grid"></div>
+
+        <section class="launch-bar glass-panel" aria-label="Preparar inicio del juego">
+          <div>
+            <p class="eyebrow">SESIÓN PREPARADA</p>
+            <strong id="launch-summary">Exploración Libre · Rainforest World</strong>
+            <small id="launch-readiness">Configurando lanzamiento…</small>
+          </div>
+          <button id="play-button" class="play-button" type="button"><span>▶</span> JUGAR</button>
+        </section>
+      </section>
+
+      <section id="view-avatar" class="view" aria-labelledby="avatar-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">AVATAR STUDIO</p><h3 id="avatar-heading">Construye tu identidad.</h3></div>
+          <span id="avatar-save-status" class="status" aria-live="polite"></span>
+        </div>
+        <div class="avatar-studio-grid">
+          <div class="avatar-stage glass-panel">
+            <div id="avatar-preview-studio" class="avatar-preview avatar-preview-large" aria-label="Vista previa estilizada del personaje">
+              <div class="avatar-glow"></div>
+              <div class="avatar-head"></div>
+              <div class="avatar-body"><span class="avatar-pack"></span></div>
+              <div class="avatar-legs"></div>
+              <span class="avatar-tool"></span>
+            </div>
+            <div class="avatar-stage-label"><strong>Child Explorer</strong><span>avatar.child-explorer.v1</span></div>
+          </div>
+          <div id="avatar-controls" class="customization-panel glass-panel"></div>
+        </div>
+      </section>
+
+      <section id="view-modes" class="view" aria-labelledby="modes-heading">
+        <div class="section-heading"><div><p class="eyebrow">GAME MODES</p><h3 id="modes-heading">¿Qué quieres hacer hoy?</h3></div></div>
+        <div id="mode-grid" class="mode-grid mode-grid-large"></div>
+        <div id="mission-picker" class="mission-picker glass-panel" hidden>
+          <div><p class="eyebrow">AVENTURA</p><h3>Elige una misión.</h3></div>
+          <div id="mission-list" class="mission-list"></div>
+        </div>
+      </section>
+
+      <section id="view-worlds" class="view" aria-labelledby="worlds-heading">
+        <div class="section-heading"><div><p class="eyebrow">WORLD SELECT</p><h3 id="worlds-heading">Elige dónde empieza la historia.</h3></div></div>
+        <div id="world-grid" class="world-grid"></div>
+      </section>
+
+      <section id="view-store" class="view" aria-labelledby="store-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">STORE</p><h3 id="store-heading">Hazlo tuyo.</h3><p>Cosméticos solamente. Las solicitudes requieren aprobación parental.</p></div>
+        </div>
+        <div class="store-safety-note"><span>◈</span><p>No hay loot boxes, ventajas de poder ni compra directa desde la cuenta infantil.</p></div>
+        <div id="store-grid" class="store-grid"></div>
+      </section>
+
+      <dialog id="launch-dialog" class="launch-dialog">
+        <div class="launch-dialog-icon">▶</div>
+        <p class="eyebrow">WORLD MAKERS LAUNCH CONTEXT</p>
+        <h3>Tu sesión está lista.</h3>
+        <p id="launch-dialog-copy"></p>
+        <pre id="launch-context-preview"></pre>
+        <form method="dialog"><button class="secondary-button">Cerrar</button></form>
+      </dialog>
+
+      <div id="global-status" class="toast" aria-live="polite"></div>
+    </main>
+  </div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
