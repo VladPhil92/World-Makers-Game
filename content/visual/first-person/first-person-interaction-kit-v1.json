@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "kitId": "visual.first-person-interaction-kit.v1",
+  "status": "source-proxy-ready",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "sourcePolicy": "content/visual/governance/reference-driven-visual-polish-v2.json",
+  "modes": [
+    {
+      "modeId": "firstperson.explore",
+      "toolSlot": null,
+      "contextPanel": null,
+      "defaultAction": "tool-raise"
+    },
+    {
+      "modeId": "firstperson.build",
+      "toolSlot": "tool.build",
+      "contextPanel": "hud.build-palette",
+      "defaultAction": "build-point"
+    },
+    {
+      "modeId": "firstperson.scan",
+      "toolSlot": "tool.scanner",
+      "contextPanel": "hud.science-panel",
+      "defaultAction": "scan-hold"
+    },
+    {
+      "modeId": "firstperson.measure",
+      "toolSlot": "tool.measure",
+      "contextPanel": "hud.measurement-readout",
+      "defaultAction": "measure-focus"
+    },
+    {
+      "modeId": "firstperson.observe",
+      "toolSlot": null,
+      "contextPanel": "hud.object-inspection",
+      "defaultAction": "observe-focus"
+    }
+  ],
+  "authoredAssetSlots": [
+    {
+      "slotId": "arms.firstperson",
+      "assetPath": "/Game/WorldMakers/Characters/FirstPerson/SK_WM_FirstPersonArms",
+      "assetType": "skeletal-mesh",
+      "requiredForFinal": true,
+      "proxyFallback": "source-sphere-hands"
+    },
+    {
+      "slotId": "tool.scanner",
+      "assetPath": "/Game/WorldMakers/Tools/Scanner/SM_WM_Scanner",
+      "assetType": "static-mesh",
+      "requiredForFinal": true,
+      "proxyFallback": "engine-basic-shape"
+    },
+    {
+      "slotId": "tool.build",
+      "assetPath": "/Game/WorldMakers/Tools/Build/SM_WM_BuildTool",
+      "assetType": "static-mesh",
+      "requiredForFinal": true,
+      "proxyFallback": "engine-basic-shape"
+    },
+    {
+      "slotId": "tool.measure",
+      "assetPath": "/Game/WorldMakers/Tools/Measure/SM_WM_MeasureTool",
+      "assetType": "static-mesh",
+      "requiredForFinal": true,
+      "proxyFallback": "engine-basic-shape"
+    },
+    {
+      "slotId": "device.wrist",
+      "assetPath": "/Game/WorldMakers/Tools/Wrist/SM_WM_WristDevice",
+      "assetType": "static-mesh",
+      "requiredForFinal": true,
+      "proxyFallback": "source-cube-device"
+    }
+  ],
+  "animationSlots": [
+    {"actionId": "tool-raise", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ToolRaise"},
+    {"actionId": "tool-lower", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ToolLower"},
+    {"actionId": "scan-anticipate", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanAnticipate"},
+    {"actionId": "scan-hold", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanHold"},
+    {"actionId": "scan-settle", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanSettle"},
+    {"actionId": "build-point", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_BuildPoint"},
+    {"actionId": "build-confirm", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_BuildConfirm"},
+    {"actionId": "measure-focus", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_MeasureFocus"},
+    {"actionId": "observe-focus", "assetPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ObserveFocus"}
+  ],
+  "semanticEventRouting": {
+    "gameplay.build.*": "build-confirm",
+    "science.*": "scan-hold",
+    "mission.measure.reveal": "measure-focus",
+    "world.observe.reveal": "observe-focus"
+  },
+  "runtimeBudgets": {
+    "maxLargePanels": 2,
+    "maxContextPanels": 1,
+    "maxToolScreenFraction": 0.22,
+    "maxCameraBobCm": 1.5,
+    "maxToolLagDegrees": 4.0,
+    "proxyCollision": false,
+    "proxyCastsShadow": false,
+    "ownerOnlyVisibility": true
+  },
+  "reducedMotion": {
+    "cameraBobCm": 0.0,
+    "toolLagDegrees": 0.0,
+    "poseAmplitudeScale": 0.45,
+    "preserveInformationState": true
+  },
+  "certificationBoundary": {
+    "sourceRuntimeCanBeCertifiedInCI": true,
+    "authoredAssetsPresent": false,
+    "nativeUnrealAssetValidationRequired": true,
+    "representativeTabletValidationRequired": true
+  }
+}
