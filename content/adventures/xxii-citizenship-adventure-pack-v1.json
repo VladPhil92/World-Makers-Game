@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "packId": "adventure-pack.xxii-citizenship-v1",
+  "prototypeOnly": true,
+  "designPrinciple": "learning-is-structurally-necessary-to-play",
+  "citizenshipFrameworkId": "citizenship.xxii-century.interspecies-v1",
+  "privacyModel": "stable-ids-no-child-free-text",
+  "adventures": [
+    {
+      "adventureId": "adventure.xxii.river-two-futures",
+      "missionId": "mission.xxii.river-two-futures-01",
+      "titleKey": "adventure.xxii.river-two-futures.title",
+      "premiseKey": "adventure.xxii.river-two-futures.premise",
+      "primaryDiscipline": "ecology",
+      "secondaryDisciplines": ["physics", "ethics", "technology-energy"],
+      "ageBand": "11-12",
+      "beats": [
+        {"beatId":"beat.river.model-flow","primitiveId":"model-system","evidenceEventId":"citizenship.river.flow-energy-system-modeled","producerKind":"world","producerRefId":"system.river.energy-water-habitat","requiredCount":1},
+        {"beatId":"beat.river.test-design","primitiveId":"predict-test-revise","evidenceEventId":"citizenship.river.design-consequences-tested","producerKind":"science","producerRefId":"system.river.energy-water-habitat","requiredCount":1},
+        {"beatId":"beat.river.deliberate","primitiveId":"reason-through-dilemma","evidenceEventId":"citizenship.river.multi-species-energy-reasoning-demonstrated","producerKind":"thought","producerRefId":"case.river-two-futures","requiredCount":1}
+      ]
+    },
+    {
+      "adventureId": "adventure.xxii.city-trusted-algorithm",
+      "missionId": "mission.xxii.city-trusted-algorithm-01",
+      "titleKey": "adventure.xxii.city-trusted-algorithm.title",
+      "premiseKey": "adventure.xxii.city-trusted-algorithm.premise",
+      "primaryDiscipline": "responsible-ai",
+      "secondaryDisciplines": ["ethics", "civics", "ecology"],
+      "ageBand": "11-12",
+      "beats": [
+        {"beatId":"beat.ai.inspect-outcomes","primitiveId":"sequence-and-infer","evidenceEventId":"citizenship.ai.distribution-pattern-inferred","producerKind":"world","producerRefId":"ai.water-distribution","requiredCount":1},
+        {"beatId":"beat.ai.govern-system","primitiveId":"construct-to-constraint","evidenceEventId":"citizenship.ai.governance-safeguards-configured","producerKind":"thought","producerRefId":"ai.water-distribution","requiredCount":1},
+        {"beatId":"beat.ai.revise-policy","primitiveId":"argue-and-revise","evidenceEventId":"citizenship.ai.water-governance-reasoning-demonstrated","producerKind":"thought","producerRefId":"case.city-trusted-algorithm","requiredCount":1}
+      ]
+    },
+    {
+      "adventureId": "adventure.xxii.forest-learned-to-listen",
+      "missionId": "mission.xxii.forest-learned-to-listen-01",
+      "titleKey": "adventure.xxii.forest-learned-to-listen.title",
+      "premiseKey": "adventure.xxii.forest-learned-to-listen.premise",
+      "primaryDiscipline": "technology-ecology",
+      "secondaryDisciplines": ["biology", "responsible-ai", "ethics"],
+      "ageBand": "9-10",
+      "beats": [
+        {"beatId":"beat.forest.observe-needs","primitiveId":"observe-and-classify","evidenceEventId":"citizenship.forest.species-and-community-needs-observed","producerKind":"world","producerRefId":"system.forest.living-network","requiredCount":1},
+        {"beatId":"beat.forest.build-network","primitiveId":"construct-to-constraint","evidenceEventId":"citizenship.forest.low-impact-network-built","producerKind":"building","producerRefId":"building.forest.sensor-network","requiredCount":1},
+        {"beatId":"beat.forest.deliberate","primitiveId":"reason-through-dilemma","evidenceEventId":"citizenship.forest.responsible-sensing-demonstrated","producerKind":"thought","producerRefId":"case.forest-learned-to-listen","requiredCount":1}
+      ]
+    },
+    {
+      "adventureId": "adventure.xxii.last-power-grid",
+      "missionId": "mission.xxii.last-power-grid-01",
+      "titleKey": "adventure.xxii.last-power-grid.title",
+      "premiseKey": "adventure.xxii.last-power-grid.premise",
+      "primaryDiscipline": "technology-energy",
+      "secondaryDisciplines": ["physics", "ecology", "mathematics", "ethics"],
+      "ageBand": "11-12",
+      "beats": [
+        {"beatId":"beat.grid.balance","primitiveId":"model-system","evidenceEventId":"citizenship.energy.generation-demand-storage-balanced","producerKind":"science","producerRefId":"system.energy.resilient-grid","requiredCount":1},
+        {"beatId":"beat.grid.test-resilience","primitiveId":"predict-test-revise","evidenceEventId":"citizenship.energy.grid-stress-tested","producerKind":"science","producerRefId":"system.energy.resilient-grid","requiredCount":1},
+        {"beatId":"beat.grid.lifecycle","primitiveId":"reason-through-dilemma","evidenceEventId":"citizenship.energy.system-design-reasoning-demonstrated","producerKind":"thought","producerRefId":"case.last-power-grid","requiredCount":1}
+      ]
+    },
+    {
+      "adventureId": "adventure.xxii.community-new-standards",
+      "missionId": "mission.xxii.community-new-standards-01",
+      "titleKey": "adventure.xxii.community-new-standards.title",
+      "premiseKey": "adventure.xxii.community-new-standards.premise",
+      "primaryDiscipline": "philosophy-for-children",
+      "secondaryDisciplines": ["ethics", "ecology", "civics", "technology-energy", "responsible-ai"],
+      "ageBand": "13-15",
+      "beats": [
+        {"beatId":"beat.community.map-affected","primitiveId":"model-system","evidenceEventId":"citizenship.hospitality.affected-network-modeled","producerKind":"world","producerRefId":"system.community.more-than-human","requiredCount":1},
+        {"beatId":"beat.community.charter","primitiveId":"reason-through-dilemma","evidenceEventId":"citizenship.hospitality.community-design-reasoning-demonstrated","producerKind":"thought","producerRefId":"case.community-new-standards","requiredCount":1},
+        {"beatId":"beat.community.revise","primitiveId":"argue-and-revise","evidenceEventId":"citizenship.hospitality.charter-revised-after-consequences","producerKind":"thought","producerRefId":"case.community-new-standards","requiredCount":1}
+      ]
+    }
+  ]
+}

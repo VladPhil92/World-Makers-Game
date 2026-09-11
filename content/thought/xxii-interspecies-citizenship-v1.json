@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "thought.xxii-interspecies-citizenship-v1",
+  "prototypeOnly": true,
+  "privacyModel": "stable-ids-no-child-free-text",
+  "evaluationRule": "score-structured-reasoning-never-doctrinal-agreement",
+  "deliberationCases": [
+    {
+      "caseId": "case.river-two-futures",
+      "domainIds": ["domain.planetary-commons", "domain.living-world", "domain.technology-energy", "domain.ethics-sovereignty-coexistence"],
+      "affectedEntityIds": ["human.river-town", "animal.migratory-fish", "animal.river-bird", "ecosystem.riparian-forest", "commons.river"],
+      "optionIds": ["option.large-dam", "option.run-of-river-plus-storage", "option.efficiency-distributed-mix"],
+      "reasonIds": ["reason.grid-reliability", "reason.energy-access", "reason.habitat-connectivity", "reason.downstream-flow", "reason.lifecycle-materials", "reason.community-displacement"],
+      "tradeoffIds": ["tradeoff.energy-vs-habitat", "tradeoff-speed-vs-reversibility", "tradeoff-centralization-vs-resilience"],
+      "uncertaintyIds": ["uncertainty.rainfall-variability", "uncertainty.migration-response"],
+      "evidenceEventId": "citizenship.river.multi-species-energy-reasoning-demonstrated"
+    },
+    {
+      "caseId": "case.city-trusted-algorithm",
+      "domainIds": ["domain.responsible-intelligence", "domain.planetary-commons", "domain.ethics-sovereignty-coexistence"],
+      "affectedEntityIds": ["human.neighborhood-a", "human.neighborhood-b", "human.water-operators", "animal.downstream-wildlife", "commons.water"],
+      "optionIds": ["option.keep-optimizer-unchanged", "option.pause-audit-retrain", "option.bounded-ai-human-review"],
+      "reasonIds": ["reason.water-efficiency", "reason.distributional-fairness", "reason.auditability", "reason.human-accountability", "reason.downstream-ecology", "reason.service-continuity"],
+      "tradeoffIds": ["tradeoff.efficiency-vs-fairness", "tradeoff.automation-vs-accountability", "tradeoff.speed-vs-audit"],
+      "uncertaintyIds": ["uncertainty.training-data-bias", "uncertainty.future-demand"],
+      "evidenceEventId": "citizenship.ai.water-governance-reasoning-demonstrated"
+    },
+    {
+      "caseId": "case.forest-learned-to-listen",
+      "domainIds": ["domain.living-world", "domain.responsible-intelligence", "domain.technology-energy"],
+      "affectedEntityIds": ["human.ranger-team", "human.local-residents", "animal.jaguar", "animal.pollinators", "ecosystem.rainforest"],
+      "optionIds": ["option.dense-always-on-sensor-grid", "option.targeted-low-power-network", "option.community-observation-plus-sensors"],
+      "reasonIds": ["reason.fire-detection", "reason.species-monitoring", "reason.privacy-minimization", "reason.compute-energy-cost", "reason.habitat-disturbance", "reason.local-knowledge"],
+      "tradeoffIds": ["tradeoff.coverage-vs-intrusion", "tradeoff.compute-vs-energy", "tradeoff.automation-vs-local-knowledge"],
+      "uncertaintyIds": ["uncertainty.false-positive-rate", "uncertainty.sensor-disturbance"],
+      "evidenceEventId": "citizenship.forest.responsible-sensing-demonstrated"
+    },
+    {
+      "caseId": "case.last-power-grid",
+      "domainIds": ["domain.technology-energy", "domain.planetary-commons", "domain.living-world"],
+      "affectedEntityIds": ["human.city-residents", "human.energy-workers", "animal.migratory-birds", "animal.bats", "commons.air", "ecosystem.highland"],
+      "optionIds": ["option.single-renewable-max-build", "option.diverse-renewable-storage-grid", "option.efficiency-first-local-microgrids"],
+      "reasonIds": ["reason.reliability", "reason.storage", "reason.land-use", "reason.material-demand", "reason.air-quality", "reason.wildlife-collision", "reason.energy-poverty"],
+      "tradeoffIds": ["tradeoff.capacity-vs-land", "tradeoff.cost-vs-resilience", "tradeoff.speed-vs-lifecycle"],
+      "uncertaintyIds": ["uncertainty.weather-profile", "uncertainty.future-load"],
+      "evidenceEventId": "citizenship.energy.system-design-reasoning-demonstrated"
+    },
+    {
+      "caseId": "case.community-new-standards",
+      "domainIds": ["domain.ethics-sovereignty-coexistence", "domain.living-world", "domain.planetary-commons", "domain.responsible-intelligence", "domain.technology-energy"],
+      "affectedEntityIds": ["human.residents", "human.future-generations", "animal.urban-wildlife", "animal.domestic-animals", "ecosystem.wetland", "commons.water", "commons.air", "commons.soil"],
+      "optionIds": ["option.human-growth-first", "option.fixed-conservation-zones", "option.adaptive-more-than-human-charter"],
+      "reasonIds": ["reason.housing", "reason.mobility", "reason.ecological-flourishing", "reason.radical-singularity", "reason.shared-decision", "reason.reversibility", "reason.intergenerational-responsibility"],
+      "tradeoffIds": ["tradeoff.growth-vs-habitat", "tradeoff.predictability-vs-adaptation", "tradeoff.human-convenience-vs-other-lives"],
+      "uncertaintyIds": ["uncertainty.population-change", "uncertainty.ecosystem-thresholds", "uncertainty.technology-effects"],
+      "evidenceEventId": "citizenship.hospitality.community-design-reasoning-demonstrated"
+    }
+  ],
+  "responsibleAICases": [
+    {
+      "systemId": "ai.water-distribution",
+      "requiredSafeguardIds": ["safeguard.human-accountability", "safeguard.bounded-authority", "safeguard.auditability", "safeguard.privacy-fairness", "safeguard.fail-safe", "safeguard.ecological-cost-review"]
+    },
+    {
+      "systemId": "ai.forest-monitoring",
+      "requiredSafeguardIds": ["safeguard.human-accountability", "safeguard.bounded-authority", "safeguard.auditability", "safeguard.privacy-fairness", "safeguard.fail-safe", "safeguard.ecological-cost-review"]
+    }
+  ]
+}

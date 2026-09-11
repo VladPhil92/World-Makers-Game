@@ -59,6 +59,8 @@ jobs:
         run: python scripts/validate-m5-3-science-simulation.py
       - name: Validate M5.4 Language Literature Thought Runtime
         run: python scripts/validate-m5-4-language-thought-runtime.py
+      - name: Validate C1 XXII Century Citizenship
+        run: python scripts/validate-c1-xxii-century-citizenship.py
       - name: Validate V1 Visual Production Foundation
         run: python scripts/validate-v1-visual-production.py
       - name: Validate V2 Materials Surface Language
