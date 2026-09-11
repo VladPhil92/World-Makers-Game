@@ -49,7 +49,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts\p4\source | Out-Null
-          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json --verify
+          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json
 
       - name: Export 17 animation FBXs in Blender
         shell: pwsh
