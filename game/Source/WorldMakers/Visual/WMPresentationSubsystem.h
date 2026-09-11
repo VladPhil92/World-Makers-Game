@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Visual/WMPresentationRuntime.h"
+#include "Visual/WMReferenceVisualPolishRuntime.h"
 #include "WMPresentationSubsystem.generated.h"
 
 class UCameraComponent;
@@ -23,6 +24,21 @@ public:
 
     bool PulseCameraMode(EWMPresentationCameraMode Mode, float DurationSeconds = 0.8f, FName CueId = NAME_None);
 
+    /** Presentation-only override used by first-person interaction viewmodels. */
+    bool SetFirstPersonInteractionMode(EWMFirstPersonVisualMode Mode, bool bEnabled);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Presentation|First Person")
+    bool SetFirstPersonInteractionModeById(FName ModeId, bool bEnabled);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Presentation|First Person")
+    bool IsFirstPersonInteractionModeActive() const { return bFirstPersonInteractionActive; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Presentation|First Person")
+    FName GetFirstPersonInteractionModeId() const
+    {
+        return FWMReferenceVisualPolishRuntime::FirstPersonModeToId(FirstPersonMode);
+    }
+
     UFUNCTION(BlueprintCallable, Category = "World Makers|Presentation|Accessibility")
     void SetReducedMotion(bool bEnabled);
 
@@ -39,6 +55,7 @@ private:
     void UpdateMissionReveal();
     void ApplyCameraProfile(float DeltaTime);
     FName ResolveCueForEvent(FName EventId) const;
+    bool TryParseFirstPersonModeId(FName ModeId, EWMFirstPersonVisualMode& OutMode) const;
 
     UPROPERTY(Transient)
     TObjectPtr<USpringArmComponent> CameraBoom;
@@ -50,7 +67,10 @@ private:
     TObjectPtr<UWMPresentationOverlayWidget> Overlay;
 
     FWMPresentationCameraProfile ActiveProfile;
+    FWMFirstPersonVisualProfile FirstPersonProfile;
+    EWMFirstPersonVisualMode FirstPersonMode = EWMFirstPersonVisualMode::Explore;
     float PulseRemainingSeconds = 0.0f;
     FName LastMissionId = NAME_None;
     bool bReducedMotion = false;
+    bool bFirstPersonInteractionActive = false;
 };
