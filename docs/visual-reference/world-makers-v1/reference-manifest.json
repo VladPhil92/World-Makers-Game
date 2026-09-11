@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "referenceSet": "world-makers-v1",
+  "source": "user-provided visual direction",
+  "assets": [
+    {
+      "sourceUpload": "1000790709.png",
+      "sourceSha256": "af31b91516cba7f2f4990062f98a49db887d29b1a664c53263ddab2d69683d58",
+      "sourceBytes": 177729,
+      "width": 1536,
+      "height": 768,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/logo-primary.webp",
+      "repositorySha256": "31806eedbbb827463dcf7e477905feef5cc900e156b8cee87f7df72a51ea7cb6",
+      "repositoryBytes": 125012,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790591.png",
+      "sourceSha256": "b923c5dce2a8e4a4f7b2e9a3ff4ca441e8e444aba76fb1c14921f5a7fb10c03b",
+      "sourceBytes": 541482,
+      "width": 1229,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/character-02-scientist-inventor.webp",
+      "repositorySha256": "ae359b806984f9dc5fb78027001894a63900c758f1e22d5d0ba4bc302f05fd14",
+      "repositoryBytes": 465604,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790621.png",
+      "sourceSha256": "06726af923ff7a5c8fc31e81bc99a2eacd11155d82a8722f8b8723cf5de38b4e",
+      "sourceBytes": 545590,
+      "width": 1229,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/character-03-nature-guardian.webp",
+      "repositorySha256": "334ea0bc6dafe4016f841162851f2f3af26f9878d2759b7d7ba79dad1e70526e",
+      "repositoryBytes": 470534,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790622.png",
+      "sourceSha256": "9b8d92ec677d98c4f791203ecee1268982414749639470875c24bb99679f714a",
+      "sourceBytes": 476256,
+      "width": 1278,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/character-04-luna-explorer.webp",
+      "repositorySha256": "52e1d4acf8b898d6220385feba3bf8d2b30f77fe34416efaf40a29d51ef29bb3",
+      "repositoryBytes": 395570,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790075.png",
+      "sourceSha256": "42ca483f90cfbb98c5f6b5f63bd1c0a15868724096012bd394cd4e4fac6b67f3",
+      "sourceBytes": 500036,
+      "width": 1229,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/character-01-curious-explorer.webp",
+      "repositorySha256": "13a008825c29d99a0bfe25126e3836601b18cfe4f2104a94bd73bb5e247323d7",
+      "repositoryBytes": 417058,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790054.png",
+      "sourceSha256": "a8b3ae0aad25cdd301677f8e4b521baaf1f5522b67223775c7d8da4ae5027a68",
+      "sourceBytes": 653003,
+      "width": 1024,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/gameplay-visual-direction-overview.webp",
+      "repositorySha256": "5c8ff93cb469f8b2fbd9acc5aed3da51fad63483ea90b1ca1a759dca5fdb5e2c",
+      "repositoryBytes": 603710,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790067.png",
+      "sourceSha256": "45d8d4e776a2cebaa50f8226cf623b4998f9f66f27584a133827fe067931f2e5",
+      "sourceBytes": 499794,
+      "width": 1024,
+      "height": 1536,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/visual-identity-base-guide.webp",
+      "repositorySha256": "25693a2e0362187767176cbe179780f164a40c5127d287ded42f4a745e6e1857",
+      "repositoryBytes": 420194,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    },
+    {
+      "sourceUpload": "1000790071.png",
+      "sourceSha256": "b3a96ba3f2f30b3b893633bd156d58015c4159e2866e0af077ca57e1c03af08e",
+      "sourceBytes": 525889,
+      "width": 1536,
+      "height": 1404,
+      "repositoryAsset": "docs/visual-reference/world-makers-v1/forms-design-animation-reference.webp",
+      "repositorySha256": "0dc649be2f91667fc44dfdc73e9ec66afe6b109da671ffc15be0e05fc906ad59",
+      "repositoryBytes": 433038,
+      "format": "webp",
+      "purpose": "approved visual reference; not runtime production art"
+    }
+  ]
+}

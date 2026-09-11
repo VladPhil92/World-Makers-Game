@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "policyId": "visual.identity-animation.v1",
+  "status": "normative",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "documentation": "docs/visual-identity-animation-policy.md",
+  "referenceRoot": "docs/visual-reference/world-makers-v1",
+  "pillars": ["nature", "science", "creation", "learning", "community"],
+  "brandPalette": {
+    "explorationBlue": "#2F80ED",
+    "deepBlue": "#123B7A",
+    "brightCyan": "#56CCF2",
+    "lifeGreen": "#27AE60",
+    "growthGreen": "#6FCF97",
+    "discoveryGold": "#F2C94C",
+    "solarOrange": "#F2994A",
+    "warmSand": "#E9D8A6",
+    "lightWhite": "#F8FBFF",
+    "mistGray": "#DDE7F0"
+  },
+  "shapeLanguage": {
+    "preferred": [
+      "rounded-modules",
+      "tapered-prisms",
+      "cylinders",
+      "arches",
+      "bridges",
+      "domes",
+      "terraces",
+      "organic-rock",
+      "biophilic-structures"
+    ],
+    "prohibitedAsDefiningIdentity": [
+      "voxel-grid-terrain",
+      "identical-grass-dirt-cube-stacks",
+      "pixel-textured-3d-world-surfaces",
+      "recognizable-third-party-game-silhouette-copy",
+      "unchanged-marketplace-hero-identity"
+    ]
+  },
+  "characters": {
+    "familyHeadsTallMin": 4.5,
+    "familyHeadsTallMax": 5.0,
+    "childExplorerV1HeadsTall": 5.0,
+    "requiredReadabilityTraits": ["enlarged-head", "readable-hands", "readable-footwear", "clear-eyes-brows", "strong-silhouette"],
+    "minimumExpressionVocabulary": ["attentive", "joy", "curiosity", "surprise", "determination", "calm-empathy"],
+    "biometricCaptureRequired": false
+  },
+  "ui": {
+    "microFeedbackMs": [120, 180],
+    "stateTransitionMs": [180, 280],
+    "largeRevealMs": [300, 450],
+    "colorOnlyStateAllowed": false,
+    "reducedMotionRequired": true
+  },
+  "animation": {
+    "style": "fluid-expressive-physically-legible",
+    "baselineSourceFps": 30,
+    "rootMotionDefault": false,
+    "principles": ["anticipation", "weight-transfer", "arcs", "follow-through", "pose-clarity", "short-settle"],
+    "combatUrgencyAsDefaultLocomotion": false,
+    "cameraShakeRequired": false
+  },
+  "productionGates": [
+    "originality",
+    "identity",
+    "gameplay-readability",
+    "accessibility",
+    "performance",
+    "provenance",
+    "native-review"
+  ],
+  "productionBoundary": {
+    "referenceImagesAreRuntimeAssets": false,
+    "referenceImagesProveNativeAssetsPresent": false,
+    "humanArtReviewRequired": true,
+    "representativeDeviceReviewRequired": true
+  }
+}
