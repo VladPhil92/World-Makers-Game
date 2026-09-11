@@ -28,7 +28,17 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Initialize(FSubsystemCollectionBase&
 {
     Collection.InitializeDependency<UWMPresentationSubsystem>();
     Super::Initialize(Collection);
-    bExplicitTakeoverEnabled = FParse::Param(FCommandLine::Get(), TEXT("WMEnableFirstPersonAuthored"));
+
+    bReviewTakeoverEnabled = FParse::Param(FCommandLine::Get(), TEXT("WMEnableFirstPersonAuthored"));
+    FParse::Value(FCommandLine::Get(), TEXT("WMBuildCommit="), BuildCommitSha);
+    BuildCommitSha = BuildCommitSha.ToLower();
+
+    FWMFirstPersonNativeActivationState ParsedActivation;
+    if (FWMFirstPersonNativeActivationRuntime::TryLoadPackagedState(ParsedActivation))
+    {
+        ActivationState = MoveTemp(ParsedActivation);
+        bProductionActivationApproved = ActivationState.AllowsProductionTakeover(BuildCommitSha);
+    }
 }
 
 void UWMFirstPersonAuthoredBridgeSubsystem::Deinitialize()
@@ -49,6 +59,9 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Deinitialize()
     WristAsset = nullptr;
     ProxyToolFallback = nullptr;
     ProxyWristFallback = nullptr;
+    BuildCommitSha.Reset();
+    bReviewTakeoverEnabled = false;
+    bProductionActivationApproved = false;
     Super::Deinitialize();
 }
 
@@ -59,7 +72,8 @@ TStatId UWMFirstPersonAuthoredBridgeSubsystem::GetStatId() const
 
 bool UWMFirstPersonAuthoredBridgeSubsystem::IsAuthoredTakeoverReady() const
 {
-    return FWMFirstPersonAuthoredRuntime::CanTakeOver(Availability, bExplicitTakeoverEnabled);
+    const bool bTakeoverAuthorized = bReviewTakeoverEnabled || bProductionActivationApproved;
+    return FWMFirstPersonAuthoredRuntime::CanTakeOver(Availability, bTakeoverAuthorized);
 }
 
 UStaticMeshComponent* UWMFirstPersonAuthoredBridgeSubsystem::FindStaticMeshComponent(const FName ComponentName) const
