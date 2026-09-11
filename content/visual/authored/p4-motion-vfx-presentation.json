@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "phase": "P4",
+  "source": {
+    "generator": "scripts/generate-p4-authored-motion-vfx-presentation.py",
+    "generatedRoot": "SourceArt/WorldMakers/P4",
+    "bundleFilename": "WM_P4_AuthoredMotionVFXPresentation.source.json",
+    "sha256": "9193bbeb85a5f14e74d69df92ecae9a6e8414304a4337b1ee4912f71439e0ed3"
+  },
+  "dependencies": {
+    "characterP3": "content/visual/authored/character-p3-source-pack.json",
+    "animationV5": "content/visual/character/character-animation-v5.json",
+    "vfxV6": "content/visual/vfx/vfx-feedback-v6.json",
+    "presentationV7": "content/visual/presentation/presentation-camera-ui-v7.json"
+  },
+  "animation": {
+    "clipCount": 17,
+    "requiredClipIds": [
+      "locomotion.idle",
+      "locomotion.start",
+      "locomotion.walk",
+      "locomotion.run",
+      "locomotion.stop",
+      "locomotion.turn-in-place",
+      "locomotion.jump",
+      "locomotion.fall",
+      "locomotion.land",
+      "interaction.build-place",
+      "interaction.build-remove",
+      "interaction.build-move",
+      "interaction.measure",
+      "interaction.observe",
+      "interaction.inspect",
+      "interaction.pickup",
+      "interaction.science-manipulate"
+    ],
+    "animationBlueprintObjectPath": "/Game/WorldMakers/Characters/Player/ABP_WM_ChildExplorer.ABP_WM_ChildExplorer",
+    "skeletonObjectPath": "/Game/WorldMakers/Characters/Player/SKEL_WM_ChildExplorer.SKEL_WM_ChildExplorer",
+    "rootMotionDefault": false,
+    "fps": 30
+  },
+  "vfx": {
+    "effectCount": 17,
+    "requiredEffectIds": [
+      "gameplay.build.place",
+      "gameplay.build.remove",
+      "gameplay.build.move",
+      "mission.measure.reveal",
+      "world.observe.reveal",
+      "science.chemistry.dissolution",
+      "science.chemistry.saturation",
+      "science.chemistry.filtration",
+      "science.chemistry.reaction",
+      "science.physics.force",
+      "science.physics.circuit-flow",
+      "science.biology.cell-energy",
+      "science.biology.plant-growth",
+      "science.ecology.recovery",
+      "science.ecology.stress",
+      "fantasy.portal.open",
+      "fantasy.rune.activate"
+    ],
+    "authoredTargets": [
+      "/Game/WorldMakers/VFX/NS_WM_Build_Place.NS_WM_Build_Place",
+      "/Game/WorldMakers/VFX/NS_WM_Build_Remove.NS_WM_Build_Remove",
+      "/Game/WorldMakers/VFX/NS_WM_Build_Move.NS_WM_Build_Move",
+      "/Game/WorldMakers/VFX/NS_WM_Measure_Reveal.NS_WM_Measure_Reveal",
+      "/Game/WorldMakers/VFX/NS_WM_Observe_Reveal.NS_WM_Observe_Reveal",
+      "/Game/WorldMakers/VFX/NS_WM_Chem_Dissolution.NS_WM_Chem_Dissolution",
+      "/Game/WorldMakers/VFX/NS_WM_Chem_Saturation.NS_WM_Chem_Saturation",
+      "/Game/WorldMakers/VFX/NS_WM_Chem_Filtration.NS_WM_Chem_Filtration",
+      "/Game/WorldMakers/VFX/NS_WM_Chem_Reaction.NS_WM_Chem_Reaction",
+      "/Game/WorldMakers/VFX/NS_WM_Physics_Force.NS_WM_Physics_Force",
+      "/Game/WorldMakers/VFX/NS_WM_Physics_CircuitFlow.NS_WM_Physics_CircuitFlow",
+      "/Game/WorldMakers/VFX/NS_WM_Bio_CellEnergy.NS_WM_Bio_CellEnergy",
+      "/Game/WorldMakers/VFX/NS_WM_Bio_PlantGrowth.NS_WM_Bio_PlantGrowth",
+      "/Game/WorldMakers/VFX/NS_WM_Ecology_Recovery.NS_WM_Ecology_Recovery",
+      "/Game/WorldMakers/VFX/NS_WM_Ecology_Stress.NS_WM_Ecology_Stress",
+      "/Game/WorldMakers/VFX/NS_WM_Fantasy_Portal.NS_WM_Fantasy_Portal",
+      "/Game/WorldMakers/VFX/NS_WM_Fantasy_Rune.NS_WM_Fantasy_Rune"
+    ],
+    "presentationOnly": true
+  },
+  "presentation": {
+    "cameraModeCount": 6,
+    "uiCueCount": 6,
+    "sequenceCount": 2,
+    "cameraDataObjectPath": "/Game/WorldMakers/Presentation/DA_WM_CameraPresentation.DA_WM_CameraPresentation",
+    "adventureRevealObjectPath": "/Game/WorldMakers/Presentation/Sequences/LS_WM_AdventureReveal.LS_WM_AdventureReveal",
+    "scienceRevealObjectPath": "/Game/WorldMakers/Presentation/Sequences/LS_WM_ScienceReveal.LS_WM_ScienceReveal"
+  },
+  "productionBoundary": {
+    "sourceAnimationCurvesPresent": true,
+    "sourceVfxRecipesPresent": true,
+    "sourcePresentationTimelinesPresent": true,
+    "nativeAnimationAssetsPresent": false,
+    "nativeNiagaraAssetsPresent": false,
+    "nativeLevelSequencesPresent": false,
+    "nativeImportRequired": true,
+    "humanReviewRequired": true,
+    "deviceReviewRequired": true,
+    "authoredFlagsMutated": false
+  }
+}
