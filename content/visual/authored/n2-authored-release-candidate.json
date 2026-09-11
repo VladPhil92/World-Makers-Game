@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "phase": "N2",
+  "releaseId": "authored.activation.rc.v1",
+  "states": [
+    "BLOCKED",
+    "ACTIVATION_READY",
+    "RELEASE_CANDIDATE"
+  ],
+  "activationPolicy": "human-reviewed-commit",
+  "allOrNothing": true,
+  "automaticRegistryCommit": false,
+  "sourceBranchRegistryMustRemainFailClosed": true,
+  "required": {
+    "p1RegistryAssets": 16,
+    "rainforestAssets": 9,
+    "animationAssets": 17,
+    "vfxAssets": 17,
+    "presentationAssets": 7
+  },
+  "activationRules": {
+    "n1StatusMustBeActivationCandidate": true,
+    "candidateHashMustMatchApproval": true,
+    "candidateMayOnlySetAuthoredPresentTrue": true,
+    "canonicalAndPackagedRegistryMustMatch": true,
+    "humanApprovalRequired": true,
+    "rehearsalCannotBeReleaseCandidate": true,
+    "committedModeRequiresAllAuthoredPresent": true
+  },
+  "runtimeTakeover": {
+    "authoredEnvironmentActive": true,
+    "proceduralEnvironmentHidden": true,
+    "authoredAvatarActive": true,
+    "proceduralAvatarHidden": true,
+    "authoredAnimationBlueprintActive": true,
+    "authoredNiagaraPreferred": true,
+    "proceduralVfxFallbackRetained": true,
+    "nativePresentationAssetsRequired": true,
+    "collisionAuthorityUnchanged": true,
+    "gameplayAuthorityUnchanged": true
+  },
+  "releaseFingerprint": [
+    "releaseCommit",
+    "n1SourceCommit",
+    "n1CandidateSha256",
+    "activatedRegistrySha256",
+    "nativeInventorySha256",
+    "runtimeTakeoverReportSha256"
+  ],
+  "certificationHandoff": {
+    "p5Required": true,
+    "v8Required": true,
+    "deviceEvidenceMustMatchReleaseCommit": true,
+    "androidAndIpadosAllTiersRequired": true
+  },
+  "rollback": {
+    "proceduralFallbackRetained": true,
+    "registryRevertRestoresFallback": true,
+    "noBinaryAssetDeletionRequired": true
+  }
+}

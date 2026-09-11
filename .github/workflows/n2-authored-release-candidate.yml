@@ -1,0 +1,208 @@
+name: N2 Authored Activation Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Rehearsal mutates only the workspace; committed requires registry/provenance already committed.
+        required: true
+        default: rehearsal
+        type: choice
+        options:
+          - rehearsal
+          - committed
+      n1_run_id:
+        description: Workflow run ID that produced the approved N1 candidate artifact.
+        required: true
+        type: string
+      n1_source_commit:
+        description: Full commit SHA recorded by the approved N1 result.
+        required: true
+        type: string
+      n1_candidate_sha256:
+        description: Human-approved SHA-256 of authored-assets-p1.activation-candidate.json.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  authored-release-candidate:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate N2 source contract
+        shell: pwsh
+        run: python scripts/validate-n2-authored-release-candidate.py
+
+      - name: Verify native production tools
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          if (-not $env:BLENDER_EXE) { throw 'BLENDER_EXE is required.' }
+          if (-not (Test-Path $env:BLENDER_EXE)) { throw 'BLENDER_EXE does not exist.' }
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          New-Item -ItemType Directory -Force -Path artifacts\n2 | Out-Null
+
+      - name: Download approved N1 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: n1-native-authored-integration-${{ inputs.n1_source_commit }}
+          path: artifacts/n1-approved
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.n1_run_id }}
+
+      - name: Rehearse approved authored activation
+        if: ${{ inputs.mode == 'rehearsal' }}
+        shell: pwsh
+        run: |
+          python scripts/apply-n2-authored-activation.py `
+            --base-registry content/visual/authored/authored-assets-p1.json `
+            --candidate artifacts/n1-approved/authored-assets-p1.activation-candidate.json `
+            --n1-result artifacts/n1-approved/n1-native-integration-readiness.json `
+            --expected-source-commit "${{ inputs.n1_source_commit }}" `
+            --expected-candidate-sha256 "${{ inputs.n1_candidate_sha256 }}" `
+            --mode rehearsal `
+            --output-registry artifacts/n2/authored-assets-p1.activated.json `
+            --output-provenance artifacts/n2/n2-activation-provenance.json `
+            --require-ready
+          Copy-Item artifacts/n2/authored-assets-p1.activated.json content/visual/authored/authored-assets-p1.json -Force
+          Copy-Item artifacts/n2/authored-assets-p1.activated.json game/Content/WorldMakers/Visual/Authored/authored-assets-p1.json -Force
+
+      - name: Validate committed authored activation
+        if: ${{ inputs.mode == 'committed' }}
+        shell: pwsh
+        run: |
+          python -c "import json,pathlib; a=pathlib.Path('content/visual/authored/authored-assets-p1.json').read_bytes(); b=pathlib.Path('game/Content/WorldMakers/Visual/Authored/authored-assets-p1.json').read_bytes(); assert a==b, 'registry copies differ'; p=json.loads(a); assert len(p['assets'])==16 and all(x['authoredPresent'] is True for x in p['assets']), 'registry is not fully activated'; q=json.load(open('content/visual/authored/n2-activation-provenance.json',encoding='utf-8')); assert q['status']=='ACTIVATION_READY' and q['activationMode']=='committed', 'committed provenance missing'"
+
+      - name: Generate P2 rainforest source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p2\obj | Out-Null
+          python scripts/generate-p2-rainforest-source.py --output-dir artifacts/n2/p2/obj --verify
+
+      - name: Export P2 FBX LOD payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p2\fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/export-p2-rainforest-fbx.py -- --input-dir artifacts/n2/p2/obj --output-dir artifacts/n2/p2/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P2 rainforest
+        shell: pwsh
+        env:
+          WM_P2_FBX_DIR: ${{ github.workspace }}\artifacts\n2\p2\fbx
+          WM_P2_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n2\p2-import.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p2-rainforest-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Generate and export P3 character
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p3\source | Out-Null
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p3\fbx | Out-Null
+          python scripts/generate-p3-character-source.py --output-dir artifacts/n2/p3/source --verify
+          & $env:BLENDER_EXE --background --python scripts/blender/build-p3-character-fbx.py -- --source-dir artifacts/n2/p3/source --output-dir artifacts/n2/p3/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P3 character
+        shell: pwsh
+        env:
+          WM_P3_FBX_DIR: ${{ github.workspace }}\artifacts\n2\p3\fbx
+          WM_P3_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n2\p3-import.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p3-character-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Generate and export P4 authored animation source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p4\source | Out-Null
+          New-Item -ItemType Directory -Force -Path artifacts\n2\p4\animation-fbx | Out-Null
+          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/n2/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json
+          & $env:BLENDER_EXE --background --python scripts/blender/export-p4-animation-fbx.py -- --rig-fbx artifacts/n2/p3/fbx/SK_WM_ChildExplorer_LOD0.fbx --source artifacts/n2/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json --output-dir artifacts/n2/p4/animation-fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P4 animations and presentation containers
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\n2\p4\source\WM_P4_AuthoredMotionVFXPresentation.source.json
+          WM_P4_ANIMATION_FBX_DIR: ${{ github.workspace }}\artifacts\n2\p4\animation-fbx
+          WM_P4_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n2\p4-import.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p4-animation-presentation.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build activated Unreal project
+        shell: pwsh
+        run: .\scripts\build-unreal.ps1 -EngineRoot $env:UNREAL_ENGINE_ROOT -Configuration Development -EvidenceDir artifacts\n2\build
+
+      - name: Run World Makers automation tests
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Collect exact-build P5 native inventory
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\n2\p4\source\WM_P4_AuthoredMotionVFXPresentation.source.json
+          WM_P5_NATIVE_INVENTORY: ${{ github.workspace }}\artifacts\n2\p5-native-inventory.json
+          WM_BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\collect-p5-native-inventory.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Capture N2 runtime takeover report
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          $report = "$pwd\artifacts\n2\n2-runtime-takeover.json"
+          & $editor "$pwd\game\WorldMakers.uproject" -game -unattended -nop4 -nullrhi "-WMN2TakeoverReport=$report" "-WMBuildCommit=${{ github.sha }}" -benchmark -seconds=6 -log
+          if (-not (Test-Path $report)) { throw 'N2 runtime takeover report was not produced.' }
+          python -c "import json; p=json.load(open(r'artifacts/n2/n2-runtime-takeover.json',encoding='utf-8')); assert p['status']=='TAKEOVER_VERIFIED', p"
+
+      - name: Assess committed release candidate
+        if: ${{ inputs.mode == 'committed' }}
+        shell: pwsh
+        run: |
+          python scripts/assess-n2-release-candidate.py `
+            --canonical-registry content/visual/authored/authored-assets-p1.json `
+            --packaged-registry game/Content/WorldMakers/Visual/Authored/authored-assets-p1.json `
+            --provenance content/visual/authored/n2-activation-provenance.json `
+            --native-inventory artifacts/n2/p5-native-inventory.json `
+            --runtime-report artifacts/n2/n2-runtime-takeover.json `
+            --expected-release-commit "${{ github.sha }}" `
+            --output artifacts/n2/n2-release-candidate.json `
+            --require-release-candidate
+
+      - name: Mark rehearsal boundary
+        if: ${{ inputs.mode == 'rehearsal' }}
+        shell: pwsh
+        run: |
+          '{"schemaVersion":1,"phase":"N2","status":"ACTIVATION_READY","releaseCandidate":false,"reason":"workspace rehearsal is not a committed release candidate"}' | Set-Content -Encoding utf8 artifacts/n2/n2-rehearsal-result.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: n2-authored-release-${{ inputs.mode }}-${{ github.sha }}
+          path: artifacts/n2
+          if-no-files-found: error

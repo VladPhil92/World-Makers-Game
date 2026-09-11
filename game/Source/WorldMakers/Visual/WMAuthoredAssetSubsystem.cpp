@@ -1,5 +1,6 @@
 #include "Visual/WMAuthoredAssetSubsystem.h"
 
+#include "Animation/AnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Misc/FileHelper.h"
@@ -18,6 +19,17 @@ namespace WMAuthoredAssetRuntime
     {
         return Mesh && Mesh->GetLODNum() >= Definition.MinLods &&
             Mesh->GetMaterials().Num() <= Definition.MaxMaterialSlots;
+    }
+
+    FString ToGeneratedClassPath(const FString& ObjectPath)
+    {
+        FString PackagePath;
+        FString ObjectName;
+        if (!ObjectPath.Split(TEXT("."), &PackagePath, &ObjectName, ESearchCase::CaseSensitive, ESearchDir::FromEnd) || ObjectName.IsEmpty())
+        {
+            return FString();
+        }
+        return FString::Printf(TEXT("%s.%s_C"), *PackagePath, *ObjectName);
     }
 }
 
@@ -112,4 +124,27 @@ USkeletalMesh* UWMAuthoredAssetSubsystem::LoadSkeletalMesh(const FName AssetId) 
         return nullptr;
     }
     return Mesh;
+}
+
+TSubclassOf<UAnimInstance> UWMAuthoredAssetSubsystem::LoadAnimationBlueprintClass(const FName AssetId) const
+{
+    const FWMAuthoredVisualAssetDefinition* Asset = FindLoadableAsset(AssetId, TEXT("AnimationBlueprint"));
+    if (!Asset)
+    {
+        return nullptr;
+    }
+
+    const FString ClassPath = WMAuthoredAssetRuntime::ToGeneratedClassPath(Asset->ObjectPath);
+    if (ClassPath.IsEmpty())
+    {
+        return nullptr;
+    }
+
+    UClass* LoadedClass = FSoftClassPath(ClassPath).TryLoadClass<UAnimInstance>();
+    if (!LoadedClass || !LoadedClass->IsChildOf(UAnimInstance::StaticClass()))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("World Makers authored AnimationBlueprint class failed to load: %s"), *AssetId.ToString());
+        return nullptr;
+    }
+    return LoadedClass;
 }

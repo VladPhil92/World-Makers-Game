@@ -1,10 +1,17 @@
 #include "Visual/WMVFXSubsystem.h"
 
 #include "Building/WMBuildWorldStateSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Environment/WMEnvironmentStateSubsystem.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "Misc/Paths.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
+#include "UObject/SoftObjectPath.h"
+#include "Visual/WMAuthoredAssetSubsystem.h"
 #include "Visual/WMProceduralVFXActor.h"
 #include "Visual/WMVisualProfileSettings.h"
 
@@ -29,6 +36,16 @@ namespace
             }
         }
         return nullptr;
+    }
+
+    FString CanonicalObjectPath(const FString& PackagePath)
+    {
+        if (PackagePath.Contains(TEXT(".")))
+        {
+            return PackagePath;
+        }
+        const FString Name = FPaths::GetBaseFilename(PackagePath);
+        return FString::Printf(TEXT("%s.%s"), *PackagePath, *Name);
     }
 }
 
@@ -70,15 +87,18 @@ void UWMVFXSubsystem::Deinitialize()
 
     for (const TWeakObjectPtr<AWMProceduralVFXActor>& Effect : ActiveProxyEffects)
     {
-        if (Effect.IsValid())
-        {
-            Effect->Destroy();
-        }
+        if (Effect.IsValid()) Effect->Destroy();
+    }
+    for (const TWeakObjectPtr<UNiagaraComponent>& Effect : ActiveAuthoredEffects)
+    {
+        if (Effect.IsValid()) Effect->DeactivateImmediate();
     }
     ActiveProxyEffects.Reset();
+    ActiveAuthoredEffects.Reset();
     LastBuildSnapshot.Reset();
     Runtime = FWMVFXRuntime();
     LastAcceptedEventId = NAME_None;
+    bLastAcceptedEffectAuthored = false;
     bHasEnvironmentSnapshot = false;
     Super::Deinitialize();
 }
@@ -88,7 +108,6 @@ FWMVFXBudget UWMVFXSubsystem::ResolveBudget() const
     FWMVFXBudget Budget;
     const UWMVisualProfileSettings* VisualSettings = GetDefault<UWMVisualProfileSettings>();
     const EWMVisualQualityTier Tier = VisualSettings ? VisualSettings->DefaultQualityTier : EWMVisualQualityTier::Mid;
-
     switch (Tier)
     {
         case EWMVisualQualityTier::Low:
@@ -120,6 +139,10 @@ void UWMVFXSubsystem::PruneExpiredEffects()
     {
         return !Effect.IsValid();
     });
+    ActiveAuthoredEffects.RemoveAll([](const TWeakObjectPtr<UNiagaraComponent>& Effect)
+    {
+        return !Effect.IsValid() || Effect->IsComplete();
+    });
 }
 
 int32 UWMVFXSubsystem::GetActiveProxyEffectCount() const
@@ -127,20 +150,74 @@ int32 UWMVFXSubsystem::GetActiveProxyEffectCount() const
     int32 Count = 0;
     for (const TWeakObjectPtr<AWMProceduralVFXActor>& Effect : ActiveProxyEffects)
     {
-        if (Effect.IsValid())
-        {
-            ++Count;
-        }
+        if (Effect.IsValid()) ++Count;
     }
     return Count;
 }
 
-bool UWMVFXSubsystem::EmitSemanticEvent(
-    const FName EventId,
-    const FVector LocationCm,
-    const float Intensity,
-    const FVector Direction,
-    const float DurationSeconds)
+int32 UWMVFXSubsystem::GetActiveAuthoredEffectCount() const
+{
+    int32 Count = 0;
+    for (const TWeakObjectPtr<UNiagaraComponent>& Effect : ActiveAuthoredEffects)
+    {
+        if (Effect.IsValid() && !Effect->IsComplete()) ++Count;
+    }
+    return Count;
+}
+
+bool UWMVFXSubsystem::IsAuthoredNiagaraEnabled() const
+{
+    const UWorld* World = GetWorld();
+    const UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+    const UWMAuthoredAssetSubsystem* Assets = GameInstance ? GameInstance->GetSubsystem<UWMAuthoredAssetSubsystem>() : nullptr;
+    return Assets && Assets->IsCatalogLoaded() && Assets->IsAuthoredAssetDeclaredPresent(TEXT("vfx.science.master"));
+}
+
+FString UWMVFXSubsystem::ResolveAuthoredNiagaraObjectPath(const FName EventId)
+{
+    const FString Id = EventId.ToString();
+    if (Id == TEXT("gameplay.build.place")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Build_Place"));
+    if (Id == TEXT("gameplay.build.remove")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Build_Remove"));
+    if (Id == TEXT("gameplay.build.move")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Build_Move"));
+    if (Id == TEXT("mission.measure.reveal")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Measure_Reveal"));
+    if (Id == TEXT("world.observe.reveal")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Observe_Reveal"));
+    if (Id == TEXT("science.chemistry.dissolution")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Chem_Dissolution"));
+    if (Id == TEXT("science.chemistry.saturation")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Chem_Saturation"));
+    if (Id == TEXT("science.chemistry.filtration")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Chem_Filtration"));
+    if (Id == TEXT("science.chemistry.reaction")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Chem_Reaction"));
+    if (Id == TEXT("science.physics.force")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Physics_Force"));
+    if (Id == TEXT("science.physics.circuit-flow")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Physics_CircuitFlow"));
+    if (Id == TEXT("science.biology.cell-energy")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Bio_CellEnergy"));
+    if (Id == TEXT("science.biology.plant-growth")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Bio_PlantGrowth"));
+    if (Id == TEXT("science.ecology.recovery")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Ecology_Recovery"));
+    if (Id == TEXT("science.ecology.stress")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Ecology_Stress"));
+    if (Id == TEXT("fantasy.portal.open")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Fantasy_Portal"));
+    if (Id == TEXT("fantasy.rune.activate")) return CanonicalObjectPath(TEXT("/Game/WorldMakers/VFX/NS_WM_Fantasy_Rune"));
+    return FString();
+}
+
+bool UWMVFXSubsystem::TrySpawnAuthoredNiagara(const FWMVFXEvent& Event)
+{
+    UWorld* World = GetWorld();
+    if (!World || !IsAuthoredNiagaraEnabled()) return false;
+
+    const FString ObjectPath = ResolveAuthoredNiagaraObjectPath(Event.EventId);
+    if (ObjectPath.IsEmpty()) return false;
+    UNiagaraSystem* System = Cast<UNiagaraSystem>(FSoftObjectPath(ObjectPath).TryLoad());
+    if (!System) return false;
+
+    const FRotator Rotation = Event.Direction.IsNearlyZero() ? FRotator::ZeroRotator : Event.Direction.Rotation();
+    UNiagaraComponent* Component = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+        World, System, Event.LocationCm, Rotation, FVector::OneVector, true, true, ENCPoolMethod::None, true);
+    if (!Component) return false;
+
+    Component->SetVariableFloat(TEXT("User.Intensity"), Event.Intensity);
+    Component->SetVariableFloat(TEXT("User.MotionScale"), Event.MotionScale);
+    ActiveAuthoredEffects.Add(Component);
+    return true;
+}
+
+bool UWMVFXSubsystem::EmitSemanticEvent(const FName EventId, const FVector LocationCm, const float Intensity, const FVector Direction, const float DurationSeconds)
 {
     FWMVFXEvent Event;
     Event.EventId = EventId;
@@ -155,38 +232,31 @@ bool UWMVFXSubsystem::EmitSemanticEvent(
 bool UWMVFXSubsystem::EmitEvent(const FWMVFXEvent& Event)
 {
     UWorld* World = GetWorld();
-    if (!World)
-    {
-        return false;
-    }
+    if (!World) return false;
 
     PruneExpiredEffects();
     FWMVFXEvent Accepted = Event;
     const FWMVFXBudget Budget = ResolveBudget();
-    if (!Runtime.TryAccept(Accepted, World->GetTimeSeconds(), GetActiveProxyEffectCount(), Budget, bReducedMotion))
-    {
-        return false;
-    }
+    const int32 ActiveEffectCount = GetActiveProxyEffectCount() + GetActiveAuthoredEffectCount();
+    if (!Runtime.TryAccept(Accepted, World->GetTimeSeconds(), ActiveEffectCount, Budget, bReducedMotion)) return false;
 
     FWMVFXStyle Style;
-    if (!FWMVFXRuntime::ResolveStyle(Accepted.EventId, Style))
-    {
-        return false;
-    }
+    if (!FWMVFXRuntime::ResolveStyle(Accepted.EventId, Style)) return false;
 
-    FActorSpawnParameters SpawnParameters;
-    SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-    AWMProceduralVFXActor* Effect = World->SpawnActor<AWMProceduralVFXActor>(AWMProceduralVFXActor::StaticClass(), Accepted.LocationCm, FRotator::ZeroRotator, SpawnParameters);
-    if (!Effect || !Effect->InitializeEffect(Accepted, Style))
+    bLastAcceptedEffectAuthored = TrySpawnAuthoredNiagara(Accepted);
+    if (!bLastAcceptedEffectAuthored)
     {
-        if (Effect)
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AWMProceduralVFXActor* Effect = World->SpawnActor<AWMProceduralVFXActor>(AWMProceduralVFXActor::StaticClass(), Accepted.LocationCm, FRotator::ZeroRotator, SpawnParameters);
+        if (!Effect || !Effect->InitializeEffect(Accepted, Style))
         {
-            Effect->Destroy();
+            if (Effect) Effect->Destroy();
+            return false;
         }
-        return false;
+        ActiveProxyEffects.Add(Effect);
     }
 
-    ActiveProxyEffects.Add(Effect);
     LastAcceptedEventId = Accepted.EventId;
     OnVFXAccepted.Broadcast(Accepted.EventId, Accepted.LocationCm, Accepted.Intensity);
     return true;
@@ -216,7 +286,6 @@ void UWMVFXSubsystem::HandleBuildWorldChanged(const int32 Revision)
         if (Direction.IsNearlyZero()) Direction = FVector::ForwardVector;
         EmitSemanticEvent(TEXT("gameplay.build.move"), Added->LocationCm, 0.70f, Direction, 0.55f);
     }
-
     LastBuildSnapshot = Current;
 }
 
@@ -242,10 +311,7 @@ void UWMVFXSubsystem::HandleEnvironmentStateChanged(const FWMEnvironmentStateSna
     FVector Location = FVector::ZeroVector;
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
     {
-        if (APawn* Pawn = PC->GetPawn())
-        {
-            Location = Pawn->GetActorLocation() + FVector(0.0f, 0.0f, 30.0f);
-        }
+        if (APawn* Pawn = PC->GetPawn()) Location = Pawn->GetActorLocation() + FVector(0.0f, 0.0f, 30.0f);
     }
 
     const FName EventId = SignedChange > 0.0f ? FName(TEXT("science.ecology.recovery")) : FName(TEXT("science.ecology.stress"));

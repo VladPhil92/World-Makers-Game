@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "content/visual/authored/n1-native-integration.json"
 P1 = ROOT / "content/visual/authored/authored-assets-p1.json"
+N2_PROVENANCE = ROOT / "content/visual/authored/n2-activation-provenance.json"
 ASSESSOR = ROOT / "scripts/assess-n1-native-integration.py"
 WORKFLOW = ROOT / ".github/workflows/n1-native-authored-integration.yml"
 REPO_QUALITY = ROOT / ".github/workflows/repo-quality.yml"
@@ -68,9 +69,20 @@ def main() -> None:
     p1 = load(P1)
     assets = p1.get("assets", [])
     require(len(assets) == 16, "P1 registry must contain exactly 16 targets")
-    require(all(a.get("authoredPresent") is False for a in assets), "N1 source branch must remain fail-closed")
+    flags = [a.get("authoredPresent") for a in assets]
+    all_fail_closed = all(flag is False for flag in flags)
+    all_activated = all(flag is True for flag in flags)
+    require(all_fail_closed or all_activated, "P1 activation may not be partial")
 
-    subprocess.run([sys.executable, str(ASSESSOR), "--self-test"], check=True, cwd=ROOT)
+    if all_fail_closed:
+        subprocess.run([sys.executable, str(ASSESSOR), "--self-test"], check=True, cwd=ROOT)
+    else:
+        require(N2_PROVENANCE.is_file(), "post-N1 activation requires committed N2 provenance")
+        provenance = load(N2_PROVENANCE)
+        require(provenance.get("phase") == "N2", "activated registry provenance must belong to N2")
+        require(provenance.get("status") == "ACTIVATION_READY" and provenance.get("activationReady") is True, "activated registry provenance is not ready")
+        require(provenance.get("activationMode") == "committed", "activated registry requires committed-mode N2 provenance")
+        require(provenance.get("humanApprovalRequired") is True, "N2 provenance must preserve human approval")
 
     workflow = WORKFLOW.read_text(encoding="utf-8")
     for token in (
@@ -102,17 +114,11 @@ def main() -> None:
     require("update_file" not in assessor_text and "git commit" not in assessor_text.lower(), "assessor must not mutate repository state")
 
     doc = DOC.read_text(encoding="utf-8").replace("`", "").lower()
-    for phrase in (
-        "activation_candidate",
-        "all-or-nothing",
-        "human review",
-        "does not mutate",
-        "native runner",
-        "n2",
-    ):
+    for phrase in ("activation_candidate", "all-or-nothing", "human review", "does not mutate", "native runner", "n2"):
         require(phrase in doc, f"N1 documentation missing: {phrase}")
 
-    print("N1 native integration validated: all-or-nothing candidate generation, same-build native inventory and fail-closed registry behavior verified.")
+    mode = "fail-closed source" if all_fail_closed else "provenance-backed N2 activation"
+    print(f"N1 native integration validated: all-or-nothing candidate generation, same-build inventory and {mode} behavior verified.")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ public class WorldMakers : ModuleRules
             "InputCore",
             "PhysicsCore",
             "ProceduralMeshComponent",
+            "Niagara",
             "UMG"
         });
 

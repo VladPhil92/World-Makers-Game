@@ -8,6 +8,8 @@
 #include "WMVFXSubsystem.generated.h"
 
 class AWMProceduralVFXActor;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FWMVFXAcceptedSignature, FName, EventId, FVector, LocationCm, float, Intensity);
 
@@ -35,7 +37,16 @@ public:
     int32 GetActiveProxyEffectCount() const;
 
     UFUNCTION(BlueprintPure, Category = "World Makers|VFX")
+    int32 GetActiveAuthoredEffectCount() const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|VFX")
     FName GetLastAcceptedEventId() const { return LastAcceptedEventId; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|VFX|Authored")
+    bool IsAuthoredNiagaraEnabled() const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|VFX|Authored")
+    bool WasLastAcceptedEffectAuthored() const { return bLastAcceptedEffectAuthored; }
 
     /** Presentation-only notification emitted after a VFX event has passed all V6 validation and budget gates. */
     UPROPERTY(BlueprintAssignable, Category = "World Makers|VFX")
@@ -50,12 +61,16 @@ private:
 
     FWMVFXBudget ResolveBudget() const;
     void PruneExpiredEffects();
+    bool TrySpawnAuthoredNiagara(const FWMVFXEvent& Event);
+    static FString ResolveAuthoredNiagaraObjectPath(FName EventId);
 
     FWMVFXRuntime Runtime;
     TArray<TWeakObjectPtr<AWMProceduralVFXActor>> ActiveProxyEffects;
+    TArray<TWeakObjectPtr<UNiagaraComponent>> ActiveAuthoredEffects;
     TArray<FWMPlacedBuildPieceSnapshot> LastBuildSnapshot;
     FWMEnvironmentStateSnapshot LastEnvironmentSnapshot;
     FName LastAcceptedEventId = NAME_None;
+    bool bLastAcceptedEffectAuthored = false;
     bool bHasEnvironmentSnapshot = false;
     bool bReducedMotion = false;
 };
