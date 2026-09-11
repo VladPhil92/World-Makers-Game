@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UWMFirstPersonInteractionComponent;
 class UWMPresentationOverlayWidget;
 
 UCLASS()
@@ -55,6 +56,7 @@ private:
     void UpdateMissionReveal();
     void ApplyCameraProfile(float DeltaTime);
     FName ResolveCueForEvent(FName EventId) const;
+    FName ResolveFirstPersonActionForEvent(FName EventId) const;
     bool TryParseFirstPersonModeId(FName ModeId, EWMFirstPersonVisualMode& OutMode) const;
 
     UPROPERTY(Transient)
@@ -65,6 +67,9 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<UWMPresentationOverlayWidget> Overlay;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UWMFirstPersonInteractionComponent> FirstPersonInteraction;
 
     FWMPresentationCameraProfile ActiveProfile;
     FWMFirstPersonVisualProfile FirstPersonProfile;
