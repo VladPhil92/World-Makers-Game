@@ -17,7 +17,7 @@ These files are **reference images only**. They are not runtime Unreal assets, a
 | `visual-identity-base-guide.webp` | canonical brand palette, shape vocabulary and style summary |
 | `forms-design-animation-reference.webp` | original shape policy, anti-voxel boundary, character and animation direction |
 
-The original user uploads were converted to high-quality WebP for repository-efficient documentation. Source and repository checksums are recorded in `reference-manifest.json`.
+The repository stores **documentation-optimized WebP reference copies** so the approved direction remains directly visible and versioned without treating concept imagery as production runtime art. `reference-manifest.json` preserves the original PNG filenames, dimensions, byte sizes and SHA-256 identities together with the exact metadata and checksums of the committed WebP derivatives.
 
 ## Use rule
 
