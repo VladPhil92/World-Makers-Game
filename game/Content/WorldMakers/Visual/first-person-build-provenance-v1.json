@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "provenanceId": "visual.first-person-build-provenance.v1",
+  "status": "unbound",
+  "buildCommitSha": "",
+  "reviewedSourceCommitSha": "",
+  "activationCandidateSha256": "",
+  "activationManifestSha256": ""
+}
