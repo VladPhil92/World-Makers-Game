@@ -12,7 +12,6 @@ class UStaticMeshComponent;
 class UWMBuildingComponent;
 class UWMBuildHUDWidget;
 class UWMCharacterAnimationComponent;
-class UWMFirstPersonInteractionComponent;
 class UWMMissionMeasurementComponent;
 class UWMExplorationComponent;
 class UWMInteractionComponent;
@@ -138,10 +137,6 @@ public:
     /** V5 animation state/read-model bridge for both procedural art and the future production AnimBP. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Animation")
     TObjectPtr<UWMCharacterAnimationComponent> CharacterAnimationComponent;
-
-    /** First-person presentation kit. Gameplay authority remains with building/mission/interaction components. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|First Person")
-    TObjectPtr<UWMFirstPersonInteractionComponent> FirstPersonInteractionComponent;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World Makers|Input", meta = (ClampMin = "4.0", ClampMax = "128.0"))
     float TouchDragDeadZonePx = 24.0f;
