@@ -20,6 +20,7 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/first-person-*.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
@@ -43,8 +44,10 @@ on:
       - 'scripts/validate-m3-6-child-journey-ux.py'
       - 'scripts/validate-m3-7-tablet-performance.py'
       - 'scripts/validate-m3-8-vertical-slice-certification.py'
+      - 'scripts/*first-person*.py'
       - '.github/workflows/unreal-ci.yml'
       - '.github/workflows/m3-certification.yml'
+      - '.github/workflows/first-person-*.yml'
   push:
     branches:
       - main
@@ -66,8 +69,10 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/first-person-*.md'
       - 'scripts/**'
       - '.github/workflows/m3-certification.yml'
+      - '.github/workflows/first-person-*.yml'
   workflow_dispatch:
 
 permissions:
@@ -118,6 +123,12 @@ jobs:
         run: python scripts/validate-m3-7-tablet-performance.py
       - name: Validate M3.8 Vertical Slice Certification
         run: python scripts/validate-m3-8-vertical-slice-certification.py
+      - name: Validate First-Person Authored Asset Pack
+        run: python scripts/validate-first-person-authored-pack.py
+      - name: Validate First-Person Native Review Activation
+        run: python scripts/validate-first-person-native-review-activation.py
+      - name: Validate First-Person Activation Runtime Certification
+        run: python scripts/validate-first-person-activation-runtime-cert.py
 
   unreal-build-and-test:
     if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
