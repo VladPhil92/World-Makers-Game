@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Visual/WMFirstPersonAuthoredRuntime.h"
+#include "Visual/WMFirstPersonNativeActivationRuntime.h"
 #include "WMFirstPersonAuthoredBridgeSubsystem.generated.h"
 
 class AWMPlayerCharacter;
@@ -14,9 +15,10 @@ class UStaticMeshComponent;
 class UWMFirstPersonInteractionComponent;
 
 /**
- * Optional production-art bridge for the source-proxy first-person kit.
- * It is presentation-only and remains fail-closed unless the full authored set exists and
- * -WMEnableFirstPersonAuthored is supplied for an explicit native review/build.
+ * Production-art bridge for the source-proxy first-person kit.
+ * Review mode is explicitly opt-in with -WMEnableFirstPersonAuthored.
+ * Production takeover is fail-closed unless the packaged native activation manifest is approved
+ * for the exact build commit supplied through -WMBuildCommit=<sha>.
  */
 UCLASS()
 class WORLDMAKERS_API UWMFirstPersonAuthoredBridgeSubsystem : public UTickableWorldSubsystem
@@ -35,6 +37,12 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "World Makers|First Person|Authored")
     bool IsAuthoredTakeoverActive() const { return bTakeoverActive; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|First Person|Authored")
+    bool IsProductionActivationApproved() const { return bProductionActivationApproved; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|First Person|Authored")
+    bool IsReviewTakeoverEnabled() const { return bReviewTakeoverEnabled; }
 
 private:
     void EnsureTargets();
@@ -91,8 +99,11 @@ private:
     TMap<FName, TObjectPtr<UAnimationAsset>> Animations;
 
     FWMFirstPersonAuthoredAvailability Availability;
+    FWMFirstPersonNativeActivationState ActivationState;
+    FString BuildCommitSha;
     FName LastPlayedActionId = NAME_None;
     bool bLoadAttempted = false;
-    bool bExplicitTakeoverEnabled = false;
+    bool bReviewTakeoverEnabled = false;
+    bool bProductionActivationApproved = false;
     bool bTakeoverActive = false;
 };
