@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "packId": "visual.first-person-authored-pack.v1",
+  "status": "source-art-ready-native-import-pending",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "sourceKit": "content/visual/first-person/first-person-interaction-kit-v1.json",
+  "sourceGenerator": "scripts/generate-first-person-authored-source.py",
+  "generatedBundle": "Build/FirstPersonAuthored/first-person-authored-source-v1.json",
+  "expectedGeneratedSha256": "ef435b8f27333ba03de3b5021fdc0eed37497f9fbcd4f79bf02c11e69053b6ff",
+  "coordinateContract": {
+    "units": "centimeters",
+    "forward": "+X",
+    "right": "+Y",
+    "up": "+Z"
+  },
+  "skeleton": {
+    "id": "SKEL_WM_FirstPersonArms",
+    "boneCount": 7,
+    "requiredBones": ["root", "upperarm_l", "lowerarm_l", "hand_l", "upperarm_r", "lowerarm_r", "hand_r"],
+    "maxSkinInfluences": 2,
+    "rootMotion": false
+  },
+  "assets": [
+    {
+      "slotId": "arms.firstperson",
+      "assetType": "skeletal-mesh",
+      "unrealPath": "/Game/WorldMakers/Characters/FirstPerson/SK_WM_FirstPersonArms",
+      "sourceFbx": "Build/FirstPersonAuthored/FBX/SK_WM_FirstPersonArms_LOD0.fbx",
+      "minimumLods": 3,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "slotId": "tool.scanner",
+      "assetType": "static-mesh",
+      "unrealPath": "/Game/WorldMakers/Tools/Scanner/SM_WM_Scanner",
+      "sourceFbx": "Build/FirstPersonAuthored/FBX/SM_WM_Scanner_LOD0.fbx",
+      "minimumLods": 3,
+      "maxMaterialSlots": 3,
+      "authoredPresent": false
+    },
+    {
+      "slotId": "tool.build",
+      "assetType": "static-mesh",
+      "unrealPath": "/Game/WorldMakers/Tools/Build/SM_WM_BuildTool",
+      "sourceFbx": "Build/FirstPersonAuthored/FBX/SM_WM_BuildTool_LOD0.fbx",
+      "minimumLods": 3,
+      "maxMaterialSlots": 3,
+      "authoredPresent": false
+    },
+    {
+      "slotId": "tool.measure",
+      "assetType": "static-mesh",
+      "unrealPath": "/Game/WorldMakers/Tools/Measure/SM_WM_MeasureTool",
+      "sourceFbx": "Build/FirstPersonAuthored/FBX/SM_WM_MeasureTool_LOD0.fbx",
+      "minimumLods": 3,
+      "maxMaterialSlots": 3,
+      "authoredPresent": false
+    },
+    {
+      "slotId": "device.wrist",
+      "assetType": "static-mesh",
+      "unrealPath": "/Game/WorldMakers/Tools/Wrist/SM_WM_WristDevice",
+      "sourceFbx": "Build/FirstPersonAuthored/FBX/SM_WM_WristDevice_LOD0.fbx",
+      "minimumLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    }
+  ],
+  "animations": [
+    {"actionId": "tool-raise", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ToolRaise", "durationSeconds": 0.42, "loop": false, "authoredPresent": false},
+    {"actionId": "tool-lower", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ToolLower", "durationSeconds": 0.36, "loop": false, "authoredPresent": false},
+    {"actionId": "scan-anticipate", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanAnticipate", "durationSeconds": 0.28, "loop": false, "authoredPresent": false},
+    {"actionId": "scan-hold", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanHold", "durationSeconds": 1.20, "loop": true, "authoredPresent": false},
+    {"actionId": "scan-settle", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ScanSettle", "durationSeconds": 0.34, "loop": false, "authoredPresent": false},
+    {"actionId": "build-point", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_BuildPoint", "durationSeconds": 0.48, "loop": false, "authoredPresent": false},
+    {"actionId": "build-confirm", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_BuildConfirm", "durationSeconds": 0.36, "loop": false, "authoredPresent": false},
+    {"actionId": "measure-focus", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_MeasureFocus", "durationSeconds": 0.60, "loop": false, "authoredPresent": false},
+    {"actionId": "observe-focus", "unrealPath": "/Game/WorldMakers/Animations/FirstPerson/A_FP_ObserveFocus", "durationSeconds": 0.52, "loop": false, "authoredPresent": false}
+  ],
+  "takeoverPolicy": {
+    "allOrProxy": true,
+    "partialAuthoredTakeoverAllowed": false,
+    "proxyRemainsRollbackPath": true,
+    "requiresAllFiveAssets": true,
+    "requiresAllNineAnimations": true,
+    "collisionAuthority": "character-capsule",
+    "assetCollision": "none",
+    "ownerOnlyVisibility": true,
+    "castsShadow": false
+  },
+  "nativePipeline": {
+    "blenderScript": "scripts/blender-build-first-person-authored.py",
+    "unrealImporter": "scripts/unreal-import-first-person-authored.py",
+    "report": "Build/FirstPersonAuthored/native-import-report.json",
+    "humanReviewRequired": true,
+    "deviceReviewRequired": true
+  },
+  "certificationBoundary": {
+    "sourceGeometryAndAnimationCanBeValidatedInCI": true,
+    "authoredAssetsPresent": false,
+    "nativeUnrealImportRequired": true,
+    "deformationReviewRequired": true,
+    "representativeTabletValidationRequired": true
+  }
+}

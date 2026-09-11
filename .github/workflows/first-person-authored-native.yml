@@ -1,0 +1,66 @@
+name: First-Person Authored Native Integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authored-first-person-native:
+    runs-on: [self-hosted, Windows, X64, Unreal]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Validate source contract
+        shell: pwsh
+        run: python scripts/validate-first-person-authored-pack.py
+
+      - name: Generate deterministic source bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path Build/FirstPersonAuthored | Out-Null
+          python scripts/generate-first-person-authored-source.py --output Build/FirstPersonAuthored/first-person-authored-source-v1.json --print-sha
+
+      - name: Export arms tools and animation FBX in Blender
+        shell: pwsh
+        run: |
+          if (-not $env:BLENDER_EXE) { throw "BLENDER_EXE is required on the native runner" }
+          & $env:BLENDER_EXE -b --python scripts/blender-build-first-person-authored.py -- --bundle Build/FirstPersonAuthored/first-person-authored-source-v1.json --output-dir Build/FirstPersonAuthored/FBX
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import authored first-person assets into Unreal
+        shell: pwsh
+        run: |
+          if (-not $env:UE_EDITOR_CMD) { throw "UE_EDITOR_CMD is required on the native runner" }
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -run=pythonscript -script="scripts/unreal-import-first-person-authored.py -- --fbx-dir Build/FirstPersonAuthored/FBX --report Build/FirstPersonAuthored/native-import-report.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Require complete native import report
+        shell: pwsh
+        run: |
+          python -c "import json,pathlib; p=pathlib.Path('Build/FirstPersonAuthored/native-import-report.json'); d=json.loads(p.read_text()); assert d['allFiveAssetsImported'] and d['allNineAnimationsImported'] and d['allSourceImportsComplete']; print('native first-person source import complete; human/device review still pending')"
+
+      - name: Run first-person Unreal automation tests
+        shell: pwsh
+        run: |
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -ExecCmds="Automation RunTests WorldMakers.Visual.FirstPerson;Quit" -TestExit="Automation Test Queue Empty"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Authored takeover smoke boot
+        shell: pwsh
+        run: |
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -game -unattended -nop4 -nosplash -nullrhi -WMEnableFirstPersonAuthored -ExecCmds="Quit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: first-person-authored-native-report
+          path: |
+            Build/FirstPersonAuthored/native-import-report.json
+            Build/FirstPersonAuthored/first-person-authored-source-v1.json
+          if-no-files-found: warn
