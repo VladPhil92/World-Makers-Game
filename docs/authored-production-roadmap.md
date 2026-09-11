@@ -80,17 +80,31 @@ See `docs/p3-authored-character-cosmetics.md` and `content/visual/authored/chara
 
 ## P4 — Authored Animation, VFX & Presentation
 
-Goal: replace procedural motion/effects/presentation stand-ins with production binary assets.
+Status: **source-complete target on `feat/p4-authored-animation-vfx-presentation`; native AnimBP/Niagara/Level Sequence art review pending.**
 
-- `ABP_WM_ChildExplorer` and locomotion clips;
-- interaction montages for build/measure/observe/pickup/science;
-- foot placement and retargeting;
-- Niagara systems bound to V6 semantic events;
-- final camera Data Asset;
-- short Level Sequences for adventure/science reveals;
-- UI motion art respecting V7 reduced-motion states.
+Implemented source-production contract:
 
-Exit: V5–V7 runtime semantics are represented by authored animation/VFX/cinematic assets, not source proxies.
+- 17 authored animation clips exactly covering the 9 V5 locomotion states and 8 interaction actions;
+- 30 fps in-place curves on the P3/V4 19-joint Skeleton with root motion disabled;
+- interaction durations and layer semantics locked to V5;
+- deterministic `ABP_WM_ChildExplorer` state/read-model plan using the existing V5 animation read model;
+- Blender baking/export bridge producing one animation FBX per clip from the P3 armature;
+- Unreal import bridge targeting the P3 Skeleton and reporting native `AnimSequence` import readiness;
+- 17 authored VFX recipes exactly matching V6 event IDs, domains, shapes and Niagara target paths;
+- tablet-first particle ceilings, reduced-motion scale, semantic intensity/direction parameters and no collision/light renderer requirement;
+- source presentation pack copying all six V7 camera modes and six UI cues without semantic drift;
+- two authored microsequence timelines: Adventure Reveal and Science Reveal, both under the V7 2.5 s ceiling;
+- no input lock, forced ViewTarget or global time-scale changes;
+- Unreal handoff can create Level Sequence containers/playback ranges while camera-track composition remains native human-authored work;
+- canonical SHA-256 over the complete generated P4 source bundle;
+- manual self-hosted Blender→FBX→Unreal handoff workflow;
+- no automatic `authoredPresent=true` mutation; V5/V6/V7 procedural/runtime fallbacks remain authoritative until native approval.
+
+Exit for source phase: deterministic animation curves, VFX recipes, camera/UI timelines, Blender animation export, Unreal animation/presentation import bridge, docs and Repository Quality gate pass.
+
+Exit for art/native phase: imported AnimSequences, final `ABP_WM_ChildExplorer`, reviewed Niagara systems, final camera Data Asset and Level Sequence camera tracks exist as native assets; timing/deformation/overdraw/camera comfort/UI motion pass review on representative devices before P1 authored flags change.
+
+See `docs/p4-authored-animation-vfx-presentation.md` and `content/visual/authored/p4-motion-vfx-presentation.json`.
 
 ## P5 — Art Polish & Device Certification
 

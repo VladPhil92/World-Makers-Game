@@ -77,6 +77,8 @@ jobs:
         run: python scripts/validate-p2-rainforest-assets.py
       - name: Validate P3 Authored Character Cosmetics
         run: python scripts/validate-p3-character-assets.py
+      - name: Validate P4 Authored Animation VFX Presentation
+        run: python scripts/validate-p4-authored-motion-vfx-presentation.py
 
   parent-portal:
     runs-on: ubuntu-latest
