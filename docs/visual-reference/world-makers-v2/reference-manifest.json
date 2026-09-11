@@ -7,12 +7,12 @@
   "assets": [
     {
       "repositoryAsset": "docs/visual-reference/world-makers-v2/logo-primary.png",
-      "sha256": "e4aed835fc09b721634a1a32b06cd6c01a5a331d468807b414a32bbdaca4a5f7",
-      "bytes": 3085871,
-      "width": 1024,
-      "height": 1536,
+      "sha256": "acc31c94f351ad0af8204447c85ae03fd4b1f48280bfadc7d6a9c2dd4917b706",
+      "bytes": 1578526,
+      "width": 1774,
+      "height": 887,
       "format": "png",
-      "purpose": "approved World Makers wordmark / primary logo"
+      "purpose": "approved World Makers wordmark / primary logo (transparent background)"
     },
     {
       "repositoryAsset": "docs/visual-reference/world-makers-v2/hero-banner.png",
@@ -52,8 +52,8 @@
     },
     {
       "repositoryAsset": "docs/visual-reference/world-makers-v2/universe-overview.png",
-      "sha256": "dc9a7f162903d5fd44989d9e060ffc9143fde2b0223e097f84840962522b4f73",
-      "bytes": 2274563,
+      "sha256": "e4aed835fc09b721634a1a32b06cd6c01a5a331d468807b414a32bbdaca4a5f7",
+      "bytes": 3085871,
       "width": 1024,
       "height": 1536,
       "format": "png",
@@ -61,19 +61,19 @@
     },
     {
       "repositoryAsset": "docs/visual-reference/world-makers-v2/visual-identity-guide.png",
-      "sha256": "8082c4f66bb199e9b9b002aba80e42b4b3ab9f031292e442410c9d24ffdcdd75",
-      "bytes": 2202962,
-      "width": 1312,
-      "height": 1199,
+      "sha256": "dc9a7f162903d5fd44989d9e060ffc9143fde2b0223e097f84840962522b4f73",
+      "bytes": 2274563,
+      "width": 1024,
+      "height": 1536,
       "format": "png",
       "purpose": "approved brand guide: palette, shapes, style summary"
     },
     {
       "repositoryAsset": "docs/visual-reference/world-makers-v2/forms-style-policy.png",
-      "sha256": "acc31c94f351ad0af8204447c85ae03fd4b1f48280bfadc7d6a9c2dd4917b706",
-      "bytes": 1578526,
-      "width": 1774,
-      "height": 887,
+      "sha256": "8082c4f66bb199e9b9b002aba80e42b4b3ab9f031292e442410c9d24ffdcdd75",
+      "bytes": 2202962,
+      "width": 1312,
+      "height": 1199,
       "format": "png",
       "purpose": "approved shape/style policy sheet"
     },
