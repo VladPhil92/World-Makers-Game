@@ -84,7 +84,7 @@ bool FWMFirstPersonNativeActivationExactCommitTest::RunTest(const FString& Param
     TestTrue(TEXT("Activated manifest is structurally valid"), State.IsStructurallyValid());
     TestTrue(TEXT("Build provenance is structurally valid"), Provenance.IsStructurallyValid());
     TestTrue(TEXT("Reviewed source plus bound build provenance is approved"), State.AllowsProductionTakeover(Provenance));
-    TestNotEqual(TEXT("Activation build may differ from reviewed source without self-reference"), Build, Reviewed);
+    TestTrue(TEXT("Activation build may differ from reviewed source without self-reference"), Build != Reviewed);
     return true;
 }
 
