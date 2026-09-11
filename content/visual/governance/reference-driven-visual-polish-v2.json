@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "policyId": "visual.reference-driven-polish.v2",
+  "status": "normative",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "referenceRoot": "docs/visual-reference/world-makers-v1",
+  "sourcePolicy": "content/visual/governance/visual-identity-animation-v1.json",
+  "direction": {
+    "worldIdentity": "bright-eco-futurist-adventure",
+    "composition": [
+      "foreground-foliage-or-character-frame",
+      "readable-playable-midground",
+      "aspirational-landmark-background",
+      "waterfall-bridge-or-terrain-depth-cues"
+    ],
+    "signatureLandmarks": [
+      "research-dome",
+      "greenhouse-glazing",
+      "curved-research-modules",
+      "waterfalls",
+      "bridges-and-arches",
+      "renewable-energy-silhouettes"
+    ],
+    "architecture": {
+      "preferred": ["curved-modules", "arches", "domes", "rounded-corners", "terraces", "greenhouse-glazing", "biophilic-overgrowth"],
+      "avoidAsPrimaryIdentity": ["voxel-grid-buildings", "box-only-modules", "military-industrial-silhouette", "photoreal-grit"]
+    },
+    "runtimeColorIntent": "reduce-key-art-bloom-and-saturation-for-playability"
+  },
+  "firstPerson": {
+    "enabledAsPresentationPath": true,
+    "modes": ["explore", "build", "scan", "measure", "observe"],
+    "handAndToolRules": [
+      "hands-serve-interaction-not-decoration",
+      "tool-never-blocks-center-reticle",
+      "wrist-device-is-secondary-information-anchor",
+      "tool-motion-must-have-anticipation-hold-settle",
+      "reduced-motion-removes-lag-and-large-bob"
+    ],
+    "toolFamily": ["scanner", "build-tool", "measurement-tool", "wrist-device"],
+    "maxToolScreenFraction": 0.22,
+    "maxCameraBobCm": 1.5,
+    "maxToolLagDegrees": 4.0
+  },
+  "hud": {
+    "baselinePersistentElements": ["compass", "compact-hotbar", "mission-summary", "minimap"],
+    "contextualElements": ["science-panel", "build-palette", "snap-feedback", "measurement-readout", "object-inspection"],
+    "rules": {
+      "maxLargePanelsAtOnce": 2,
+      "onlyOneContextPanelAtOnce": true,
+      "buildPaletteOnlyInBuildMode": true,
+      "sciencePanelOnlyDuringScienceContext": true,
+      "colorOnlyStateAllowed": false,
+      "exploreMustRemainVisuallyQuiet": true
+    },
+    "domainAccents": {
+      "physics": "#56CCF2",
+      "biology": "#27AE60",
+      "ecology": "#6FCF97",
+      "chemistry": "#8F6DE0",
+      "construction": "#2F80ED",
+      "discovery": "#F2C94C"
+    }
+  },
+  "characters": {
+    "silhouetteProfiles": ["curious-explorer", "scientist-inventor", "nature-guardian", "knowledge-explorer"],
+    "rules": [
+      "differentiate-silhouette-before-color",
+      "gear-supports-role-readability",
+      "readable-hands-and-footwear",
+      "backpack-or-tool-mass-must-not-obscure-body-language",
+      "no-character-is-default-gender-template"
+    ],
+    "motionPersonality": {
+      "curious-explorer": {"strideScale": 1.00, "armSwingScale": 1.05, "headLookScale": 1.10, "settleSeconds": 0.18, "secondaryMotionScale": 0.80},
+      "scientist-inventor": {"strideScale": 0.92, "armSwingScale": 0.88, "headLookScale": 0.92, "settleSeconds": 0.15, "secondaryMotionScale": 0.60},
+      "nature-guardian": {"strideScale": 0.96, "armSwingScale": 0.82, "headLookScale": 1.00, "settleSeconds": 0.22, "secondaryMotionScale": 0.75},
+      "knowledge-explorer": {"strideScale": 1.00, "armSwingScale": 0.95, "headLookScale": 1.15, "settleSeconds": 0.17, "secondaryMotionScale": 0.70}
+    }
+  },
+  "animation": {
+    "firstPersonActions": ["tool-raise", "tool-lower", "scan-anticipate", "scan-hold", "scan-settle", "build-point", "build-confirm", "measure-focus", "observe-focus"],
+    "thirdPersonPrinciples": ["clear-line-of-action", "weight-transfer", "contralateral-locomotion", "role-specific-head-response", "short-settle", "readable-tool-contact"],
+    "interactionTimingRule": "gameplay-result-remains-authority",
+    "rootMotionDefault": false
+  },
+  "referenceUse": {
+    "referencesAreDirectionNotRuntimeAssets": true,
+    "doNotTraceLayoutsPixelForPixel": true,
+    "doNotTreatConceptHudDensityAsBaseline": true,
+    "preserveOriginalWorldMakersIdentity": true
+  }
+}
