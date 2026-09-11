@@ -16,7 +16,7 @@ Status: **source-complete target on `feat/p1-authored-asset-production-pipeline`
 - explicit `authoredPresent` truth flag;
 - LOD and material-slot budgets enforced by the native loader;
 - deterministic environment HISM replacement bridge;
-- automatic player Skeletal Mesh adoption;
+- automatic player Skeletal Mesh preparation;
 - procedural fallback preserved when authored assets are absent or invalid;
 - production queue report and CI gate.
 
@@ -24,21 +24,30 @@ Exit: the project can accept real assets without code-path rewrites or silent lo
 
 ## P2 — Authored Rainforest Asset Pack
 
-Goal: complete the first real environment takeover.
+Status: **source-art pack implemented on `feat/p2-authored-rainforest-asset-pack`; native `.uasset` import and visual review pending.**
 
-- ground family;
-- terrain mound family;
-- Tree A/B/C silhouettes;
-- understory family;
-- rock family;
-- water-edge family;
-- hero ceiba;
-- production UVs, normals/tangents and V2 material instances;
-- authored LOD chains within V8 budgets;
-- native asset audit and screenshot comparison against the procedural composition;
-- set all nine rainforest manifest entries to `authoredPresent=true` only after native validation.
+Implemented source-production contract:
 
-Exit: the active rainforest uses authored meshes at runtime while collision/world layout remain unchanged.
+- nine environment families exactly matching the P1 rainforest takeover set;
+- original deterministic OBJ geometry generator using centimeters / +Z up / +X forward;
+- explicit UV0 and vertex normals;
+- three distinct tree silhouettes and a separate hero ceiba;
+- explicit authored LOD groups: Ground 3, Terrain 3, Tree A/B/C 3, Understory 2, Rock 3, Water Edge 2, Hero Ceiba 4;
+- material-slot ceilings remain within P1 budgets;
+- canonical SHA-256 for every generated source mesh;
+- source validator regenerates the pack and verifies hashes, UV/normals/faces, LOD counts and materials;
+- Blender background conversion from OBJ LOD groups to per-LOD FBX payloads;
+- Unreal Editor Python import path using the native Static Mesh editor LOD pipeline;
+- native import report for LOD count, material slots, UV channels and triangle presence;
+- manual self-hosted P2 import workflow;
+- P1 all-or-nothing rainforest takeover and collision proxies remain authoritative;
+- no automatic `authoredPresent=true` mutation.
+
+Exit for source phase: reproducible geometry, LOD/material contract, Blender→FBX bridge, Unreal import bridge, docs and CI pass.
+
+Exit for art/native phase: all nine `.uasset` Static Meshes exist at their P1 object paths, pass native import and human silhouette/UV/LOD/shading review, then all nine manifest entries may be deliberately marked `authoredPresent=true` and the authored runtime takeover may be tested.
+
+See `docs/p2-authored-rainforest-asset-pack.md` and `content/visual/authored/rainforest-p2-source-pack.json`.
 
 ## P3 — Authored Character + Modular Cosmetics
 

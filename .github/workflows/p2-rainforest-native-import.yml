@@ -1,0 +1,69 @@
+name: P2 Rainforest Native Import
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  import-rainforest-pack:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate P2 source contract
+        shell: pwsh
+        run: python scripts/validate-p2-rainforest-assets.py
+
+      - name: Verify native production tools
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          if (-not $env:BLENDER_EXE) { throw 'BLENDER_EXE is required.' }
+          if (-not (Test-Path $env:BLENDER_EXE)) { throw 'BLENDER_EXE does not exist.' }
+
+      - name: Generate P2 OBJ source pack
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p2\obj | Out-Null
+          python scripts/generate-p2-rainforest-source.py --output-dir artifacts/p2/obj --verify
+
+      - name: Export authored FBX LOD payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p2\fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/export-p2-rainforest-fbx.py -- --input-dir artifacts/p2/obj --output-dir artifacts/p2/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import and validate in Unreal Editor
+        shell: pwsh
+        env:
+          WM_P2_FBX_DIR: ${{ github.workspace }}\artifacts\p2\fbx
+          WM_P2_IMPORT_REPORT: ${{ github.workspace }}\artifacts\p2\p2-rainforest-import-report.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p2-rainforest-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Makers automation tests after import
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p2-rainforest-native-import-${{ github.sha }}
+          path: artifacts/p2
+          if-no-files-found: error
