@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "unrealVersion": "5.8.2",
+  "minimumFrameSamplesPerScenario": 1800,
+  "requiredPlatforms": ["iPadOS", "Android"],
+  "requiredScenarios": [
+    "visual.rainforest.explore",
+    "visual.build.dense",
+    "visual.science.vfx-burst",
+    "visual.adventure.reveal"
+  ],
+  "budgets": [
+    {
+      "profileId": "performance.tablet.low",
+      "targetFps": 30,
+      "maxP95FrameTimeMs": 33.34,
+      "maxGameThreadP95Ms": 24.0,
+      "maxRenderThreadP95Ms": 24.0,
+      "maxGpuP95Ms": 30.0,
+      "maxDrawCalls": 700,
+      "maxVisibleTriangles": 750000,
+      "maxResidentTextureMB": 512,
+      "maxActiveVfx": 8
+    },
+    {
+      "profileId": "performance.tablet.medium",
+      "targetFps": 30,
+      "maxP95FrameTimeMs": 33.34,
+      "maxGameThreadP95Ms": 23.0,
+      "maxRenderThreadP95Ms": 23.0,
+      "maxGpuP95Ms": 29.0,
+      "maxDrawCalls": 950,
+      "maxVisibleTriangles": 1200000,
+      "maxResidentTextureMB": 768,
+      "maxActiveVfx": 16
+    },
+    {
+      "profileId": "performance.tablet.high",
+      "targetFps": 60,
+      "maxP95FrameTimeMs": 16.67,
+      "maxGameThreadP95Ms": 13.5,
+      "maxRenderThreadP95Ms": 13.5,
+      "maxGpuP95Ms": 15.5,
+      "maxDrawCalls": 1250,
+      "maxVisibleTriangles": 1800000,
+      "maxResidentTextureMB": 1024,
+      "maxActiveVfx": 28
+    }
+  ],
+  "certificationRules": {
+    "allRequiredScenariosPerDevice": true,
+    "allTabletProfilesRequired": true,
+    "singleBuildCommitRequired": true,
+    "allMetricsWithinBudget": true,
+    "captureHashRequired": true,
+    "screenshotHashRequired": true,
+    "visualReviewRequired": true,
+    "certificationIsFailClosed": true,
+    "sourceCiCanSelfCertify": false
+  }
+}

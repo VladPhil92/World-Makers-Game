@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldmakers.local/schemas/v8-visual-device-evidence.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "platform",
+    "deviceClass",
+    "osVersion",
+    "unrealVersion",
+    "buildCommit",
+    "profileId",
+    "captureTool",
+    "captureFile",
+    "captureSha256",
+    "screenshotFile",
+    "screenshotSha256",
+    "visualReview",
+    "scenarios"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["pending", "passed", "failed"]},
+    "platform": {"enum": ["iPadOS", "Android"]},
+    "deviceClass": {"type": "string", "minLength": 3, "maxLength": 120},
+    "osVersion": {"type": "string", "minLength": 1, "maxLength": 80},
+    "unrealVersion": {"const": "5.8.2"},
+    "buildCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "profileId": {"enum": ["performance.tablet.low", "performance.tablet.medium", "performance.tablet.high"]},
+    "captureTool": {"enum": ["UnrealInsights", "CSVProfiler", "ProfileGPU+CSVProfiler"]},
+    "captureFile": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 200},
+    "captureSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "screenshotFile": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "maxLength": 200},
+    "screenshotSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "visualReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sceneReadable", "uiLegible", "cameraComfortable", "noCriticalArtifacts", "reviewerRole"],
+      "properties": {
+        "sceneReadable": {"type": "boolean"},
+        "uiLegible": {"type": "boolean"},
+        "cameraComfortable": {"type": "boolean"},
+        "noCriticalArtifacts": {"type": "boolean"},
+        "reviewerRole": {"enum": ["visual-qa", "tech-art", "art-director", "product-owner"]}
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "frameSamples",
+          "averageFrameTimeMs",
+          "p95FrameTimeMs",
+          "gameThreadP95Ms",
+          "renderThreadP95Ms",
+          "gpuP95Ms",
+          "peakDrawCalls",
+          "peakVisibleTriangles",
+          "peakResidentTextureMB",
+          "peakActiveVfx"
+        ],
+        "properties": {
+          "id": {"enum": ["visual.rainforest.explore", "visual.build.dense", "visual.science.vfx-burst", "visual.adventure.reveal"]},
+          "frameSamples": {"type": "integer", "minimum": 0},
+          "averageFrameTimeMs": {"type": "number", "minimum": 0},
+          "p95FrameTimeMs": {"type": "number", "minimum": 0},
+          "gameThreadP95Ms": {"type": "number", "minimum": 0},
+          "renderThreadP95Ms": {"type": "number", "minimum": 0},
+          "gpuP95Ms": {"type": "number", "minimum": 0},
+          "peakDrawCalls": {"type": "integer", "minimum": 0},
+          "peakVisibleTriangles": {"type": "integer", "minimum": 0},
+          "peakResidentTextureMB": {"type": "integer", "minimum": 0},
+          "peakActiveVfx": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

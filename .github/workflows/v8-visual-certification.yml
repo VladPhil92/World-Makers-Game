@@ -1,0 +1,52 @@
+name: V8 Visual Device Certification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify-visual-stack:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate V8 source contract
+        shell: pwsh
+        run: python scripts/validate-v8-visual-certification.py
+
+      - name: Verify native certification environment
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required on the native runner.' }
+          if (-not $env:V8_DEVICE_EVIDENCE_ROOT) { throw 'V8_DEVICE_EVIDENCE_ROOT must point to captured iPadOS/Android evidence.' }
+          if (-not (Test-Path $env:V8_DEVICE_EVIDENCE_ROOT)) { throw 'V8_DEVICE_EVIDENCE_ROOT does not exist.' }
+
+      - name: Run World Makers Unreal automation tests
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers." -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Assess representative device evidence
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\v8-visual-certification | Out-Null
+          python scripts/assess-v8-visual-certification.py --evidence-dir "$env:V8_DEVICE_EVIDENCE_ROOT" --expected-commit "${{ github.sha }}" --output artifacts/v8-visual-certification/v8-visual-assessment.json --require-certified
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v8-visual-device-certification-${{ github.sha }}
+          path: artifacts/v8-visual-certification
+          if-no-files-found: error
