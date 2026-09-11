@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "runtimeId": "presentation.camera-ui.v1",
+  "presentationOnly": true,
+  "gameplayAuthority": false,
+  "inputLockingAllowed": false,
+  "forcedCameraRotationAllowed": false,
+  "cameraShakeRequired": false,
+  "authoredSequenceAssetsPresent": false,
+  "principles": {
+    "playerControlPreserved": true,
+    "microbeatsOverLongCutscenes": true,
+    "cameraCollisionPreserved": true,
+    "supportsReducedMotion": true,
+    "semanticVfxDrivenFraming": true,
+    "uiMeaningWithoutMotion": true
+  },
+  "cameraModes": [
+    {"id":"explore","armLengthCm":500,"fovDegrees":72,"offsetZCm":65,"blendSeconds":0.34,"holdSeconds":0.0},
+    {"id":"build","armLengthCm":580,"fovDegrees":77,"offsetZCm":78,"blendSeconds":0.32,"holdSeconds":0.65},
+    {"id":"observe","armLengthCm":405,"fovDegrees":65,"offsetZCm":72,"blendSeconds":0.28,"holdSeconds":0.85},
+    {"id":"science","armLengthCm":365,"fovDegrees":62,"offsetZCm":70,"blendSeconds":0.30,"holdSeconds":0.90},
+    {"id":"dialogue","armLengthCm":345,"fovDegrees":60,"offsetZCm":75,"blendSeconds":0.30,"holdSeconds":1.20},
+    {"id":"adventure-reveal","armLengthCm":650,"fovDegrees":69,"offsetZCm":105,"blendSeconds":0.45,"holdSeconds":1.35}
+  ],
+  "uiCues": [
+    "presentation.build.confirm",
+    "presentation.observe.focus",
+    "presentation.science.focus",
+    "presentation.adventure.reveal",
+    "presentation.mission.changed",
+    "presentation.ecology.changed"
+  ],
+  "reducedMotion": {
+    "maxArmDeltaFromExploreCm": 80,
+    "maxFovDeltaFromExploreDegrees": 3,
+    "maxOffsetZDeltaFromExploreCm": 16,
+    "maxBlendSeconds": 0.18,
+    "maxHoldSeconds": 0.70,
+    "uiTranslationPx": 0,
+    "uiScale": 1.0
+  },
+  "cinematicBeat": {
+    "phases": ["enter", "hold", "exit"],
+    "maxDurationSeconds": 2.5,
+    "locksInput": false,
+    "changesGameplayTimeScale": false,
+    "forcesViewTarget": false
+  },
+  "authoredTargets": {
+    "cameraDataAsset": "/Game/WorldMakers/Presentation/DA_WM_CameraPresentation",
+    "adventureRevealSequence": "/Game/WorldMakers/Presentation/Sequences/LS_WM_AdventureReveal",
+    "scienceRevealSequence": "/Game/WorldMakers/Presentation/Sequences/LS_WM_ScienceReveal",
+    "uiMotionStyle": "/Game/WorldMakers/UI/Presentation/DA_WM_UIMotionStyle"
+  },
+  "certificationBoundary": {
+    "sourceRuntimeCanBeValidatedInCI": true,
+    "authoredLevelSequencesPresent": false,
+    "nativeCameraReviewRequired": true,
+    "motionSicknessReviewRequired": true,
+    "representativeTabletReviewRequired": true
+  }
+}

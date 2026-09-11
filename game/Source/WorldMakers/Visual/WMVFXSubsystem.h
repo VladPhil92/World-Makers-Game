@@ -9,6 +9,8 @@
 
 class AWMProceduralVFXActor;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FWMVFXAcceptedSignature, FName, EventId, FVector, LocationCm, float, Intensity);
+
 UCLASS()
 class WORLDMAKERS_API UWMVFXSubsystem : public UWorldSubsystem
 {
@@ -34,6 +36,10 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "World Makers|VFX")
     FName GetLastAcceptedEventId() const { return LastAcceptedEventId; }
+
+    /** Presentation-only notification emitted after a VFX event has passed all V6 validation and budget gates. */
+    UPROPERTY(BlueprintAssignable, Category = "World Makers|VFX")
+    FWMVFXAcceptedSignature OnVFXAccepted;
 
 private:
     UFUNCTION()
