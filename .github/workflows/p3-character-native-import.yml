@@ -1,0 +1,69 @@
+name: P3 Character Native Import
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  import-character-pack:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate P3 source contract
+        shell: pwsh
+        run: python scripts/validate-p3-character-assets.py
+
+      - name: Verify native production tools
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          if (-not $env:BLENDER_EXE) { throw 'BLENDER_EXE is required.' }
+          if (-not (Test-Path $env:BLENDER_EXE)) { throw 'BLENDER_EXE does not exist.' }
+
+      - name: Generate P3 source bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p3\source | Out-Null
+          python scripts/generate-p3-character-source.py --output-dir artifacts/p3/source --verify
+
+      - name: Build rigged FBX payload in Blender
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p3\fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/build-p3-character-fbx.py -- --source-dir artifacts/p3/source --output-dir artifacts/p3/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import and validate in Unreal Editor
+        shell: pwsh
+        env:
+          WM_P3_FBX_DIR: ${{ github.workspace }}\artifacts\p3\fbx
+          WM_P3_IMPORT_REPORT: ${{ github.workspace }}\artifacts\p3\p3-character-import-report.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p3-character-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Makers automation tests after import
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p3-character-native-import-${{ github.sha }}
+          path: artifacts/p3
+          if-no-files-found: error
