@@ -5,7 +5,7 @@
     "generator": "scripts/generate-p4-authored-motion-vfx-presentation.py",
     "generatedRoot": "SourceArt/WorldMakers/P4",
     "bundleFilename": "WM_P4_AuthoredMotionVFXPresentation.source.json",
-    "sha256": "9193bbeb85a5f14e74d69df92ecae9a6e8414304a4337b1ee4912f71439e0ed3"
+    "sha256": "835a8734a6850470154f50f47a61e79ecb567ef871426bde4faaeff1a38188df"
   },
   "dependencies": {
     "characterP3": "content/visual/authored/character-p3-source-pack.json",
