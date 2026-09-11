@@ -81,6 +81,8 @@ jobs:
         run: python scripts/validate-p4-authored-motion-vfx-presentation.py
       - name: Validate P5 Art Polish Device Certification
         run: python scripts/validate-p5-art-polish-certification.py
+      - name: Validate N1 Native Authored Integration Candidate
+        run: python scripts/validate-n1-native-integration.py
 
   parent-portal:
     runs-on: ubuntu-latest
