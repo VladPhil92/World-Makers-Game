@@ -1,0 +1,143 @@
+name: N1 Native Authored Integration Candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-integration-candidate:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate N1 source contract
+        shell: pwsh
+        run: python scripts/validate-n1-native-integration.py
+
+      - name: Verify Blender and Unreal native runner
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          if (-not $env:BLENDER_EXE) { throw 'BLENDER_EXE is required.' }
+          if (-not (Test-Path $env:BLENDER_EXE)) { throw 'BLENDER_EXE does not exist.' }
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          New-Item -ItemType Directory -Force -Path artifacts\n1\reports | Out-Null
+
+      - name: Generate P2 rainforest source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p2\obj | Out-Null
+          python scripts/generate-p2-rainforest-source.py --output-dir artifacts/n1/p2/obj --verify
+
+      - name: Export P2 FBX LOD payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p2\fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/export-p2-rainforest-fbx.py -- --input-dir artifacts/n1/p2/obj --output-dir artifacts/n1/p2/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P2 rainforest into Unreal
+        shell: pwsh
+        env:
+          WM_P2_FBX_DIR: ${{ github.workspace }}\artifacts\n1\p2\fbx
+          WM_P2_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n1\reports\p2-rainforest-import-report.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p2-rainforest-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Generate P3 character source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p3\source | Out-Null
+          python scripts/generate-p3-character-source.py --output-dir artifacts/n1/p3/source --verify
+
+      - name: Build P3 rigged FBX payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p3\fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/build-p3-character-fbx.py -- --source-dir artifacts/n1/p3/source --output-dir artifacts/n1/p3/fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P3 character into Unreal
+        shell: pwsh
+        env:
+          WM_P3_FBX_DIR: ${{ github.workspace }}\artifacts\n1\p3\fbx
+          WM_P3_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n1\reports\p3-character-import-report.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p3-character-assets.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Generate P4 authored motion VFX presentation source
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p4\source | Out-Null
+          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/n1/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json
+          python -c "import hashlib,json,pathlib; p=pathlib.Path('artifacts/n1/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json'); m=json.load(open('content/visual/authored/p4-motion-vfx-presentation.json',encoding='utf-8')); actual=hashlib.sha256(p.read_bytes()).hexdigest(); expected=m['source']['sha256']; assert actual==expected, f'P4 SHA mismatch: {actual} != {expected}'"
+
+      - name: Export P4 animation FBXs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\n1\p4\animation-fbx | Out-Null
+          & $env:BLENDER_EXE --background --python scripts/blender/export-p4-animation-fbx.py -- --rig-fbx artifacts/n1/p3/fbx/SK_WM_ChildExplorer_LOD0.fbx --source artifacts/n1/p4/source/WM_P4_AuthoredMotionVFXPresentation.source.json --output-dir artifacts/n1/p4/animation-fbx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import P4 animations and presentation containers
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\n1\p4\source\WM_P4_AuthoredMotionVFXPresentation.source.json
+          WM_P4_ANIMATION_FBX_DIR: ${{ github.workspace }}\artifacts\n1\p4\animation-fbx
+          WM_P4_IMPORT_REPORT: ${{ github.workspace }}\artifacts\n1\reports\p4-native-report.json
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\import-p4-animation-presentation.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Collect exact-build P5 native inventory
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\n1\p4\source\WM_P4_AuthoredMotionVFXPresentation.source.json
+          WM_P5_NATIVE_INVENTORY: ${{ github.workspace }}\artifacts\n1\reports\p5-native-inventory.json
+          WM_BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\collect-p5-native-inventory.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Makers automation tests on integrated Content
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Assess N1 activation candidate
+        shell: pwsh
+        run: |
+          python scripts/assess-n1-native-integration.py `
+            --p2-report artifacts/n1/reports/p2-rainforest-import-report.json `
+            --p3-report artifacts/n1/reports/p3-character-import-report.json `
+            --p4-report artifacts/n1/reports/p4-native-report.json `
+            --p5-inventory artifacts/n1/reports/p5-native-inventory.json `
+            --expected-commit "${{ github.sha }}" `
+            --output artifacts/n1/n1-native-integration-readiness.json `
+            --candidate-manifest artifacts/n1/authored-assets-p1.activation-candidate.json `
+            --require-candidate
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: n1-native-authored-integration-${{ github.sha }}
+          path: artifacts/n1
+          if-no-files-found: error
