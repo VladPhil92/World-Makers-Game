@@ -52,7 +52,7 @@ for (const forbidden of ['STRIPE_SECRET', 'SUPABASE_SERVICE_ROLE', 'PRIVATE_KEY'
 }
 
 const identity = await readFile(join(root, 'src', 'domain', 'identity.mjs'), 'utf8');
-for (const required of ['ctg-one-identity-v1', "issuer: 'ctg-one'", "audience: 'world-makers'", 'timingSafeEqual', 'deriveIdentityLinkId']) {
+for (const required of ["const ISSUER = 'ctg-one'", "const AUDIENCE = 'world-makers'", "const PROTOCOL = 'ctg-one-identity-v1'", 'timingSafeEqual', 'deriveIdentityLinkId']) {
   if (!identity.includes(required)) throw new Error(`D2 identity boundary missing: ${required}`);
 }
 if (identity.includes('localStorage') || identity.includes('password')) throw new Error('Identity contract may not persist browser credentials/passwords.');
