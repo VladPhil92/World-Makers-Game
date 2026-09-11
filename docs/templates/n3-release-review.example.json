@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "buildCommit": "0000000000000000000000000000000000000000",
+  "reviewerRoles": [],
+  "checks": {
+    "n2ReleaseCandidateApproved": false,
+    "p5ArtPolishApproved": false,
+    "v8DeviceMatrixApproved": false,
+    "childSafetyRegressionReviewed": false,
+    "noCriticalDefects": false,
+    "releaseNotesApproved": false
+  },
+  "notes": "Template only. A real N3 release review must be completed against the exact certification commit."
+}
