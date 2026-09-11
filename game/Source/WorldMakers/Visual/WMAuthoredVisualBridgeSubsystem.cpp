@@ -1,5 +1,6 @@
 #include "Visual/WMAuthoredVisualBridgeSubsystem.h"
 
+#include "Animation/AnimInstance.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/ProceduralMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -7,8 +8,15 @@
 #include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
 #include "Environment/WMCaribbeanRainforestPrototype.h"
+#include "HAL/FileManager.h"
+#include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Parse.h"
+#include "Misc/Paths.h"
 #include "Player/WMPlayerCharacter.h"
 #include "Visual/WMAuthoredAssetSubsystem.h"
+#include "Visual/WMAvatarArtTypes.h"
+#include "Visual/WMVFXSubsystem.h"
 
 namespace WMAuthoredBridge
 {
@@ -45,6 +53,11 @@ namespace WMAuthoredBridge
         Component->SetVisibility(bVisible, true);
         Component->SetHiddenInGame(!bVisible, true);
     }
+
+    const TCHAR* JsonBool(const bool bValue)
+    {
+        return bValue ? TEXT("true") : TEXT("false");
+    }
 }
 
 void UWMAuthoredVisualBridgeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
@@ -52,22 +65,35 @@ void UWMAuthoredVisualBridgeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
     RetryRemainingSeconds = 3.0f;
     RetryAccumulatorSeconds = 0.0f;
+    bTakeoverReportWritten = false;
+    FParse::Value(FCommandLine::Get(), TEXT("WMN2TakeoverReport="), TakeoverReportPath);
+    FParse::Value(FCommandLine::Get(), TEXT("WMBuildCommit="), TakeoverBuildCommit);
     RefreshAuthoredVisuals();
+    TryWriteN2TakeoverReport(false);
 }
 
 void UWMAuthoredVisualBridgeSubsystem::Tick(const float DeltaTime)
 {
-    if (!FMath::IsFinite(DeltaTime) || DeltaTime <= 0.0f || RetryRemainingSeconds <= 0.0f)
+    if (!FMath::IsFinite(DeltaTime) || DeltaTime <= 0.0f)
     {
         return;
     }
 
-    RetryRemainingSeconds = FMath::Max(0.0f, RetryRemainingSeconds - DeltaTime);
-    RetryAccumulatorSeconds += DeltaTime;
-    if (RetryAccumulatorSeconds >= 0.25f)
+    if (RetryRemainingSeconds > 0.0f)
     {
-        RetryAccumulatorSeconds = 0.0f;
-        RefreshAuthoredVisuals();
+        RetryRemainingSeconds = FMath::Max(0.0f, RetryRemainingSeconds - DeltaTime);
+        RetryAccumulatorSeconds += DeltaTime;
+        if (RetryAccumulatorSeconds >= 0.25f)
+        {
+            RetryAccumulatorSeconds = 0.0f;
+            RefreshAuthoredVisuals();
+        }
+    }
+
+    TryWriteN2TakeoverReport(false);
+    if (RetryRemainingSeconds <= 0.0f)
+    {
+        TryWriteN2TakeoverReport(true);
     }
 }
 
@@ -182,11 +208,30 @@ bool UWMAuthoredVisualBridgeSubsystem::TryPrepareAuthoredAvatar(
     {
         return false;
     }
+    bAuthoredAvatarReady = true;
+
+    const TSubclassOf<UAnimInstance> AnimClass = Assets->LoadAnimationBlueprintClass(TEXT("animation.player.blueprint"));
+    if (!AnimClass)
+    {
+        return false;
+    }
 
     Character->GetMesh()->SetSkeletalMesh(AuthoredMesh);
     Character->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Character->GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+    Character->GetMesh()->SetAnimInstanceClass(AnimClass);
+    bAuthoredAnimationBlueprintActive = true;
+
+    // N2 runtime activation may override the V4 source-development preference, but only after
+    // P1 explicitly declares both the production mesh and AnimBP present. This mutates only the
+    // process-local default object; reverting the P1 registry restores the procedural fallback.
+    if (UWMAvatarVisualSettings* Settings = GetMutableDefault<UWMAvatarVisualSettings>())
+    {
+        Settings->bUseProceduralAvatarArt = false;
+    }
     Character->RefreshAvatarVisualPath();
-    return true;
+
+    return !Character->IsProceduralAvatarActive() && Character->GetMesh()->IsVisible();
 }
 
 bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredEnvironment(
@@ -290,6 +335,22 @@ bool UWMAuthoredVisualBridgeSubsystem::TryApplyAuthoredEnvironment(
     return true;
 }
 
+bool UWMAuthoredVisualBridgeSubsystem::IsAuthoredPresentationReady() const
+{
+    const UWMAuthoredAssetSubsystem* Assets = GetAssetSubsystem();
+    return Assets &&
+        Assets->IsAuthoredAssetDeclaredPresent(TEXT("presentation.adventure-reveal")) &&
+        Assets->IsAuthoredAssetDeclaredPresent(TEXT("presentation.camera-data"));
+}
+
+bool UWMAuthoredVisualBridgeSubsystem::IsFullAuthoredTakeoverActive() const
+{
+    const UWorld* World = GetWorld();
+    const UWMVFXSubsystem* VFX = World ? World->GetSubsystem<UWMVFXSubsystem>() : nullptr;
+    return bAuthoredEnvironmentActive && bAuthoredAvatarActive && bAuthoredAnimationBlueprintActive &&
+        VFX && VFX->IsAuthoredNiagaraEnabled() && IsAuthoredPresentationReady();
+}
+
 void UWMAuthoredVisualBridgeSubsystem::RefreshAuthoredVisuals()
 {
     UWorld* World = GetWorld();
@@ -300,9 +361,11 @@ void UWMAuthoredVisualBridgeSubsystem::RefreshAuthoredVisuals()
     }
 
     bAuthoredAvatarReady = false;
+    bAuthoredAvatarActive = false;
+    bAuthoredAnimationBlueprintActive = false;
     for (TActorIterator<AWMPlayerCharacter> It(World); It; ++It)
     {
-        bAuthoredAvatarReady |= TryPrepareAuthoredAvatar(*It, Assets);
+        bAuthoredAvatarActive |= TryPrepareAuthoredAvatar(*It, Assets);
     }
 
     const bool bPreviouslyAuthoredEnvironment = bAuthoredEnvironmentActive;
@@ -318,4 +381,52 @@ void UWMAuthoredVisualBridgeSubsystem::RefreshAuthoredVisuals()
             SetProceduralEnvironmentVisible(Biome, true);
         }
     }
+}
+
+void UWMAuthoredVisualBridgeSubsystem::TryWriteN2TakeoverReport(const bool bForce)
+{
+    if (bTakeoverReportWritten || TakeoverReportPath.IsEmpty())
+    {
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    UWMVFXSubsystem* VFX = World ? World->GetSubsystem<UWMVFXSubsystem>() : nullptr;
+    const bool bAuthoredVfxReady = VFX && VFX->IsAuthoredNiagaraEnabled();
+    const bool bPresentationReady = IsAuthoredPresentationReady();
+
+    bool bProceduralAvatarActive = false;
+    if (World)
+    {
+        for (TActorIterator<AWMPlayerCharacter> It(World); It; ++It)
+        {
+            bProceduralAvatarActive |= It->IsProceduralAvatarActive();
+        }
+    }
+
+    const bool bFullTakeover = bAuthoredEnvironmentActive && bAuthoredAvatarActive &&
+        bAuthoredAnimationBlueprintActive && bAuthoredVfxReady && bPresentationReady && !bProceduralAvatarActive;
+    if (!bFullTakeover && !bForce)
+    {
+        return;
+    }
+
+    const FString AbsoluteReportPath = FPaths::IsRelative(TakeoverReportPath)
+        ? FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), TakeoverReportPath)
+        : TakeoverReportPath;
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(AbsoluteReportPath), true);
+
+    const FString Json = FString::Printf(
+        TEXT("{\n  \"schemaVersion\": 1,\n  \"phase\": \"N2\",\n  \"status\": \"%s\",\n  \"buildCommit\": \"%s\",\n  \"authoredEnvironmentActive\": %s,\n  \"proceduralEnvironmentVisible\": %s,\n  \"authoredAvatarActive\": %s,\n  \"proceduralAvatarActive\": %s,\n  \"authoredAnimationBlueprintActive\": %s,\n  \"authoredVfxReady\": %s,\n  \"authoredPresentationReady\": %s\n}\n"),
+        bFullTakeover ? TEXT("TAKEOVER_VERIFIED") : TEXT("BLOCKED"),
+        *TakeoverBuildCommit,
+        WMAuthoredBridge::JsonBool(bAuthoredEnvironmentActive),
+        WMAuthoredBridge::JsonBool(!bAuthoredEnvironmentActive),
+        WMAuthoredBridge::JsonBool(bAuthoredAvatarActive),
+        WMAuthoredBridge::JsonBool(bProceduralAvatarActive),
+        WMAuthoredBridge::JsonBool(bAuthoredAnimationBlueprintActive),
+        WMAuthoredBridge::JsonBool(bAuthoredVfxReady),
+        WMAuthoredBridge::JsonBool(bPresentationReady));
+
+    bTakeoverReportWritten = FFileHelper::SaveStringToFile(Json, *AbsoluteReportPath);
 }
