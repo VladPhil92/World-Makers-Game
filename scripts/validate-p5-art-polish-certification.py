@@ -102,7 +102,8 @@ def main() -> None:
     roadmap = ROADMAP.read_text(encoding="utf-8").replace("`", "")
     require("P5" in roadmap and "source-complete" in roadmap.lower() and "device certification" in roadmap.lower(), "Authored roadmap must record the P5 source/device boundary")
 
-    require(any(asset.get("authoredPresent") is False for asset in p1["assets"]), "P5 source gate expects certification to remain blocked until native authored assets are explicitly approved")
+    authored_flags = [asset.get("authoredPresent") is True for asset in p1["assets"]]
+    require(all(authored_flags) or not any(authored_flags), "P5/P1 activation state must be all-off before N2 or all-on after committed N2 activation; partial activation is forbidden")
     print("P5 art-polish/device-certification source contract validated: strict authored inventory, human polish evidence, six Android/iPadOS tier packages and V8 fail-closed certification are wired.")
 
 
