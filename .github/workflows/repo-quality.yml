@@ -75,6 +75,8 @@ jobs:
         run: python scripts/validate-first-person-interaction-kit.py
       - name: Validate First-Person Authored Asset Pack v1
         run: python scripts/validate-first-person-authored-pack.py
+      - name: Validate First-Person Native Review Activation v1
+        run: python scripts/validate-first-person-native-review-activation.py
       - name: Validate V8 Visual Optimization Device Certification
         run: python scripts/validate-v8-visual-certification.py
       - name: Validate P1 Authored Asset Production Pipeline
