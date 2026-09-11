@@ -1,4 +1,6 @@
-# World Makers — Approved Visual Reference Set v1
+# World Makers — Approved Visual Reference Set v1 (superseded)
+
+> **Superseded by [`world-makers-v2`](../world-makers-v2/README.md).** This set remains for historical traceability and for anything in this repository that still links to it (for example the `ctg_one_website` live visual proxy's legacy asset keys). New work — including the public website — should reference `world-makers-v2`, which carries a newer approved generation batch at full, unmodified resolution instead of documentation-optimized derivatives.
 
 This directory contains the user-approved visual references used to formalize `docs/visual-identity-animation-policy.md`.
 
