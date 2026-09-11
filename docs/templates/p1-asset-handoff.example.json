@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "assetId": "environment.rainforest.tree.a",
+  "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_A.fbx",
+  "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_A.SM_WM_RF_Tree_A",
+  "dccTool": "pending",
+  "dccVersion": "pending",
+  "checks": {
+    "centimeterScale": "pending",
+    "zUp": "pending",
+    "xForward": "pending",
+    "transformsApplied": "pending",
+    "pivotReviewed": "pending",
+    "silhouetteReviewed": "pending",
+    "uvReviewed": "pending",
+    "normalsTangentsReviewed": "pending",
+    "lodFloorMet": "pending",
+    "materialSlotCeilingMet": "pending",
+    "collisionPolicyMet": "pending",
+    "unrealImportReviewed": "pending",
+    "gameplayDistanceReviewed": "pending"
+  },
+  "notes": "Example only. Never change authoredPresent=true from this template; verify the imported asset first."
+}

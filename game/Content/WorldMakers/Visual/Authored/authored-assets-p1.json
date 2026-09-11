@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "units": "centimeters",
+  "upAxis": "Z",
+  "forwardAxis": "X",
+  "sourceFormats": ["fbx", "gltf", "blend", "sbsar", "json"],
+  "assets": [
+    {
+      "id": "environment.rainforest.ground.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Ground_A.SM_WM_RF_Ground_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Ground_A.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.terrain.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_TerrainMound_A.SM_WM_RF_TerrainMound_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_TerrainMound_A.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.tree.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_A.SM_WM_RF_Tree_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_A.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.tree.b",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_B.SM_WM_RF_Tree_B",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_B.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.tree.c",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_C.SM_WM_RF_Tree_C",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Tree_C.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.understory.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Understory_A.SM_WM_RF_Understory_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Understory_A.fbx",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 2,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.rock.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_Rock_A.SM_WM_RF_Rock_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_Rock_A.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 3,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.water-edge.a",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_WaterEdge_A.SM_WM_RF_WaterEdge_A",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_WaterEdge_A.fbx",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 2,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "environment.rainforest.hero-ceiba",
+      "kind": "StaticMesh",
+      "objectPath": "/Game/WorldMakers/Environment/Rainforest/SM_WM_RF_HeroCeiba.SM_WM_RF_HeroCeiba",
+      "sourcePath": "SourceArt/WorldMakers/Environment/Rainforest/SM_WM_RF_HeroCeiba.fbx",
+      "collisionPolicy": "proxy",
+      "fallbackMode": "procedural",
+      "minLods": 4,
+      "maxMaterialSlots": 2,
+      "authoredPresent": false
+    },
+    {
+      "id": "character.player.child-explorer",
+      "kind": "SkeletalMesh",
+      "objectPath": "/Game/WorldMakers/Characters/Player/SK_WM_ChildExplorer.SK_WM_ChildExplorer",
+      "sourcePath": "SourceArt/WorldMakers/Characters/Player/SK_WM_ChildExplorer.fbx",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 4,
+      "maxMaterialSlots": 4,
+      "authoredPresent": false
+    },
+    {
+      "id": "material.master.surface",
+      "kind": "Material",
+      "objectPath": "/Game/WorldMakers/Materials/M_WM_MasterSurface.M_WM_MasterSurface",
+      "sourcePath": "SourceArt/WorldMakers/Materials/M_WM_MasterSurface.sbsar",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "material.water",
+      "kind": "Material",
+      "objectPath": "/Game/WorldMakers/Materials/M_WM_Water.M_WM_Water",
+      "sourcePath": "SourceArt/WorldMakers/Materials/M_WM_Water.sbsar",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "animation.player.blueprint",
+      "kind": "AnimationBlueprint",
+      "objectPath": "/Game/WorldMakers/Characters/Player/ABP_WM_ChildExplorer.ABP_WM_ChildExplorer",
+      "sourcePath": "SourceArt/WorldMakers/Characters/Player/ABP_WM_ChildExplorer.plan.json",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "vfx.science.master",
+      "kind": "NiagaraSystem",
+      "objectPath": "/Game/WorldMakers/VFX/NS_WM_ScienceMaster.NS_WM_ScienceMaster",
+      "sourcePath": "SourceArt/WorldMakers/VFX/NS_WM_ScienceMaster.plan.json",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "presentation.adventure-reveal",
+      "kind": "LevelSequence",
+      "objectPath": "/Game/WorldMakers/Presentation/LS_WM_AdventureReveal.LS_WM_AdventureReveal",
+      "sourcePath": "SourceArt/WorldMakers/Presentation/LS_WM_AdventureReveal.sequence-plan.json",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    },
+    {
+      "id": "presentation.camera-data",
+      "kind": "DataAsset",
+      "objectPath": "/Game/WorldMakers/Presentation/DA_WM_CameraPresentation.DA_WM_CameraPresentation",
+      "sourcePath": "SourceArt/WorldMakers/Presentation/DA_WM_CameraPresentation.plan.json",
+      "collisionPolicy": "none",
+      "fallbackMode": "procedural",
+      "minLods": 1,
+      "maxMaterialSlots": 1,
+      "authoredPresent": false
+    }
+  ]
+}
