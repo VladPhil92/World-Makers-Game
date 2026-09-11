@@ -21,6 +21,15 @@ namespace
     }
 }
 
+bool FWMFirstPersonBuildProvenance::IsStructurallyValid() const
+{
+    return Status == TEXT("bound") &&
+        IsLowerHexOfLength(BuildCommitSha, 40) &&
+        IsLowerHexOfLength(ReviewedSourceCommitSha, 40) &&
+        IsLowerHexOfLength(ActivationCandidateSha256, 64) &&
+        IsLowerHexOfLength(ActivationManifestSha256, 64);
+}
+
 bool FWMFirstPersonNativeActivationState::IsStructurallyValid() const
 {
     if (!bActivated || Status != TEXT("activated")) return false;
@@ -31,9 +40,12 @@ bool FWMFirstPersonNativeActivationState::IsStructurallyValid() const
     return bAllFiveAssetsApproved && bAllNineAnimationsApproved && bHumanReviewApproved && bDeviceReviewApproved;
 }
 
-bool FWMFirstPersonNativeActivationState::AllowsProductionTakeover(const FString& BuildCommitSha) const
+bool FWMFirstPersonNativeActivationState::AllowsProductionTakeover(const FWMFirstPersonBuildProvenance& Provenance) const
 {
-    return IsStructurallyValid() && IsLowerHexOfLength(BuildCommitSha, 40) && TargetCommitSha == BuildCommitSha;
+    return IsStructurallyValid() &&
+        Provenance.IsStructurallyValid() &&
+        TargetCommitSha == Provenance.ReviewedSourceCommitSha &&
+        ActivationCandidateSha256 == Provenance.ActivationCandidateSha256;
 }
 
 bool FWMFirstPersonNativeActivationRuntime::TryParseJson(const FString& JsonText, FWMFirstPersonNativeActivationState& OutState)
@@ -71,7 +83,41 @@ bool FWMFirstPersonNativeActivationRuntime::TryLoadPackagedState(FWMFirstPersonN
     return FFileHelper::LoadFileToString(JsonText, *FullPath) && TryParseJson(JsonText, OutState);
 }
 
+bool FWMFirstPersonNativeActivationRuntime::TryParseBuildProvenanceJson(const FString& JsonText, FWMFirstPersonBuildProvenance& OutState)
+{
+    TSharedPtr<FJsonObject> Root;
+    const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonText);
+    if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid()) return false;
+
+    double SchemaVersion = 0.0;
+    if (!Root->TryGetNumberField(TEXT("schemaVersion"), SchemaVersion) || static_cast<int32>(SchemaVersion) != 1) return false;
+
+    FString ProvenanceId;
+    if (!Root->TryGetStringField(TEXT("provenanceId"), ProvenanceId) || ProvenanceId != TEXT("visual.first-person-build-provenance.v1")) return false;
+
+    FWMFirstPersonBuildProvenance Parsed;
+    Root->TryGetStringField(TEXT("status"), Parsed.Status);
+    Root->TryGetStringField(TEXT("buildCommitSha"), Parsed.BuildCommitSha);
+    Root->TryGetStringField(TEXT("reviewedSourceCommitSha"), Parsed.ReviewedSourceCommitSha);
+    Root->TryGetStringField(TEXT("activationCandidateSha256"), Parsed.ActivationCandidateSha256);
+    Root->TryGetStringField(TEXT("activationManifestSha256"), Parsed.ActivationManifestSha256);
+    OutState = MoveTemp(Parsed);
+    return true;
+}
+
+bool FWMFirstPersonNativeActivationRuntime::TryLoadPackagedBuildProvenance(FWMFirstPersonBuildProvenance& OutState)
+{
+    FString JsonText;
+    const FString FullPath = FPaths::Combine(FPaths::ProjectContentDir(), PackagedBuildProvenanceRelativePath());
+    return FFileHelper::LoadFileToString(JsonText, *FullPath) && TryParseBuildProvenanceJson(JsonText, OutState);
+}
+
 FString FWMFirstPersonNativeActivationRuntime::PackagedRelativePath()
 {
     return TEXT("WorldMakers/Visual/first-person-native-activation-v1.json");
+}
+
+FString FWMFirstPersonNativeActivationRuntime::PackagedBuildProvenanceRelativePath()
+{
+    return TEXT("WorldMakers/Visual/first-person-build-provenance-v1.json");
 }
