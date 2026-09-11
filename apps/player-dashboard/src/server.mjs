@@ -7,6 +7,7 @@ import { dashboardCatalog } from './domain/catalog.mjs';
 import { createLaunchContext } from './domain/launch.mjs';
 import { verifyIdentityAssertion, deriveIdentityLinkId } from './domain/identity.mjs';
 import { JsonFileProfileStore, ProfileConflictError } from './domain/profile-store.mjs';
+import { SupabaseProfileStore } from './domain/supabase-profile-store.mjs';
 import { appendStoreRequest, createPlayerProfile, profilePlayerReadModel, updateProfileLoadout, updateProfilePreferences, updateProfileSelection } from './domain/profile.mjs';
 import { createDemoPlayer } from './data/demo-player.mjs';
 
@@ -20,7 +21,11 @@ const identityLinkSecret = process.env.WORLD_MAKERS_IDENTITY_LINK_SECRET ?? iden
 const configuredProfileStorePath = process.env.WORLD_MAKERS_PROFILE_STORE_PATH ?? '';
 const developmentProfileStorePath = process.env.NODE_ENV === 'production' ? '' : join(process.cwd(), 'Build', 'PlayerDashboard', 'profiles.json');
 const defaultProfileStorePath = configuredProfileStorePath || developmentProfileStorePath;
-const defaultProfileStore = defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
+const supabaseUrl = process.env.SUPABASE_URL ?? '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
+const defaultProfileStore = supabaseUrl && supabaseAnonKey
+  ? new SupabaseProfileStore({ url: supabaseUrl, anonKey: supabaseAnonKey })
+  : defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
 const cookieName = 'wm_player_session';
 const sessions = new Map();
 
@@ -28,6 +33,8 @@ const staticFiles = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/app.css', ['app.css', 'text/css; charset=utf-8']],
+  ['/handoff', ['handoff.html', 'text/html; charset=utf-8']],
+  ['/handoff.js', ['handoff.js', 'text/javascript; charset=utf-8']],
 ]);
 
 class AuthenticationError extends Error {}

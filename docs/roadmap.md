@@ -48,15 +48,24 @@ Target outcomes:
 Current source progression:
 
 - M4.1 — parent portal MVP: source-complete with demo-only auth and provider-neutral contracts.
-- M4.2 — production identity, durable family linking and backend adapters: next.
+- M4.2 — production identity, durable family linking and backend adapters: source-complete for the first web playtest slice; deployed for live testing.
 
-M4.2 target outcomes:
+M4.2 implementation status:
 
-- Select production identity provider and authenticated server adapter.
-- Durable family/guardian/child relationship storage and verification.
-- Real data aggregation from authorized game services.
-- Durable export/delete/unlink workflows with audit and retention semantics.
-- Production localization and deployment topology.
+- Guardians register and sign in with real accounts (Supabase Auth, email + password) instead of the demo-only session.
+- Family/guardian/child relationships are durable, in a dedicated Supabase Postgres project (`World Makers Game`) kept separate from the CTG One production/financial database by design — that project's own `worldmakers_interest_profiles` table already documents that child identity and gameplay data must stay out of it.
+- Row Level Security enforces that a guardian only ever sees their own family and linked children; the game's player-profile store is reached only through two narrowly-scoped `SECURITY DEFINER` RPCs, so no service-role key is needed anywhere in either app.
+- Guardians create a child's player profile from the portal and hand off into `player-dashboard` through the existing `ctg-one-identity-v1` assertion protocol (parent-portal now issues assertions; player-dashboard already verified them) via a same-origin `/handoff` page — no new cross-origin trust surface.
+- `player-dashboard`'s persistent profile store (D2) now has a Supabase-backed implementation alongside the original local `JsonFileProfileStore`, so profiles survive redeploys once `SUPABASE_URL`/`SUPABASE_ANON_KEY` are configured.
+- Both apps are deployed on Railway for the first live web playtest.
+
+M4.2 remaining outcomes:
+
+- Real gameplay-telemetry sync into `child_dashboard_stats` (currently zeroed on child creation; the game/runtime side of that pipeline is separate future work).
+- Co-parent invite flow (today a guardian can only self-link the family they created at signup).
+- Frictionless test signup: Supabase's default "confirm email" flow is still on for this project; either configure production SMTP or toggle confirmations off in the Supabase dashboard for faster internal testing.
+- Durable export/delete/unlink workflows with audit and retention semantics (privacy-request endpoints exist but remain a stub, as in M4.1).
+- Production localization.
 
 ## M5 — Fantastic Learning Universe
 

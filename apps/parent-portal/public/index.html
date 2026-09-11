@@ -23,8 +23,27 @@
       <p class="eyebrow">For parents and guardians</p>
       <h1 id="welcome-title">A calm view of their world.</h1>
       <p>See broad learning progress, recent creations and play-time summaries without turning a child’s play into surveillance.</p>
-      <button id="demo-sign-in" class="button button-primary" type="button">Open secure demo</button>
-      <p id="auth-note" class="fine-print">Production sign-in stays disabled until an approved identity provider is configured.</p>
+
+      <div class="auth-tabs" role="tablist" aria-label="Sign in or create an account">
+        <button id="tab-login" class="button button-secondary" type="button" role="tab" aria-selected="true">Sign in</button>
+        <button id="tab-register" class="button button-quiet" type="button" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <label>Email<input id="login-email" name="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="login-password" name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+        <button class="button button-primary" type="submit">Sign in</button>
+      </form>
+
+      <form id="register-form" class="auth-form" hidden>
+        <label>Your name<input id="register-name" name="displayName" type="text" maxlength="40" autocomplete="name" required></label>
+        <label>Email<input id="register-email" name="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+        <button class="button button-primary" type="submit">Create account</button>
+      </form>
+
+      <button id="demo-sign-in" class="button button-quiet" type="button" hidden>Open secure demo</button>
+      <p id="auth-note" class="fine-print" role="status" aria-live="polite"></p>
     </section>
 
     <section id="portal" hidden>
@@ -40,6 +59,22 @@
       </div>
 
       <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <section id="no-children" class="panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">Get started</p><h2>Add your first player profile</h2></div></div>
+        <p>Create a profile for your child. They will play under this profile inside World Makers.</p>
+        <form id="add-child-form" class="inline-form">
+          <label>Child's display name<input id="child-alias" name="displayAlias" maxlength="40" required></label>
+          <button class="button button-primary" type="submit">Add profile</button>
+        </form>
+      </section>
+
+      <div id="child-actions" class="panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">Play</p><h2>Launch World Makers</h2></div></div>
+        <p>Opens the player dashboard for the selected profile in a new tab.</p>
+        <button id="launch-button" class="button button-primary" type="button">Play now</button>
+        <p id="launch-result" class="fine-print" aria-live="polite"></p>
+      </div>
 
       <section class="metric-grid" aria-label="Weekly overview">
         <article class="metric-card"><span class="metric-label">Play time · 7 days</span><strong id="play-minutes">—</strong><span id="session-count">—</span></article>

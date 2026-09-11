@@ -12,6 +12,51 @@ permissions:
 jobs:
   content-validation:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        script:
+          - validate-content.py
+          - validate-trust-economy.py
+          - validate-m2-mission-runtime.py
+          - validate-m2-1-spatial-measurement.py
+          - validate-m2-2-interactive-measurement.py
+          - validate-m2-3-mission-progression.py
+          - validate-m3-1-biome-runtime.py
+          - validate-m3-2-world-interaction.py
+          - validate-m3-3-science-mission-runtime.py
+          - validate-m3-4-reactive-ecosystem.py
+          - validate-m3-5-ecological-building.py
+          - validate-m3-6-child-journey-ux.py
+          - validate-m3-7-tablet-performance.py
+          - validate-m3-8-vertical-slice-certification.py
+          - validate-m4-parent-portal.py
+          - validate-player-dashboard-d1.py
+          - validate-player-dashboard-d2.py
+          - validate-m5-2-composable-runtime.py
+          - validate-m5-3-science-simulation.py
+          - validate-m5-4-language-thought-runtime.py
+          - validate-v1-visual-production.py
+          - validate-v2-materials-surface.py
+          - validate-v3-environment-art.py
+          - validate-v4-character-art-rig.py
+          - validate-v5-character-animation.py
+          - validate-v6-vfx-feedback.py
+          - validate-v7-camera-ui-motion.py
+          - validate-reference-driven-visual-polish.py
+          - validate-first-person-interaction-kit.py
+          - validate-first-person-authored-pack.py
+          - validate-first-person-native-review-activation.py
+          - validate-first-person-activation-runtime-cert.py
+          - validate-v8-visual-certification.py
+          - validate-p1-authored-assets.py
+          - validate-p2-rainforest-assets.py
+          - validate-p3-character-assets.py
+          - validate-p4-authored-motion-vfx-presentation.py
+          - validate-p5-art-polish-certification.py
+          - validate-n1-native-integration.py
+          - validate-n2-authored-release-candidate.py
+          - validate-n3-native-release-certification.py
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,88 +64,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate pedagogical content
-        run: python scripts/validate-content.py
-      - name: Validate M1.10 Trust Economy
-        run: python scripts/validate-trust-economy.py
-      - name: Validate M2 Mission Runtime
-        run: python scripts/validate-m2-mission-runtime.py
-      - name: Validate M2.1 Spatial Measurement
-        run: python scripts/validate-m2-1-spatial-measurement.py
-      - name: Validate M2.2 Interactive Measurement
-        run: python scripts/validate-m2-2-interactive-measurement.py
-      - name: Validate M2.3 Mission Progression
-        run: python scripts/validate-m2-3-mission-progression.py
-      - name: Validate M3.1 Biome Runtime
-        run: python scripts/validate-m3-1-biome-runtime.py
-      - name: Validate M3.2 World Interaction
-        run: python scripts/validate-m3-2-world-interaction.py
-      - name: Validate M3.3 Science Mission Runtime
-        run: python scripts/validate-m3-3-science-mission-runtime.py
-      - name: Validate M3.4 Reactive Ecosystem
-        run: python scripts/validate-m3-4-reactive-ecosystem.py
-      - name: Validate M3.5 Ecological Building
-        run: python scripts/validate-m3-5-ecological-building.py
-      - name: Validate M3.6 Child Journey UX
-        run: python scripts/validate-m3-6-child-journey-ux.py
-      - name: Validate M3.7 Tablet Performance
-        run: python scripts/validate-m3-7-tablet-performance.py
-      - name: Validate M3.8 Vertical Slice Certification
-        run: python scripts/validate-m3-8-vertical-slice-certification.py
-      - name: Validate M4.1 Parent Portal MVP
-        run: python scripts/validate-m4-parent-portal.py
-      - name: Validate D1 Player Dashboard Foundation
-        run: python scripts/validate-player-dashboard-d1.py
-      - name: Validate D2 Player Identity Persistent Profile
-        run: python scripts/validate-player-dashboard-d2.py
-      - name: Validate M5.2 Composable Mission Runtime
-        run: python scripts/validate-m5-2-composable-runtime.py
-      - name: Validate M5.3 Science Simulation Core
-        run: python scripts/validate-m5-3-science-simulation.py
-      - name: Validate M5.4 Language Literature Thought Runtime
-        run: python scripts/validate-m5-4-language-thought-runtime.py
-      - name: Validate V1 Visual Production Foundation
-        run: python scripts/validate-v1-visual-production.py
-      - name: Validate V2 Materials Surface Language
-        run: python scripts/validate-v2-materials-surface.py
-      - name: Validate V3 Environment Art Biome Production
-        run: python scripts/validate-v3-environment-art.py
-      - name: Validate V4 Character Art Rig
-        run: python scripts/validate-v4-character-art-rig.py
-      - name: Validate V5 Character Interaction Animation
-        run: python scripts/validate-v5-character-animation.py
-      - name: Validate V6 VFX Scientific Fantastic Feedback
-        run: python scripts/validate-v6-vfx-feedback.py
-      - name: Validate V7 Camera Cinematics UI Motion
-        run: python scripts/validate-v7-camera-ui-motion.py
-      - name: Validate Reference-Driven Visual Animation Polish
-        run: python scripts/validate-reference-driven-visual-polish.py
-      - name: Validate First-Person Interaction Kit v1
-        run: python scripts/validate-first-person-interaction-kit.py
-      - name: Validate First-Person Authored Asset Pack v1
-        run: python scripts/validate-first-person-authored-pack.py
-      - name: Validate First-Person Native Review Activation v1
-        run: python scripts/validate-first-person-native-review-activation.py
-      - name: Validate First-Person Activation Runtime Certification v1
-        run: python scripts/validate-first-person-activation-runtime-cert.py
-      - name: Validate V8 Visual Optimization Device Certification
-        run: python scripts/validate-v8-visual-certification.py
-      - name: Validate P1 Authored Asset Production Pipeline
-        run: python scripts/validate-p1-authored-assets.py
-      - name: Validate P2 Authored Rainforest Asset Pack
-        run: python scripts/validate-p2-rainforest-assets.py
-      - name: Validate P3 Authored Character Cosmetics
-        run: python scripts/validate-p3-character-assets.py
-      - name: Validate P4 Authored Animation VFX Presentation
-        run: python scripts/validate-p4-authored-motion-vfx-presentation.py
-      - name: Validate P5 Art Polish Device Certification
-        run: python scripts/validate-p5-art-polish-certification.py
-      - name: Validate N1 Native Authored Integration Candidate
-        run: python scripts/validate-n1-native-integration.py
-      - name: Validate N2 Authored Activation Release Candidate
-        run: python scripts/validate-n2-authored-release-candidate.py
-      - name: Validate N3 Native Release Certification
-        run: python scripts/validate-n3-native-release-certification.py
+      - name: Run ${{ matrix.script }}
+        run: python scripts/${{ matrix.script }}
 
   parent-portal:
     runs-on: ubuntu-latest
