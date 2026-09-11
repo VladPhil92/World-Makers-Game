@@ -51,6 +51,8 @@ jobs:
         run: python scripts/validate-m4-parent-portal.py
       - name: Validate D1 Player Dashboard Foundation
         run: python scripts/validate-player-dashboard-d1.py
+      - name: Validate D2 Player Identity Persistent Profile
+        run: python scripts/validate-player-dashboard-d2.py
       - name: Validate M5.2 Composable Mission Runtime
         run: python scripts/validate-m5-2-composable-runtime.py
       - name: Validate M5.3 Science Simulation Core

@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: World Makers Player Identity & Profile API
+  version: 1.0.0
+  description: D2 contract for CTG One identity assertions and persistent World Makers player profiles.
+servers:
+  - url: https://worldmakers.ctgone.com
+paths:
+  /api/identity/session:
+    post:
+      summary: Exchange a signed CTG One identity assertion for an HttpOnly World Makers session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [assertion]
+              properties:
+                assertion:
+                  type: string
+                  maxLength: 4096
+      responses:
+        '201':
+          description: Session created and persistent profile loaded/created.
+        '400':
+          description: Assertion malformed, invalid, expired or unsupported.
+        '503':
+          description: Identity assertion verification or profile store not configured.
+  /api/profile:
+    get:
+      summary: Read the authenticated persistent player profile/dashboard state.
+      responses:
+        '200':
+          description: Persistent profile read model.
+        '401':
+          description: Authentication required.
+  /api/avatar/loadout:
+    patch:
+      summary: Persist avatar loadout using optimistic profile revision control.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loadout, profileRevision]
+              properties:
+                profileRevision: { type: integer, minimum: 1 }
+                loadout: { type: object }
+      responses:
+        '200': { description: Loadout persisted. }
+        '409': { description: profile_conflict }
+  /api/selection:
+    patch:
+      summary: Persist selected mode/world/mission using optimistic profile revision control.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [selection, profileRevision]
+              properties:
+                profileRevision: { type: integer, minimum: 1 }
+                selection: { type: object }
+      responses:
+        '200': { description: Selection persisted. }
+        '409': { description: profile_conflict }
+  /api/preferences:
+    patch:
+      summary: Persist player presentation preferences.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preferences, profileRevision]
+              properties:
+                profileRevision: { type: integer, minimum: 1 }
+                preferences:
+                  type: object
+                  properties:
+                    reducedMotion: { type: boolean }
+                    preferredModeId: { type: [string, 'null'] }
+                    preferredWorldId: { type: [string, 'null'] }
+      responses:
+        '200': { description: Preferences persisted. }
+        '409': { description: profile_conflict }
+components:
+  securitySchemes:
+    playerSession:
+      type: apiKey
+      in: cookie
+      name: wm_player_session
