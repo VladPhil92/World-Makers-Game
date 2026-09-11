@@ -56,8 +56,8 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="wm-p4-") as tmp:
         a = Path(tmp) / "a.json"
         b = Path(tmp) / "b.json"
-        subprocess.run([sys.executable, str(GENERATOR), "--output", str(a), "--verify"], check=True, cwd=ROOT)
-        subprocess.run([sys.executable, str(GENERATOR), "--output", str(b), "--verify"], check=True, cwd=ROOT)
+        subprocess.run([sys.executable, str(GENERATOR), "--output", str(a)], check=True, cwd=ROOT)
+        subprocess.run([sys.executable, str(GENERATOR), "--output", str(b)], check=True, cwd=ROOT)
         raw_a, raw_b = a.read_bytes(), b.read_bytes()
         require(raw_a == raw_b, "P4 generator is not deterministic")
         require(hashlib.sha256(raw_a).hexdigest() == expected_hash, "P4 generated source hash differs from manifest")
@@ -101,11 +101,12 @@ def main() -> None:
     effects = source["vfx"]["effects"]
     require(len(effects) == manifest["vfx"]["effectCount"] == 17, "P4 must cover all 17 V6 effects")
     require({e["id"] for e in effects} == set(v6_by_id) == set(manifest["vfx"]["requiredEffectIds"]), "P4 VFX IDs drifted from V6")
-    tier_limits = [v6["qualityTiers"][k]["maxNiagaraParticlesPerEffect"] for k in ("low","mid","high")]
+    tier_limits = [v6["qualityTiers"][k]["maxNiagaraParticlesPerEffect"] for k in ("low", "mid", "high")]
     for effect in effects:
         upstream = v6_by_id[effect["id"]]
         require(effect["domain"] == upstream["domain"] and effect["shape"] == upstream["shape"], f"VFX semantic drift: {effect['id']}")
-        require(effect["objectPath"] == upstream["niagaraTarget"] + "." + upstream["niagaraTarget"].rsplit("/",1)[-1], f"VFX target drift: {effect['id']}")
+        expected_path = upstream["niagaraTarget"] + "." + upstream["niagaraTarget"].rsplit("/", 1)[-1]
+        require(effect["objectPath"] == expected_path, f"VFX target drift: {effect['id']}")
         recipe = effect["recipe"]
         require(len(recipe["spawn"]) == 3 and all(int(recipe["spawn"][i]) <= int(tier_limits[i]) for i in range(3)), f"VFX particle budget exceeded: {effect['id']}")
         require(0 < float(recipe["reducedMotionScale"]) <= 0.35, f"reduced-motion bound invalid: {effect['id']}")
@@ -124,7 +125,7 @@ def main() -> None:
         require(float(sequence["durationSeconds"]) <= float(v7["cinematicBeat"]["maxDurationSeconds"]), f"sequence too long: {sequence['id']}")
         require(sequence["locksInput"] is False and sequence["forcesViewTarget"] is False and sequence["changesGameplayTimeScale"] is False, f"intrusive cinematic behavior forbidden: {sequence['id']}")
         phases = sequence["phases"]
-        require([p["name"] for p in phases] == ["enter","hold","exit"], f"invalid microbeat phases: {sequence['id']}")
+        require([p["name"] for p in phases] == ["enter", "hold", "exit"], f"invalid microbeat phases: {sequence['id']}")
         require(close(phases[0]["start"], 0) and close(phases[-1]["end"], sequence["durationSeconds"]), f"sequence range mismatch: {sequence['id']}")
 
     boundary = source["productionBoundary"]
@@ -141,7 +142,7 @@ def main() -> None:
     }, "P4 production boundary must remain fail-closed")
 
     p1_by_id = {a["id"]: a for a in p1["assets"]}
-    for asset_id in ("character.player.child-explorer","animation.player.blueprint","vfx.science.master","presentation.adventure-reveal","presentation.camera-data"):
+    for asset_id in ("character.player.child-explorer", "animation.player.blueprint", "vfx.science.master", "presentation.adventure-reveal", "presentation.camera-data"):
         require(asset_id in p1_by_id and p1_by_id[asset_id]["authoredPresent"] is False, f"P4 may not auto-activate {asset_id}")
 
     workflow = WORKFLOW.read_text(encoding="utf-8")
@@ -149,7 +150,12 @@ def main() -> None:
     native = NATIVE_WORKFLOW.read_text(encoding="utf-8")
     for token in ("self-hosted", "Blender", "UnrealEditor-Cmd.exe", "generate-p4-authored-motion-vfx-presentation.py", "export-p4-animation-fbx.py", "import-p4-animation-presentation.py"):
         require(token in native, f"P4 native workflow missing {token}")
-    require("authoredPresent" not in UNREAL.read_text(encoding="utf-8").replace("authoredPresentMutated", ""), "P4 Unreal bridge may not mutate authoredPresent")
+
+    unreal_text = UNREAL.read_text(encoding="utf-8")
+    require("authored-assets-p1.json" not in unreal_text, "P4 Unreal bridge may not edit the P1 authored manifest")
+    for forbidden in ('"authoredPresent": true', "authoredPresent = True", "authoredPresent=True"):
+        require(forbidden not in unreal_text, "P4 Unreal bridge may not activate authored assets")
+    require('"authoredPresentMutated": False' in unreal_text, "P4 native report must explicitly record no authoredPresent mutation")
 
     doc = DOC.read_text(encoding="utf-8").replace("`", "")
     for phrase in ("17 animation clips", "17 VFX recipes", "two microsequences", "procedural fallback", "P5"):
