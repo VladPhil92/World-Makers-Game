@@ -66,9 +66,15 @@ def main() -> None:
 
     pack = json.loads(canonical_pack.read_text(encoding="utf-8"))
     activation = json.loads(canonical_activation.read_text(encoding="utf-8"))
-    if any(item.get("authoredPresent") is not True for item in pack.get("assets", [])):
+    assets = pack.get("assets", [])
+    animations = pack.get("animations", [])
+    if len(assets) != 5:
+        fail(f"activation pack must contain exactly five assets, found {len(assets)}")
+    if len(animations) != 9:
+        fail(f"activation pack must contain exactly nine animations, found {len(animations)}")
+    if any(item.get("authoredPresent") is not True for item in assets):
         fail("all five assets must be authoredPresent=true")
-    if any(item.get("authoredPresent") is not True for item in pack.get("animations", [])):
+    if any(item.get("authoredPresent") is not True for item in animations):
         fail("all nine animations must be authoredPresent=true")
     if activation.get("status") != "activated" or activation.get("activated") is not True:
         fail("activation manifest is not activated")
