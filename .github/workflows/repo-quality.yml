@@ -79,6 +79,8 @@ jobs:
         run: python scripts/validate-p3-character-assets.py
       - name: Validate P4 Authored Animation VFX Presentation
         run: python scripts/validate-p4-authored-motion-vfx-presentation.py
+      - name: Validate P5 Art Polish Device Certification
+        run: python scripts/validate-p5-art-polish-certification.py
 
   parent-portal:
     runs-on: ubuntu-latest
