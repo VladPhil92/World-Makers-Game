@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,11 @@ REQUIRED_PROFILES = {
     "performance.tablet.low",
     "performance.tablet.medium",
     "performance.tablet.high",
+}
+REQUIRED_PLATFORM_PROFILE_PAIRS = {
+    (platform, profile)
+    for platform in REQUIRED_TABLET_PLATFORMS
+    for profile in REQUIRED_PROFILES
 }
 MIN_FRAME_SAMPLES = 1800
 
@@ -152,8 +158,10 @@ def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
         "evidenceIntegrity": False,
         "requiredPlatforms": sorted(REQUIRED_TABLET_PLATFORMS),
         "requiredProfiles": sorted(REQUIRED_PROFILES),
+        "requiredPlatformProfilePairs": [f"{platform}/{profile}" for platform, profile in sorted(REQUIRED_PLATFORM_PROFILE_PAIRS)],
         "platformsPresent": [],
         "profilesPresent": [],
+        "platformProfilePairsPresent": [],
         "buildCommitsPresent": [],
         "evidenceFiles": [],
         "reasons": [],
@@ -175,6 +183,7 @@ def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
     platforms: set[str] = set()
     profiles: set[str] = set()
     commits: set[str] = set()
+    pairs: list[tuple[str, str]] = []
     all_valid = True
     for path in files:
         valid, reasons, platform, profile_id, commit = validate_evidence_file(path, evidence_dir, matrix, expected_commit)
@@ -183,6 +192,8 @@ def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
             platforms.add(platform)
         if profile_id in REQUIRED_PROFILES:
             profiles.add(profile_id)
+        if platform in REQUIRED_TABLET_PLATFORMS and profile_id in REQUIRED_PROFILES:
+            pairs.append((platform, profile_id))
         if isinstance(commit, str) and len(commit) == 40:
             commits.add(commit)
         if not valid:
@@ -191,6 +202,7 @@ def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
 
     result["platformsPresent"] = sorted(platforms)
     result["profilesPresent"] = sorted(profiles)
+    result["platformProfilePairsPresent"] = [f"{platform}/{profile}" for platform, profile in sorted(set(pairs))]
     result["buildCommitsPresent"] = sorted(commits)
 
     missing_platforms = REQUIRED_TABLET_PLATFORMS - platforms
@@ -203,12 +215,35 @@ def assess(evidence_dir: Path, expected_commit: str | None = None) -> dict:
         all_valid = False
         fail_reason(result, "Missing tablet profile evidence: " + ", ".join(sorted(missing_profiles)))
 
+    pair_counts = Counter(pairs)
+    missing_pairs = REQUIRED_PLATFORM_PROFILE_PAIRS - set(pair_counts)
+    duplicate_pairs = {pair for pair, count in pair_counts.items() if count != 1}
+    unexpected_pairs = set(pair_counts) - REQUIRED_PLATFORM_PROFILE_PAIRS
+    if missing_pairs:
+        all_valid = False
+        fail_reason(result, "Missing required platform/profile evidence: " + ", ".join(f"{p}/{t}" for p, t in sorted(missing_pairs)))
+    if duplicate_pairs:
+        all_valid = False
+        fail_reason(result, "Each platform/profile pair must appear exactly once: " + ", ".join(f"{p}/{t}" for p, t in sorted(duplicate_pairs)))
+    if unexpected_pairs:
+        all_valid = False
+        fail_reason(result, "Unexpected platform/profile evidence: " + ", ".join(f"{p}/{t}" for p, t in sorted(unexpected_pairs)))
+
     if len(commits) != 1:
         all_valid = False
         fail_reason(result, "All V8 evidence packages must reference one identical build commit")
 
     result["evidenceIntegrity"] = all_valid
-    certified = all_valid and not missing_platforms and not missing_profiles and len(commits) == 1
+    certified = (
+        all_valid
+        and not missing_platforms
+        and not missing_profiles
+        and not missing_pairs
+        and not duplicate_pairs
+        and not unexpected_pairs
+        and len(commits) == 1
+        and len(files) == len(REQUIRED_PLATFORM_PROFILE_PAIRS)
+    )
     result["certified"] = certified
     result["status"] = "CERTIFIED" if certified else "BLOCKED"
     return result
@@ -274,17 +309,16 @@ def self_test() -> int:
         if assess(root, expected)["status"] != "BLOCKED":
             raise SystemExit("Empty evidence directory must fail closed")
 
-        write_synthetic_evidence(root, "Android", "performance.tablet.low")
+        for platform, profile in sorted(REQUIRED_PLATFORM_PROFILE_PAIRS):
+            if platform == "iPadOS" and profile == "performance.tablet.high":
+                continue
+            write_synthetic_evidence(root, platform, profile)
         if assess(root, expected)["status"] != "BLOCKED":
-            raise SystemExit("One platform/profile must not certify")
-
-        write_synthetic_evidence(root, "Android", "performance.tablet.medium")
-        if assess(root, expected)["status"] != "BLOCKED":
-            raise SystemExit("Missing iPadOS/high evidence must not certify")
+            raise SystemExit("Five of six platform/profile pairs must not certify")
 
         write_synthetic_evidence(root, "iPadOS", "performance.tablet.high")
         if assess(root, expected)["status"] != "CERTIFIED":
-            raise SystemExit("Dual-platform all-tier compliant evidence should certify in self-test")
+            raise SystemExit("All six compliant platform/profile pairs should certify in self-test")
 
         android_low = root / "android-low.json"
         payload = json.loads(android_low.read_text(encoding="utf-8"))
@@ -299,7 +333,7 @@ def self_test() -> int:
         if assess(root, expected)["status"] != "BLOCKED":
             raise SystemExit("Evidence from another build commit must block certification")
 
-    print("V8 assessor self-test passed: fail-closed, dual-platform, all-tier, same-build, integrity and budget rules verified.")
+    print("V8 assessor self-test passed: fail-closed, exact six platform/profile pairs, same-build, integrity and budget rules verified.")
     return 0
 
 
