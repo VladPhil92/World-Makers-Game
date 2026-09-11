@@ -109,4 +109,5 @@ private:
     bool bReviewTakeoverEnabled = false;
     bool bProductionActivationApproved = false;
     bool bTakeoverActive = false;
+    bool bCertificationMode = false;
 };
