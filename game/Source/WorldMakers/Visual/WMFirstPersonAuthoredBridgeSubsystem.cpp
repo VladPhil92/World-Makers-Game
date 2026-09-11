@@ -3,13 +3,19 @@
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Dom/JsonObject.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "HAL/FileManager.h"
 #include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
+#include "Misc/Paths.h"
 #include "Player/WMPlayerCharacter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 #include "UObject/SoftObjectPath.h"
 #include "Visual/WMFirstPersonInteractionComponent.h"
 #include "Visual/WMPresentationSubsystem.h"
@@ -30,19 +36,31 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Initialize(FSubsystemCollectionBase&
     Super::Initialize(Collection);
 
     bReviewTakeoverEnabled = FParse::Param(FCommandLine::Get(), TEXT("WMEnableFirstPersonAuthored"));
-    FParse::Value(FCommandLine::Get(), TEXT("WMBuildCommit="), BuildCommitSha);
-    BuildCommitSha = BuildCommitSha.ToLower();
+    FParse::Value(FCommandLine::Get(), TEXT("WMBuildCommit="), RequestedBuildCommitSha);
+    FParse::Value(FCommandLine::Get(), TEXT("WMFirstPersonTakeoverReport="), TakeoverReportPath);
+    RequestedBuildCommitSha = RequestedBuildCommitSha.ToLower();
 
     FWMFirstPersonNativeActivationState ParsedActivation;
+    FWMFirstPersonBuildProvenance ParsedProvenance;
     if (FWMFirstPersonNativeActivationRuntime::TryLoadPackagedState(ParsedActivation))
     {
         ActivationState = MoveTemp(ParsedActivation);
-        bProductionActivationApproved = ActivationState.AllowsProductionTakeover(BuildCommitSha);
+    }
+    if (FWMFirstPersonNativeActivationRuntime::TryLoadPackagedBuildProvenance(ParsedProvenance))
+    {
+        BuildProvenance = MoveTemp(ParsedProvenance);
+    }
+
+    bProductionActivationApproved = ActivationState.AllowsProductionTakeover(BuildProvenance);
+    if (bProductionActivationApproved && !RequestedBuildCommitSha.IsEmpty())
+    {
+        bProductionActivationApproved = RequestedBuildCommitSha == BuildProvenance.BuildCommitSha;
     }
 }
 
 void UWMFirstPersonAuthoredBridgeSubsystem::Deinitialize()
 {
+    WriteTakeoverReport();
     ApplyProxyFallback();
     Animations.Empty();
     Character = nullptr;
@@ -59,7 +77,8 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Deinitialize()
     WristAsset = nullptr;
     ProxyToolFallback = nullptr;
     ProxyWristFallback = nullptr;
-    BuildCommitSha.Reset();
+    RequestedBuildCommitSha.Reset();
+    TakeoverReportPath.Reset();
     bReviewTakeoverEnabled = false;
     bProductionActivationApproved = false;
     Super::Deinitialize();
@@ -244,6 +263,65 @@ void UWMFirstPersonAuthoredBridgeSubsystem::ApplyProxyFallback()
     bTakeoverActive = false;
 }
 
+void UWMFirstPersonAuthoredBridgeSubsystem::WriteTakeoverReport() const
+{
+    if (TakeoverReportPath.IsEmpty()) return;
+
+    const bool bAuthoredSetComplete = Availability.bArms && Availability.bScanner && Availability.bBuildTool &&
+        Availability.bMeasureTool && Availability.bWristDevice && Availability.AnimationCount == FWMFirstPersonAuthoredRuntime::RequiredAnimationCount;
+    const bool bFirstPersonActive = Interaction && Interaction->IsFirstPersonInteractionActive();
+    const bool bAuthoredArmsVisible = AuthoredArmsComponent && AuthoredArmsComponent->IsVisible();
+    const bool bProxyHandsHidden = LeftHandProxy && RightHandProxy && !LeftHandProxy->IsVisible() && !RightHandProxy->IsVisible();
+    const bool bWristMatchesAuthored = WristProxy && WristAsset && WristProxy->GetStaticMesh() == WristAsset;
+
+    bool bToolMatchesAuthored = true;
+    FString ModeId;
+    FString ActionId;
+    if (Interaction)
+    {
+        ModeId = Interaction->GetActiveModeId().ToString();
+        ActionId = Interaction->GetActiveActionId().ToString();
+        if (UStaticMesh* ExpectedTool = ResolveAuthoredTool(Interaction->GetActiveModeId()))
+        {
+            bToolMatchesAuthored = ToolProxy && ToolProxy->GetStaticMesh() == ExpectedTool;
+        }
+    }
+
+    const bool bCertifiedActiveState = bProductionActivationApproved && !bReviewTakeoverEnabled && bAuthoredSetComplete &&
+        bFirstPersonActive && bTakeoverActive && bAuthoredArmsVisible && bProxyHandsHidden && bWristMatchesAuthored && bToolMatchesAuthored;
+
+    TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
+    Root->SetNumberField(TEXT("schemaVersion"), 1);
+    Root->SetStringField(TEXT("reportId"), TEXT("visual.first-person-runtime-takeover.v1"));
+    Root->SetStringField(TEXT("status"), bCertifiedActiveState ? TEXT("TAKEOVER_ACTIVE") : TEXT("BLOCKED_OR_FALLBACK"));
+    Root->SetStringField(TEXT("buildCommitSha"), BuildProvenance.BuildCommitSha);
+    Root->SetStringField(TEXT("reviewedSourceCommitSha"), BuildProvenance.ReviewedSourceCommitSha);
+    Root->SetStringField(TEXT("activationCandidateSha256"), BuildProvenance.ActivationCandidateSha256);
+    Root->SetBoolField(TEXT("reviewTakeoverEnabled"), bReviewTakeoverEnabled);
+    Root->SetBoolField(TEXT("productionActivationApproved"), bProductionActivationApproved);
+    Root->SetBoolField(TEXT("authoredSetComplete"), bAuthoredSetComplete);
+    Root->SetNumberField(TEXT("animationCount"), Availability.AnimationCount);
+    Root->SetBoolField(TEXT("firstPersonInteractionActive"), bFirstPersonActive);
+    Root->SetBoolField(TEXT("takeoverActive"), bTakeoverActive);
+    Root->SetBoolField(TEXT("authoredArmsVisible"), bAuthoredArmsVisible);
+    Root->SetBoolField(TEXT("proxyHandsHidden"), bProxyHandsHidden);
+    Root->SetBoolField(TEXT("toolMatchesAuthored"), bToolMatchesAuthored);
+    Root->SetBoolField(TEXT("wristMatchesAuthored"), bWristMatchesAuthored);
+    Root->SetStringField(TEXT("activeModeId"), ModeId);
+    Root->SetStringField(TEXT("activeActionId"), ActionId);
+
+    FString JsonText;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonText);
+    if (!FJsonSerializer::Serialize(Root, Writer)) return;
+
+    const FString ReportDirectory = FPaths::GetPath(TakeoverReportPath);
+    if (!ReportDirectory.IsEmpty())
+    {
+        IFileManager::Get().MakeDirectory(*ReportDirectory, true);
+    }
+    FFileHelper::SaveStringToFile(JsonText + TEXT("\n"), *TakeoverReportPath);
+}
+
 void UWMFirstPersonAuthoredBridgeSubsystem::Tick(const float DeltaTime)
 {
     if (!FMath::IsFinite(DeltaTime) || DeltaTime <= 0.0f) return;
@@ -253,8 +331,10 @@ void UWMFirstPersonAuthoredBridgeSubsystem::Tick(const float DeltaTime)
     if (!Interaction || !Interaction->IsFirstPersonInteractionActive())
     {
         ApplyProxyFallback();
+        WriteTakeoverReport();
         return;
     }
 
     ApplyAuthoredTakeover();
+    WriteTakeoverReport();
 }
