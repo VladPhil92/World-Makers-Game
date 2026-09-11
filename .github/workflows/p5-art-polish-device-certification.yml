@@ -1,0 +1,79 @@
+name: P5 Art Polish Device Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      evidence_dir:
+        description: Absolute path on the self-hosted runner containing p5-review.json, review artifacts and v8 evidence
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  certify-authored-visual-stack:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate P5 source contract
+        shell: pwsh
+        run: python scripts/validate-p5-art-polish-certification.py
+
+      - name: Verify Unreal and evidence root
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+          $evidence = '${{ inputs.evidence_dir }}'
+          if (-not (Test-Path $evidence)) { throw "P5 evidence_dir does not exist: $evidence" }
+          if (-not (Test-Path (Join-Path $evidence 'p5-review.json'))) { throw 'p5-review.json is required.' }
+          if (-not (Test-Path (Join-Path $evidence 'v8'))) { throw 'v8 evidence directory is required.' }
+
+      - name: Generate P4 source bundle for native inventory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p5\source | Out-Null
+          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/p5/source/WM_P4_AuthoredMotionVFXPresentation.source.json
+
+      - name: Collect native authored asset inventory
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\p5\source\WM_P4_AuthoredMotionVFXPresentation.source.json
+          WM_P5_NATIVE_INVENTORY: ${{ inputs.evidence_dir }}\native-inventory.json
+          WM_BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -ExecutePythonScript="$pwd\scripts\unreal\collect-p5-native-inventory.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Makers automation tests
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecCmds="Automation RunTests WorldMakers.;Quit" -TestExit="Automation Test Queue Empty" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Assess final P5 authored visual certification
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\p5 | Out-Null
+          python scripts/assess-p5-art-polish-certification.py --evidence-dir '${{ inputs.evidence_dir }}' --expected-commit '${{ github.sha }}' --output artifacts/p5/p5-certification-report.json --require-certified
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p5-art-polish-certification-${{ github.sha }}
+          path: |
+            artifacts/p5/p5-certification-report.json
+            ${{ inputs.evidence_dir }}\native-inventory.json
+          if-no-files-found: warn

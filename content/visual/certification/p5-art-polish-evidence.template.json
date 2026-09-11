@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "buildCommit": "0000000000000000000000000000000000000000",
+  "unrealVersion": "5.8.2",
+  "reviewerRoles": ["tech-art", "animation", "visual-qa"],
+  "materialsLightingReview": {
+    "masterSurfaceApproved": false,
+    "waterMaterialApproved": false,
+    "exposureApproved": false,
+    "shadowQualityApproved": false
+  },
+  "environmentReview": {
+    "lodTransitionsApproved": false,
+    "hlodAndCullingApproved": false,
+    "foliageOverdrawApproved": false,
+    "textureStreamingApproved": false,
+    "noCriticalMipPopIn": false,
+    "texturePoolOverBudgetMB": null
+  },
+  "characterAnimationReview": {
+    "deformationApproved": false,
+    "ikApproved": false,
+    "physicsAssetApproved": false,
+    "cosmeticClippingApproved": false,
+    "maxObservedFootSlideCm": null,
+    "criticalDeformationCount": null,
+    "criticalCosmeticClippingCount": null
+  },
+  "vfxReview": {
+    "semanticParityApproved": false,
+    "reducedMotionApproved": false,
+    "overdrawApproved": false,
+    "gpuP95MsByProfile": {
+      "performance.tablet.low": null,
+      "performance.tablet.medium": null,
+      "performance.tablet.high": null
+    }
+  },
+  "presentationReview": {
+    "cameraComfortApproved": false,
+    "uiLegibilityApproved": false,
+    "safeAreaApproved": false,
+    "reducedMotionApproved": false,
+    "noInputLock": false,
+    "noForcedViewTarget": false,
+    "noGlobalTimeScaleChange": false
+  },
+  "artifacts": [
+    {"kind": "visual-contact-sheet", "file": "", "sha256": ""},
+    {"kind": "animation-review", "file": "", "sha256": ""},
+    {"kind": "vfx-overdraw", "file": "", "sha256": ""},
+    {"kind": "camera-ui-review", "file": "", "sha256": ""}
+  ]
+}

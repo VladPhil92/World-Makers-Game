@@ -8,7 +8,7 @@ The phases below do not redefine gameplay or pedagogy. They deliver the binary a
 
 ## P1 — Authored Asset Production Pipeline
 
-Status: **source-complete target on `feat/p1-authored-asset-production-pipeline`; binary art population pending.**
+Status: **source-complete; binary art population pending.**
 
 - canonical asset registry for environment, character, material, animation, VFX and presentation targets;
 - centimeters / +Z up / +X forward DCC contract;
@@ -24,7 +24,7 @@ Exit: the project can accept real assets without code-path rewrites or silent lo
 
 ## P2 — Authored Rainforest Asset Pack
 
-Status: **source-art pack implemented on `feat/p2-authored-rainforest-asset-pack`; native `.uasset` import and visual review pending.**
+Status: **source-art pack complete; native `.uasset` import and visual review pending.**
 
 Implemented source-production contract:
 
@@ -51,7 +51,7 @@ See `docs/p2-authored-rainforest-asset-pack.md` and `content/visual/authored/rai
 
 ## P3 — Authored Character + Modular Cosmetics
 
-Status: **source-complete on `feat/p3-authored-character-cosmetics`; native `.uasset`, deformation, IK/Physics and device review pending.**
+Status: **source-complete; native `.uasset`, deformation, IK/Physics and device review pending.**
 
 Implemented source-production contract:
 
@@ -80,7 +80,7 @@ See `docs/p3-authored-character-cosmetics.md` and `content/visual/authored/chara
 
 ## P4 — Authored Animation, VFX & Presentation
 
-Status: **source-complete target on `feat/p4-authored-animation-vfx-presentation`; native AnimBP/Niagara/Level Sequence art review pending.**
+Status: **source-complete; native AnimBP/Niagara/Level Sequence art review pending.**
 
 Implemented source-production contract:
 
@@ -108,21 +108,26 @@ See `docs/p4-authored-animation-vfx-presentation.md` and `content/visual/authore
 
 ## P5 — Art Polish & Device Certification
 
-Goal: prove the authored game rather than the proxy game.
+Status: **source-complete certification infrastructure; native authored/device certification remains BLOCKED until real evidence exists.**
 
-- final material/lighting polish;
-- foliage overdraw and shadow pass;
-- LOD/HLOD/culling tuning;
-- texture streaming and residency pass;
-- animation foot sliding/deformation review;
-- VFX overdraw/concurrency review;
-- camera comfort and UI legibility review;
-- V8 captures across all four stress scenarios;
-- Low, Medium and High tablet tiers;
-- representative Android and iPadOS packages;
-- exact-build SHA-256 evidence and manual V8 `CERTIFIED` result.
+Implemented source-production contract:
 
-Exit: the authored visual stack is device-certified for the captured build and profiles.
+- final material/lighting review contract for master surface, water, bounded exposure and shadow quality;
+- environment polish gates for LOD transitions, HLOD/culling, foliage overdraw, texture streaming and zero texture-pool over-budget allowance;
+- character review requiring final deformation/IK/Physics Asset/cosmetic approval, <=3 cm observed foot sliding and zero critical deformation/clipping defects;
+- VFX review for all 17 semantic systems, reduced-motion behavior, overdraw and profile-specific GPU p95 ceilings;
+- camera/UI review for comfort, safe areas, legibility and non-intrusive reveal behavior;
+- native Unreal inventory collector covering all 16 P1 targets, all 17 AnimSequence assets, all 17 Niagara targets and the final rig/presentation assets;
+- four SHA-256-verified human review artifacts;
+- composition with V8 certification plus a stronger six-package requirement: Android Low/Mid/High and iPadOS Low/Mid/High from one exact commit;
+- final fail-closed assessor and manual self-hosted Unreal certification workflow;
+- source CI explicitly cannot self-certify production art.
+
+Exit for source phase: P5 contract, template, native inventory collector, assessor self-test, docs and Repository Quality gate pass.
+
+Exit for native/device phase: every required `.uasset` exists and is deliberately approved, all polish reviews pass, all six Android/iPadOS tier packages pass V8 on the same build, artifact hashes verify, and the P5 assessor returns `CERTIFIED`.
+
+See `docs/p5-art-polish-device-certification.md` and `content/visual/authored/p5-art-polish-certification.json`.
 
 ## Production rule
 

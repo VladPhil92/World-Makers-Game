@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "phase": "P5",
+  "unrealVersion": "5.8.2",
+  "dependencies": {
+    "authoredRegistry": "content/visual/authored/authored-assets-p1.json",
+    "p4SourceManifest": "content/visual/authored/p4-motion-vfx-presentation.json",
+    "v8CertificationMatrix": "content/visual/certification/visual-certification-v8.json"
+  },
+  "polishTargets": {
+    "materialsLighting": {
+      "masterSurfaceRequired": true,
+      "waterMaterialRequired": true,
+      "manualBoundedExposureRequired": true,
+      "singlePrimaryDirectionalSunRequired": true,
+      "criticalShadowArtifactsAllowed": false
+    },
+    "environment": {
+      "requiredRainforestAssetIds": [
+        "environment.rainforest.ground.a",
+        "environment.rainforest.terrain.a",
+        "environment.rainforest.tree.a",
+        "environment.rainforest.tree.b",
+        "environment.rainforest.tree.c",
+        "environment.rainforest.understory.a",
+        "environment.rainforest.rock.a",
+        "environment.rainforest.water-edge.a",
+        "environment.rainforest.hero-ceiba"
+      ],
+      "lodTransitionReviewRequired": true,
+      "hlodAndCullingReviewRequired": true,
+      "foliageOverdrawReviewRequired": true,
+      "textureStreamingReviewRequired": true,
+      "maxTexturePoolOverBudgetMB": 0,
+      "criticalVisibleMipPopInAllowed": false
+    },
+    "characterAnimation": {
+      "requiredCharacterAssetId": "character.player.child-explorer",
+      "requiredAnimationClipCount": 17,
+      "animationBlueprintRequired": true,
+      "ikRigRequired": true,
+      "physicsAssetRequired": true,
+      "maxObservedFootSlideCm": 3.0,
+      "criticalDeformationCountAllowed": 0,
+      "criticalCosmeticClippingCountAllowed": 0,
+      "rootMotionRequired": false
+    },
+    "vfx": {
+      "requiredEffectCount": 17,
+      "semanticParityRequired": true,
+      "reducedMotionRequired": true,
+      "criticalOverdrawArtifactsAllowed": false,
+      "maxGpuP95MsByProfile": {
+        "performance.tablet.low": 2.5,
+        "performance.tablet.medium": 3.0,
+        "performance.tablet.high": 3.5
+      }
+    },
+    "presentation": {
+      "cameraDataAssetRequired": true,
+      "requiredLevelSequenceCount": 2,
+      "uiMotionStyleRequired": true,
+      "maxRevealDurationSeconds": 2.5,
+      "cameraComfortReviewRequired": true,
+      "uiLegibilityReviewRequired": true,
+      "safeAreaReviewRequired": true,
+      "reducedMotionReviewRequired": true,
+      "inputLockAllowed": false,
+      "forcedViewTargetAllowed": false,
+      "globalTimeScaleChangeAllowed": false
+    }
+  },
+  "deviceCertification": {
+    "requiredPlatforms": ["Android", "iPadOS"],
+    "requiredProfiles": [
+      "performance.tablet.low",
+      "performance.tablet.medium",
+      "performance.tablet.high"
+    ],
+    "requireEveryPlatformProfilePair": true,
+    "requiredV8Scenarios": [
+      "visual.rainforest.explore",
+      "visual.build.dense",
+      "visual.science.vfx-burst",
+      "visual.adventure.reveal"
+    ],
+    "minimumFrameSamplesPerScenario": 1800,
+    "singleBuildCommitRequired": true,
+    "captureIntegrityHashesRequired": true
+  },
+  "certificationRules": {
+    "allP1AuthoredFlagsMustBeTrue": true,
+    "allDeclaredP1UassetsMustExist": true,
+    "nativeInventoryRequired": true,
+    "humanPolishReviewRequired": true,
+    "v8CertifiedEvidenceRequired": true,
+    "allReviewArtifactsHashVerified": true,
+    "certificationIsFailClosed": true,
+    "sourceCiCanSelfCertify": false
+  },
+  "productionBoundary": {
+    "sourcePolishContractPresent": true,
+    "sourceAssessorPresent": true,
+    "nativeArtCertified": false,
+    "deviceCertified": false,
+    "nativeRunnerRequired": true,
+    "humanReviewRequired": true
+  }
+}
