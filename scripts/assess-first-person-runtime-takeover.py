@@ -83,6 +83,10 @@ def main() -> None:
         fail("runtime report candidate fingerprint mismatch")
     if report.get("reviewTakeoverEnabled") is not False:
         fail("runtime certification may not depend on review bypass")
+    if report.get("certificationMode") is not True:
+        fail("runtime report was not captured in explicit certification mode")
+    if report.get("activeModeId") != "firstperson.scan":
+        fail("certification mode must exercise the first-person scan presentation path")
     for key in (
         "productionActivationApproved",
         "authoredSetComplete",
@@ -109,6 +113,7 @@ def main() -> None:
         "buildProvenanceSha256": sha256(provenance_path),
         "runtimeReportSha256": sha256(report_path),
         "reviewBypassUsed": False,
+        "certificationMode": True,
         "authoredSet": {"assets": 5, "animations": 9},
         "proxyHandsHidden": True,
         "authoredArmsVisible": True,
