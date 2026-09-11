@@ -94,9 +94,9 @@ def main() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     if "Validate P2 Authored Rainforest Asset Pack" not in workflow:
         fail("Repository Quality does not run the P2 gate")
-    doc = DOC.read_text(encoding="utf-8")
-    for phrase in ("nine environment families", "native .uasset", "procedural fallback", "P3"):
-        if phrase.lower() not in doc.lower():
+    doc = DOC.read_text(encoding="utf-8").lower().replace("`", "")
+    for phrase in ("nine environment families", "native .uasset", "procedural fallback", "p3"):
+        if phrase not in doc:
             fail(f"documentation missing required contract phrase: {phrase}")
 
     print("P2 rainforest source pack validated: 9 families, deterministic geometry, UV0/normals, LOD/material budgets, fail-closed native boundary.")
