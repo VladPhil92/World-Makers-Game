@@ -73,6 +73,8 @@ jobs:
         run: python scripts/validate-reference-driven-visual-polish.py
       - name: Validate First-Person Interaction Kit v1
         run: python scripts/validate-first-person-interaction-kit.py
+      - name: Validate First-Person Authored Asset Pack v1
+        run: python scripts/validate-first-person-authored-pack.py
       - name: Validate V8 Visual Optimization Device Certification
         run: python scripts/validate-v8-visual-certification.py
       - name: Validate P1 Authored Asset Production Pipeline
