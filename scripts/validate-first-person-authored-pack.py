@@ -2,6 +2,7 @@
 """Validate the first-person authored asset production source contract."""
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import math
@@ -49,6 +50,41 @@ def generated_bundle() -> tuple[dict, str, bytes]:
         require(data_a == data_b, "generator output is not byte-deterministic")
         digest = hashlib.sha256(data_a).hexdigest()
         return json.loads(data_a), digest, data_a
+
+
+def importer_mutates_authored_present(source: str) -> bool:
+    """Reject real AST-level writes to the approval flag while allowing comments/docstrings about it."""
+    tree = ast.parse(source)
+
+    def subscript_is_flag(node: ast.AST) -> bool:
+        return (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.slice, ast.Constant)
+            and node.slice.value == "authoredPresent"
+        )
+
+    def dict_contains_flag(node: ast.AST) -> bool:
+        if not isinstance(node, ast.Dict):
+            return False
+        return any(isinstance(key, ast.Constant) and key.value == "authoredPresent" for key in node.keys if key is not None)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if any(subscript_is_flag(child) for child in ast.walk(target)):
+                    return True
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            if any(subscript_is_flag(child) for child in ast.walk(node.target)):
+                return True
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if node.func.attr in {"update", "setdefault", "__setitem__"}:
+                if any(isinstance(arg, ast.Constant) and arg.value == "authoredPresent" for arg in node.args):
+                    return True
+                if any(dict_contains_flag(arg) for arg in node.args):
+                    return True
+                if any(keyword.arg == "authoredPresent" for keyword in node.keywords):
+                    return True
+    return False
 
 
 def validate_mesh(source: dict, slot_id: str, lod_index: int, skinned: bool) -> int:
@@ -160,7 +196,7 @@ def main() -> None:
     importer_text = IMPORTER.read_text(encoding="utf-8")
     for token in ("AssetImportTask", "allFiveAssetsImported", "allNineAnimationsImported", "humanReviewApproved"):
         require(token in importer_text, f"Unreal importer missing: {token}")
-    require("authoredPresent" not in importer_text, "Unreal importer must never mutate authoredPresent")
+    require(not importer_mutates_authored_present(importer_text), "Unreal importer must never mutate authoredPresent")
 
     workflow_text = WORKFLOW.read_text(encoding="utf-8")
     require("BLENDER_EXE" in workflow_text and "UE_EDITOR_CMD" in workflow_text and "WMEnableFirstPersonAuthored" in workflow_text, "native workflow must require Blender, Unreal and explicit takeover review")
