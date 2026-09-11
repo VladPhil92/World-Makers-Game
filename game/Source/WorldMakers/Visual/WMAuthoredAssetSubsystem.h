@@ -5,6 +5,7 @@
 #include "Visual/WMAuthoredAssetTypes.h"
 #include "WMAuthoredAssetSubsystem.generated.h"
 
+class UAnimInstance;
 class UStaticMesh;
 class USkeletalMesh;
 
@@ -30,6 +31,7 @@ public:
 
     UStaticMesh* LoadStaticMesh(FName AssetId) const;
     USkeletalMesh* LoadSkeletalMesh(FName AssetId) const;
+    TSubclassOf<UAnimInstance> LoadAnimationBlueprintClass(FName AssetId) const;
     const FWMAuthoredVisualAssetCatalog& GetCatalog() const { return Catalog; }
 
 private:
