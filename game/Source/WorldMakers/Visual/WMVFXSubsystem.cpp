@@ -6,6 +6,7 @@
 #include "Environment/WMEnvironmentStateSubsystem.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "Misc/Paths.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
@@ -86,17 +87,11 @@ void UWMVFXSubsystem::Deinitialize()
 
     for (const TWeakObjectPtr<AWMProceduralVFXActor>& Effect : ActiveProxyEffects)
     {
-        if (Effect.IsValid())
-        {
-            Effect->Destroy();
-        }
+        if (Effect.IsValid()) Effect->Destroy();
     }
     for (const TWeakObjectPtr<UNiagaraComponent>& Effect : ActiveAuthoredEffects)
     {
-        if (Effect.IsValid())
-        {
-            Effect->DeactivateImmediate();
-        }
+        if (Effect.IsValid()) Effect->DeactivateImmediate();
     }
     ActiveProxyEffects.Reset();
     ActiveAuthoredEffects.Reset();
@@ -113,7 +108,6 @@ FWMVFXBudget UWMVFXSubsystem::ResolveBudget() const
     FWMVFXBudget Budget;
     const UWMVisualProfileSettings* VisualSettings = GetDefault<UWMVisualProfileSettings>();
     const EWMVisualQualityTier Tier = VisualSettings ? VisualSettings->DefaultQualityTier : EWMVisualQualityTier::Mid;
-
     switch (Tier)
     {
         case EWMVisualQualityTier::Low:
@@ -156,10 +150,7 @@ int32 UWMVFXSubsystem::GetActiveProxyEffectCount() const
     int32 Count = 0;
     for (const TWeakObjectPtr<AWMProceduralVFXActor>& Effect : ActiveProxyEffects)
     {
-        if (Effect.IsValid())
-        {
-            ++Count;
-        }
+        if (Effect.IsValid()) ++Count;
     }
     return Count;
 }
@@ -169,10 +160,7 @@ int32 UWMVFXSubsystem::GetActiveAuthoredEffectCount() const
     int32 Count = 0;
     for (const TWeakObjectPtr<UNiagaraComponent>& Effect : ActiveAuthoredEffects)
     {
-        if (Effect.IsValid() && !Effect->IsComplete())
-        {
-            ++Count;
-        }
+        if (Effect.IsValid() && !Effect->IsComplete()) ++Count;
     }
     return Count;
 }
@@ -211,37 +199,17 @@ FString UWMVFXSubsystem::ResolveAuthoredNiagaraObjectPath(const FName EventId)
 bool UWMVFXSubsystem::TrySpawnAuthoredNiagara(const FWMVFXEvent& Event)
 {
     UWorld* World = GetWorld();
-    if (!World || !IsAuthoredNiagaraEnabled())
-    {
-        return false;
-    }
+    if (!World || !IsAuthoredNiagaraEnabled()) return false;
 
     const FString ObjectPath = ResolveAuthoredNiagaraObjectPath(Event.EventId);
-    if (ObjectPath.IsEmpty())
-    {
-        return false;
-    }
+    if (ObjectPath.IsEmpty()) return false;
     UNiagaraSystem* System = Cast<UNiagaraSystem>(FSoftObjectPath(ObjectPath).TryLoad());
-    if (!System)
-    {
-        return false;
-    }
+    if (!System) return false;
 
     const FRotator Rotation = Event.Direction.IsNearlyZero() ? FRotator::ZeroRotator : Event.Direction.Rotation();
     UNiagaraComponent* Component = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-        World,
-        System,
-        Event.LocationCm,
-        Rotation,
-        FVector::OneVector,
-        true,
-        true,
-        ENCPoolMethod::None,
-        true);
-    if (!Component)
-    {
-        return false;
-    }
+        World, System, Event.LocationCm, Rotation, FVector::OneVector, true, true, ENCPoolMethod::None, true);
+    if (!Component) return false;
 
     Component->SetVariableFloat(TEXT("User.Intensity"), Event.Intensity);
     Component->SetVariableFloat(TEXT("User.MotionScale"), Event.MotionScale);
@@ -249,12 +217,7 @@ bool UWMVFXSubsystem::TrySpawnAuthoredNiagara(const FWMVFXEvent& Event)
     return true;
 }
 
-bool UWMVFXSubsystem::EmitSemanticEvent(
-    const FName EventId,
-    const FVector LocationCm,
-    const float Intensity,
-    const FVector Direction,
-    const float DurationSeconds)
+bool UWMVFXSubsystem::EmitSemanticEvent(const FName EventId, const FVector LocationCm, const float Intensity, const FVector Direction, const float DurationSeconds)
 {
     FWMVFXEvent Event;
     Event.EventId = EventId;
@@ -269,25 +232,16 @@ bool UWMVFXSubsystem::EmitSemanticEvent(
 bool UWMVFXSubsystem::EmitEvent(const FWMVFXEvent& Event)
 {
     UWorld* World = GetWorld();
-    if (!World)
-    {
-        return false;
-    }
+    if (!World) return false;
 
     PruneExpiredEffects();
     FWMVFXEvent Accepted = Event;
     const FWMVFXBudget Budget = ResolveBudget();
     const int32 ActiveEffectCount = GetActiveProxyEffectCount() + GetActiveAuthoredEffectCount();
-    if (!Runtime.TryAccept(Accepted, World->GetTimeSeconds(), ActiveEffectCount, Budget, bReducedMotion))
-    {
-        return false;
-    }
+    if (!Runtime.TryAccept(Accepted, World->GetTimeSeconds(), ActiveEffectCount, Budget, bReducedMotion)) return false;
 
     FWMVFXStyle Style;
-    if (!FWMVFXRuntime::ResolveStyle(Accepted.EventId, Style))
-    {
-        return false;
-    }
+    if (!FWMVFXRuntime::ResolveStyle(Accepted.EventId, Style)) return false;
 
     bLastAcceptedEffectAuthored = TrySpawnAuthoredNiagara(Accepted);
     if (!bLastAcceptedEffectAuthored)
@@ -297,17 +251,14 @@ bool UWMVFXSubsystem::EmitEvent(const FWMVFXEvent& Event)
         AWMProceduralVFXActor* Effect = World->SpawnActor<AWMProceduralVFXActor>(AWMProceduralVFXActor::StaticClass(), Accepted.LocationCm, FRotator::ZeroRotator, SpawnParameters);
         if (!Effect || !Effect->InitializeEffect(Accepted, Style))
         {
-            if (Effect)
-            {
-                Effect->Destroy();
-            }
+            if (Effect) Effect->Destroy();
             return false;
         }
         ActiveProxyEffects.Add(Effect);
     }
 
     LastAcceptedEventId = Accepted.EventId;
-    OnVFXAccepted.Broadcast(Aced.EventId, Accepted.LocationCm, Accepted.Intensity);
+    OnVFXAccepted.Broadcast(Accepted.EventId, Accepted.LocationCm, Accepted.Intensity);
     return true;
 }
 
@@ -335,7 +286,6 @@ void UWMVFXSubsystem::HandleBuildWorldChanged(const int32 Revision)
         if (Direction.IsNearlyZero()) Direction = FVector::ForwardVector;
         EmitSemanticEvent(TEXT("gameplay.build.move"), Added->LocationCm, 0.70f, Direction, 0.55f);
     }
-
     LastBuildSnapshot = Current;
 }
 
@@ -361,10 +311,7 @@ void UWMVFXSubsystem::HandleEnvironmentStateChanged(const FWMEnvironmentStateSna
     FVector Location = FVector::ZeroVector;
     if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
     {
-        if (APawn* Pawn = PC->GetPawn())
-        {
-            Location = Pawn->GetActorLocation() + FVector(0.0f, 0.0f, 30.0f);
-        }
+        if (APawn* Pawn = PC->GetPawn()) Location = Pawn->GetActorLocation() + FVector(0.0f, 0.0f, 30.0f);
     }
 
     const FName EventId = SignedChange > 0.0f ? FName(TEXT("science.ecology.recovery")) : FName(TEXT("science.ecology.stress"));
