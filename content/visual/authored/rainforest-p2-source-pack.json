@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "units": "centimeters",
+  "upAxis": "Z",
+  "forwardAxis": "X",
+  "generator": "scripts/generate-p2-rainforest-source.py",
+  "generatedRoot": "SourceArt/WorldMakers/Environment/Rainforest/GeneratedP2",
+  "nativeImportRoot": "/Game/WorldMakers/Environment/Rainforest",
+  "materials": ["WM_Ground", "WM_Terrain", "WM_Bark", "WM_Foliage", "WM_Stone", "WM_Water"],
+  "assets": [
+    {"id":"environment.rainforest.ground.a","filename":"SM_WM_RF_Ground_A.obj","lodCount":3,"materialSlots":1,"sha256":"b7722d6d2d2905115f5ce2393488375a18dc3113f09a2e6a30d764d0368318e2"},
+    {"id":"environment.rainforest.terrain.a","filename":"SM_WM_RF_TerrainMound_A.obj","lodCount":3,"materialSlots":1,"sha256":"5906046b5ec7a817e37ce1022484d1202f5e34e6b4f5f731c38291a285d9f14c"},
+    {"id":"environment.rainforest.tree.a","filename":"SM_WM_RF_Tree_A.obj","lodCount":3,"materialSlots":2,"sha256":"99d90e32a894e29d4b9ea051d884f4eea76e0d6c52427f7bd45af7d0e9c90af9"},
+    {"id":"environment.rainforest.tree.b","filename":"SM_WM_RF_Tree_B.obj","lodCount":3,"materialSlots":2,"sha256":"14d212d4d88f20713a20060c835643072bfcb0d5749c060b6eb28bdbeaf3f34e"},
+    {"id":"environment.rainforest.tree.c","filename":"SM_WM_RF_Tree_C.obj","lodCount":3,"materialSlots":2,"sha256":"0369101816fa3afc6197830c48583a7a1b48b3d2f1bac8e205262ad70629fff2"},
+    {"id":"environment.rainforest.understory.a","filename":"SM_WM_RF_Understory_A.obj","lodCount":2,"materialSlots":1,"sha256":"de97758e9b6907481874df12d0351fd0b66389a29300bb8a302a03ed1ac09249"},
+    {"id":"environment.rainforest.rock.a","filename":"SM_WM_RF_Rock_A.obj","lodCount":3,"materialSlots":1,"sha256":"ec2f86e31e4b11c379169ac9f256676ddb82d43073119c46369f1efd97879b18"},
+    {"id":"environment.rainforest.water-edge.a","filename":"SM_WM_RF_WaterEdge_A.obj","lodCount":2,"materialSlots":1,"sha256":"093f4775b6caee766626ca61dd44208f8947342918a3faadf2656fd41b3f84c4"},
+    {"id":"environment.rainforest.hero-ceiba","filename":"SM_WM_RF_HeroCeiba.obj","lodCount":4,"materialSlots":2,"sha256":"409f956bb9e244737da5c82c6e715278fd694d503509942df5b8b615b3b61457"}
+  ],
+  "productionBoundary": {
+    "sourceGeometryPresent": true,
+    "nativeUassetsPresent": false,
+    "nativeImportRequired": true,
+    "deviceReviewRequired": true
+  }
+}
