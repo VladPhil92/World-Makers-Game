@@ -51,18 +51,32 @@ See `docs/p2-authored-rainforest-asset-pack.md` and `content/visual/authored/rai
 
 ## P3 — Authored Character + Modular Cosmetics
 
-Goal: replace the V4 procedural child with the production `SK_WM_ChildExplorer` family.
+Status: **source-complete on `feat/p3-authored-character-cosmetics`; native `.uasset`, deformation, IK/Physics and device review pending.**
 
-- final child base mesh and skeleton;
-- skin weights and deformation review;
-- four LODs minimum;
-- modular hair/top/bottom/footwear/accessory slots;
-- Physics Asset and IK Rig;
-- V2 material instances and controlled palette variation;
-- avatar silhouette/readability review at gameplay distance;
-- no biometric/photo-derived avatar pipeline.
+Implemented source-production contract:
 
-Exit: V5 animation read-model drives an authored Skeletal Mesh without changing the gameplay capsule.
+- deterministic original Child Explorer source geometry preserving the V4 158 cm / five-head silhouette;
+- exact 19-joint V4 hierarchy with explicit rest locations;
+- normalized skin weights with a hard ceiling of four influences per vertex;
+- all eight V4 customization slots: body, hair, top, bottom, footwear, head accessory, back accessory and hand prop;
+- body/top/bottom/footwear with four authored LODs, hair with three and small socket accessories with two;
+- strictly decreasing source triangle counts and V4/P1 budget validation;
+- UV0, source normals and stable material roles in the canonical source bundle;
+- canonical SHA-256 over the complete generated source bundle;
+- Blender armature/vertex-group construction and per-module/per-LOD FBX export;
+- Unreal Skeletal Mesh import first, shared Skeleton reuse for skinned cosmetics and Static Mesh import for socket accessories;
+- Physics Asset creation request on native body import while deformation, Physics Asset and IK Rig quality remain explicit review items;
+- `ACharacter.GetMesh()` remains the authored body destination and `ACharacter.CapsuleComponent` remains collision authority;
+- modular plan uses shared Skeleton + leader pose for hair/top/bottom/footwear and stable sockets for head/back/hand accessories;
+- no biometric capture, photo-derived avatar generation, face training or voice training;
+- manual self-hosted P3 Blender→FBX→Unreal import workflow;
+- no automatic `authoredPresent=true` mutation; procedural fallback remains authoritative until native approval.
+
+Exit for source phase: reproducible skinned geometry, rig/weights/LOD contract, modular cosmetic source set, Blender→FBX bridge, Unreal import bridge, docs and Repository Quality gate pass.
+
+Exit for art/native phase: `SK_WM_ChildExplorer` and approved modular assets exist as native `.uasset` files, pass Skeleton/deformation/socket/Physics Asset/IK Rig/material review, work with V5 animation and representative devices, then the P1 character entry may be deliberately marked `authoredPresent=true`.
+
+See `docs/p3-authored-character-cosmetics.md` and `content/visual/authored/character-p3-source-pack.json`.
 
 ## P4 — Authored Animation, VFX & Presentation
 

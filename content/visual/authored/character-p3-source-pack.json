@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "avatarId": "avatar.child-explorer.v1",
+  "units": "centimeters",
+  "upAxis": "Z",
+  "forwardAxis": "X",
+  "baseHeightCm": 158.0,
+  "headsTall": 5.0,
+  "retargetPose": "neutral-a-pose",
+  "source": {
+    "generator": "scripts/generate-p3-character-source.py",
+    "generatedRoot": "SourceArt/WorldMakers/Characters/Player/P3",
+    "bundleFilename": "WM_ChildExplorer_P3.source.json",
+    "sha256": "48144053f0907c387ecd12803a39f7f34bfbc8f3f5578557bb7863ae59b9f15f"
+  },
+  "skeleton": {
+    "jointCount": 19,
+    "maxSkinInfluences": 4,
+    "skeletonObjectPath": "/Game/WorldMakers/Characters/Player/SKEL_WM_ChildExplorer.SKEL_WM_ChildExplorer",
+    "ikRigObjectPath": "/Game/WorldMakers/Characters/Player/IKR_WM_ChildExplorer.IKR_WM_ChildExplorer",
+    "physicsAssetObjectPath": "/Game/WorldMakers/Characters/Player/PHYS_WM_ChildExplorer.PHYS_WM_ChildExplorer"
+  },
+  "modules": [
+    {
+      "slot": "body",
+      "kind": "SkeletalMesh",
+      "assetName": "SK_WM_ChildExplorer",
+      "objectPath": "/Game/WorldMakers/Characters/Player/SK_WM_ChildExplorer.SK_WM_ChildExplorer",
+      "lodCount": 4,
+      "materialSlots": 1,
+      "required": true,
+      "attachment": "root"
+    },
+    {
+      "slot": "hair",
+      "kind": "SkeletalMesh",
+      "assetName": "SK_WM_ChildExplorer_Hair_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SK_WM_ChildExplorer_Hair_A.SK_WM_ChildExplorer_Hair_A",
+      "lodCount": 3,
+      "materialSlots": 1,
+      "required": false,
+      "attachment": "leader-pose"
+    },
+    {
+      "slot": "top",
+      "kind": "SkeletalMesh",
+      "assetName": "SK_WM_ChildExplorer_Top_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SK_WM_ChildExplorer_Top_A.SK_WM_ChildExplorer_Top_A",
+      "lodCount": 4,
+      "materialSlots": 1,
+      "required": true,
+      "attachment": "leader-pose"
+    },
+    {
+      "slot": "bottom",
+      "kind": "SkeletalMesh",
+      "assetName": "SK_WM_ChildExplorer_Bottom_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SK_WM_ChildExplorer_Bottom_A.SK_WM_ChildExplorer_Bottom_A",
+      "lodCount": 4,
+      "materialSlots": 1,
+      "required": true,
+      "attachment": "leader-pose"
+    },
+    {
+      "slot": "footwear",
+      "kind": "SkeletalMesh",
+      "assetName": "SK_WM_ChildExplorer_Footwear_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SK_WM_ChildExplorer_Footwear_A.SK_WM_ChildExplorer_Footwear_A",
+      "lodCount": 4,
+      "materialSlots": 1,
+      "required": true,
+      "attachment": "leader-pose"
+    },
+    {
+      "slot": "head-accessory",
+      "kind": "StaticMesh",
+      "assetName": "SM_WM_ChildExplorer_HeadAccessory_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SM_WM_ChildExplorer_HeadAccessory_A.SM_WM_ChildExplorer_HeadAccessory_A",
+      "lodCount": 2,
+      "materialSlots": 1,
+      "required": false,
+      "attachment": "socket_head"
+    },
+    {
+      "slot": "back-accessory",
+      "kind": "StaticMesh",
+      "assetName": "SM_WM_ChildExplorer_BackAccessory_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SM_WM_ChildExplorer_BackAccessory_A.SM_WM_ChildExplorer_BackAccessory_A",
+      "lodCount": 2,
+      "materialSlots": 1,
+      "required": false,
+      "attachment": "socket_back"
+    },
+    {
+      "slot": "hand-prop",
+      "kind": "StaticMesh",
+      "assetName": "SM_WM_ChildExplorer_HandProp_A",
+      "objectPath": "/Game/WorldMakers/Characters/Player/Cosmetics/SM_WM_ChildExplorer_HandProp_A.SM_WM_ChildExplorer_HandProp_A",
+      "lodCount": 2,
+      "materialSlots": 1,
+      "required": false,
+      "attachment": "socket_hand_r"
+    }
+  ],
+  "runtime": {
+    "bodyAuthority": "ACharacter.GetMesh",
+    "collisionAuthority": "ACharacter.CapsuleComponent",
+    "skinnedCosmeticBinding": "leader-pose",
+    "proceduralFallbackRequired": true,
+    "rootMotionDefault": false
+  },
+  "privacyAndSafety": {
+    "appearanceData": "cosmetic-stable-ids-and-palette-only",
+    "biometricCapture": false,
+    "photoAvatarGeneration": false,
+    "childVoiceFaceTraining": false
+  },
+  "productionBoundary": {
+    "sourceGeometryPresent": true,
+    "sourceSkinWeightsPresent": true,
+    "nativeUassetsPresent": false,
+    "nativeImportRequired": true,
+    "deformationReviewRequired": true,
+    "deviceReviewRequired": true
+  }
+}
