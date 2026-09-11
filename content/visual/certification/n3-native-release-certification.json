@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "phase": "N3",
+  "unrealVersion": "5.8.2",
+  "requiredPlatforms": ["Android", "iPadOS"],
+  "requiredProfiles": [
+    "performance.tablet.low",
+    "performance.tablet.medium",
+    "performance.tablet.high"
+  ],
+  "requiredPlatformProfilePairs": [
+    "Android/performance.tablet.low",
+    "Android/performance.tablet.medium",
+    "Android/performance.tablet.high",
+    "iPadOS/performance.tablet.low",
+    "iPadOS/performance.tablet.medium",
+    "iPadOS/performance.tablet.high"
+  ],
+  "dependencies": {
+    "n2ReleaseAssessment": "n2-release-assessment.json",
+    "p5Assessment": "p5-assessment.json",
+    "v8Assessment": "v8-assessment.json"
+  },
+  "packageRules": {
+    "Android": {
+      "allowedKinds": ["apk", "aab"]
+    },
+    "iPadOS": {
+      "allowedKinds": ["ipa"]
+    }
+  },
+  "smokeTest": {
+    "minimumSessionSeconds": 120,
+    "requiredChecks": [
+      "boot-to-playable-world",
+      "move-and-camera",
+      "place-build-piece",
+      "observe-world",
+      "trigger-science-vfx",
+      "change-mission",
+      "return-to-explore"
+    ]
+  },
+  "certificationRules": {
+    "n2ReleaseCandidateRequired": true,
+    "p5CertifiedRequired": true,
+    "v8CertifiedRequired": true,
+    "exactSixPlatformProfilePairsRequired": true,
+    "singleBuildCommitRequired": true,
+    "packageHashRequired": true,
+    "packageSignatureVerificationRequired": true,
+    "installVerificationRequired": true,
+    "launchVerificationRequired": true,
+    "automationVerificationRequired": true,
+    "runtimeTakeoverVerificationRequired": true,
+    "v8EvidenceLinkRequired": true,
+    "zeroCrashRequirement": true,
+    "humanReleaseReviewRequired": true,
+    "certificationIsFailClosed": true,
+    "sourceCiCanSelfCertify": false
+  },
+  "productionBoundary": {
+    "sourceCertificationHarnessPresent": true,
+    "nativePackagesPresent": false,
+    "representativeDeviceEvidencePresent": false,
+    "releaseCertified": false,
+    "nativeRunnersRequired": true,
+    "humanReviewRequired": true
+  }
+}
