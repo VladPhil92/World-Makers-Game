@@ -15,15 +15,15 @@ from pathlib import Path
 MTL = """# World Makers P2 rainforest source materials\nnewmtl WM_Ground\nKd 0.28 0.22 0.12\nNs 8\nnewmtl WM_Terrain\nKd 0.33 0.26 0.15\nNs 10\nnewmtl WM_Bark\nKd 0.24 0.14 0.08\nNs 8\nnewmtl WM_Foliage\nKd 0.15 0.42 0.20\nNs 12\nnewmtl WM_Stone\nKd 0.32 0.34 0.31\nNs 14\nnewmtl WM_Water\nKd 0.12 0.42 0.55\nNs 30\n"""
 
 EXPECTED_SHA256 = {
-    "SM_WM_RF_Ground_A.obj": "b7722d6d2d2905115f5ce2393488375a18dc3113f09a2e6a30d764d0368318e2",
-    "SM_WM_RF_TerrainMound_A.obj": "5906046b5ec7a817e37ce1022484d1202f5e34e6b4f5f731c38291a285d9f14c",
-    "SM_WM_RF_Tree_A.obj": "99d90e32a894e29d4b9ea051d884f4eea76e0d6c52427f7bd45af7d0e9c90af9",
-    "SM_WM_RF_Tree_B.obj": "14d212d4d88f20713a20060c835643072bfcb0d5749c060b6eb28bdbeaf3f34e",
-    "SM_WM_RF_Tree_C.obj": "0369101816fa3afc6197830c48583a7a1b48b3d2f1bac8e205262ad70629fff2",
-    "SM_WM_RF_Understory_A.obj": "de97758e9b6907481874df12d0351fd0b66389a29300bb8a302a03ed1ac09249",
-    "SM_WM_RF_Rock_A.obj": "ec2f86e31e4b11c379169ac9f256676ddb82d43073119c46369f1efd97879b18",
-    "SM_WM_RF_WaterEdge_A.obj": "093f4775b6caee766626ca61dd44208f8947342918a3faadf2656fd41b3f84c4",
-    "SM_WM_RF_HeroCeiba.obj": "409f956bb9e244737da5c82c6e715278fd694d503509942df5b8b615b3b61457",
+    "SM_WM_RF_Ground_A.obj": "e8553671f6434e0a1e3e6911b5d819b2f979c62bce9af1d312ccec40bffcd0c9",
+    "SM_WM_RF_TerrainMound_A.obj": "cf88b34ee9bb81e7976e614728c764437a7b84ef491118aab1f3568518a2ead8",
+    "SM_WM_RF_Tree_A.obj": "d8e0b784bda4c5489681c043f3cac780537c15eeb909677830ce22cbe411f217",
+    "SM_WM_RF_Tree_B.obj": "ffa4730ba3475069a285ee57f8604f9e5ca7b3b4359c7637c90740add9379e16",
+    "SM_WM_RF_Tree_C.obj": "37e905ef90f20b104b39db3cf630fc351fe6c331bf75df89b2c82926bf4dad75",
+    "SM_WM_RF_Understory_A.obj": "731f51c10c7e378c06f62f798dcfb7128a17bcc27313c101aaf02679e64eb984",
+    "SM_WM_RF_Rock_A.obj": "e0866b3ff4d5697db0e0898252a3975435f0406cc63e6b03fedbaf2f57ec598f",
+    "SM_WM_RF_WaterEdge_A.obj": "2e6a698caa3799c0b1ec5aa227cfd5de12aa76c924426e45de3b24269606c5f3",
+    "SM_WM_RF_HeroCeiba.obj": "3b25d423c1335968d482ca8ceeef68cfa78cfad9ccfd88214a48188e2d96e0a4",
 }
 
 
