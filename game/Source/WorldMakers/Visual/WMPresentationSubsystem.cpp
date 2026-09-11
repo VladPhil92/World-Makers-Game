@@ -16,6 +16,7 @@ void UWMPresentationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Super::Initialize(Collection);
 
     FWMPresentationRuntime::ResolveCameraProfile(EWMPresentationCameraMode::Explore, false, ActiveProfile);
+    FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(EWMFirstPersonVisualMode::Explore, false, FirstPersonProfile);
     if (UWorld* World = GetWorld())
     {
         if (UWMVFXSubsystem* VFX = World->GetSubsystem<UWMVFXSubsystem>())
@@ -38,6 +39,7 @@ void UWMPresentationSubsystem::Deinitialize()
     {
         Overlay->RemoveFromParent();
     }
+    bFirstPersonInteractionActive = false;
     Overlay = nullptr;
     CameraBoom = nullptr;
     Camera = nullptr;
@@ -97,8 +99,19 @@ void UWMPresentationSubsystem::Tick(const float DeltaTime)
 
 void UWMPresentationSubsystem::ApplyCameraProfile(const float DeltaTime)
 {
-    if (!IsValid(CameraBoom) || !IsValid(Camera) || !ActiveProfile.IsSane()) return;
+    if (!IsValid(CameraBoom) || !IsValid(Camera)) return;
 
+    if (bFirstPersonInteractionActive)
+    {
+        if (!FirstPersonProfile.IsSane()) return;
+        const float InterpSpeed = bReducedMotion ? 22.0f : 12.0f;
+        CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, 0.0f, DeltaTime, InterpSpeed);
+        CameraBoom->TargetOffset = FMath::VInterpTo(CameraBoom->TargetOffset, FVector(0.0f, 0.0f, 68.0f), DeltaTime, InterpSpeed);
+        Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, FirstPersonProfile.FieldOfViewDegrees, DeltaTime, InterpSpeed));
+        return;
+    }
+
+    if (!ActiveProfile.IsSane()) return;
     const float Blend = FMath::Max(ActiveProfile.BlendSeconds, 0.01f);
     const float InterpSpeed = 4.0f / Blend;
     CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, ActiveProfile.ArmLengthCm, DeltaTime, InterpSpeed);
@@ -126,6 +139,45 @@ bool UWMPresentationSubsystem::PulseCameraMode(
     return true;
 }
 
+bool UWMPresentationSubsystem::SetFirstPersonInteractionMode(const EWMFirstPersonVisualMode Mode, const bool bEnabled)
+{
+    if (!bEnabled)
+    {
+        bFirstPersonInteractionActive = false;
+        FirstPersonMode = EWMFirstPersonVisualMode::Explore;
+        return true;
+    }
+
+    FWMFirstPersonVisualProfile Profile;
+    if (!FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(Mode, bReducedMotion, Profile)) return false;
+    FirstPersonMode = Mode;
+    FirstPersonProfile = Profile;
+    bFirstPersonInteractionActive = true;
+    return true;
+}
+
+bool UWMPresentationSubsystem::TryParseFirstPersonModeId(const FName ModeId, EWMFirstPersonVisualMode& OutMode) const
+{
+    if (ModeId == TEXT("firstperson.explore")) { OutMode = EWMFirstPersonVisualMode::Explore; return true; }
+    if (ModeId == TEXT("firstperson.build")) { OutMode = EWMFirstPersonVisualMode::Build; return true; }
+    if (ModeId == TEXT("firstperson.scan")) { OutMode = EWMFirstPersonVisualMode::Scan; return true; }
+    if (ModeId == TEXT("firstperson.measure")) { OutMode = EWMFirstPersonVisualMode::Measure; return true; }
+    if (ModeId == TEXT("firstperson.observe")) { OutMode = EWMFirstPersonVisualMode::Observe; return true; }
+    return false;
+}
+
+bool UWMPresentationSubsystem::SetFirstPersonInteractionModeById(const FName ModeId, const bool bEnabled)
+{
+    if (!bEnabled)
+    {
+        return SetFirstPersonInteractionMode(FirstPersonMode, false);
+    }
+
+    EWMFirstPersonVisualMode Mode;
+    if (!TryParseFirstPersonModeId(ModeId, Mode)) return false;
+    return SetFirstPersonInteractionMode(Mode, true);
+}
+
 void UWMPresentationSubsystem::SetReducedMotion(const bool bEnabled)
 {
     bReducedMotion = bEnabled;
@@ -137,6 +189,10 @@ void UWMPresentationSubsystem::SetReducedMotion(const bool bEnabled)
         }
     }
     FWMPresentationRuntime::ResolveCameraProfile(EWMPresentationCameraMode::Explore, bReducedMotion, ActiveProfile);
+    if (bFirstPersonInteractionActive)
+    {
+        FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(FirstPersonMode, bReducedMotion, FirstPersonProfile);
+    }
     PulseRemainingSeconds = 0.0f;
     if (IsValid(Overlay)) Overlay->DismissCue();
 }
