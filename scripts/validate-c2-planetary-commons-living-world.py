@@ -222,7 +222,7 @@ def main() -> None:
         "deterministic",
         "civic-legitimacy",
         "Sovereignty of Hospitality",
-        "native Unreal",
+        "Native Unreal",
     ):
         if token not in docs:
             fail(f"C2 documentation missing boundary: {token}")
