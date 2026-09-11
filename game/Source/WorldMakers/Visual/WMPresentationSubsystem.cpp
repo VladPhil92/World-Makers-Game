@@ -8,6 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "UI/WMPresentationOverlayWidget.h"
+#include "Visual/WMFirstPersonInteractionComponent.h"
 #include "Visual/WMVFXSubsystem.h"
 
 void UWMPresentationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -16,6 +17,7 @@ void UWMPresentationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Super::Initialize(Collection);
 
     FWMPresentationRuntime::ResolveCameraProfile(EWMPresentationCameraMode::Explore, false, ActiveProfile);
+    FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(EWMFirstPersonVisualMode::Explore, false, FirstPersonProfile);
     if (UWorld* World = GetWorld())
     {
         if (UWMVFXSubsystem* VFX = World->GetSubsystem<UWMVFXSubsystem>())
@@ -38,6 +40,8 @@ void UWMPresentationSubsystem::Deinitialize()
     {
         Overlay->RemoveFromParent();
     }
+    bFirstPersonInteractionActive = false;
+    FirstPersonInteraction = nullptr;
     Overlay = nullptr;
     CameraBoom = nullptr;
     Camera = nullptr;
@@ -51,7 +55,7 @@ TStatId UWMPresentationSubsystem::GetStatId() const
 
 void UWMPresentationSubsystem::EnsurePresentationTargets()
 {
-    if (IsValid(CameraBoom) && IsValid(Camera) && IsValid(Overlay)) return;
+    if (IsValid(CameraBoom) && IsValid(Camera) && IsValid(Overlay) && IsValid(FirstPersonInteraction)) return;
     UWorld* World = GetWorld();
     APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
     APawn* Pawn = PC ? PC->GetPawn() : nullptr;
@@ -59,6 +63,20 @@ void UWMPresentationSubsystem::EnsurePresentationTargets()
 
     if (!IsValid(CameraBoom)) CameraBoom = Pawn->FindComponentByClass<USpringArmComponent>();
     if (!IsValid(Camera)) Camera = Pawn->FindComponentByClass<UCameraComponent>();
+
+    if (!IsValid(FirstPersonInteraction) && PC && PC->IsLocalController())
+    {
+        FirstPersonInteraction = Pawn->FindComponentByClass<UWMFirstPersonInteractionComponent>();
+        if (!IsValid(FirstPersonInteraction))
+        {
+            FirstPersonInteraction = NewObject<UWMFirstPersonInteractionComponent>(Pawn, TEXT("FirstPersonInteractionComponent"));
+            if (FirstPersonInteraction)
+            {
+                Pawn->AddInstanceComponent(FirstPersonInteraction);
+                FirstPersonInteraction->RegisterComponent();
+            }
+        }
+    }
 
     if (!IsValid(Overlay) && PC && PC->IsLocalController())
     {
@@ -97,8 +115,19 @@ void UWMPresentationSubsystem::Tick(const float DeltaTime)
 
 void UWMPresentationSubsystem::ApplyCameraProfile(const float DeltaTime)
 {
-    if (!IsValid(CameraBoom) || !IsValid(Camera) || !ActiveProfile.IsSane()) return;
+    if (!IsValid(CameraBoom) || !IsValid(Camera)) return;
 
+    if (bFirstPersonInteractionActive)
+    {
+        if (!FirstPersonProfile.IsSane()) return;
+        const float InterpSpeed = bReducedMotion ? 22.0f : 12.0f;
+        CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, 0.0f, DeltaTime, InterpSpeed);
+        CameraBoom->TargetOffset = FMath::VInterpTo(CameraBoom->TargetOffset, FVector(0.0f, 0.0f, 68.0f), DeltaTime, InterpSpeed);
+        Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, FirstPersonProfile.FieldOfViewDegrees, DeltaTime, InterpSpeed));
+        return;
+    }
+
+    if (!ActiveProfile.IsSane()) return;
     const float Blend = FMath::Max(ActiveProfile.BlendSeconds, 0.01f);
     const float InterpSpeed = 4.0f / Blend;
     CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, ActiveProfile.ArmLengthCm, DeltaTime, InterpSpeed);
@@ -126,6 +155,45 @@ bool UWMPresentationSubsystem::PulseCameraMode(
     return true;
 }
 
+bool UWMPresentationSubsystem::SetFirstPersonInteractionMode(const EWMFirstPersonVisualMode Mode, const bool bEnabled)
+{
+    if (!bEnabled)
+    {
+        bFirstPersonInteractionActive = false;
+        FirstPersonMode = EWMFirstPersonVisualMode::Explore;
+        return true;
+    }
+
+    FWMFirstPersonVisualProfile Profile;
+    if (!FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(Mode, bReducedMotion, Profile)) return false;
+    FirstPersonMode = Mode;
+    FirstPersonProfile = Profile;
+    bFirstPersonInteractionActive = true;
+    return true;
+}
+
+bool UWMPresentationSubsystem::TryParseFirstPersonModeId(const FName ModeId, EWMFirstPersonVisualMode& OutMode) const
+{
+    if (ModeId == TEXT("firstperson.explore")) { OutMode = EWMFirstPersonVisualMode::Explore; return true; }
+    if (ModeId == TEXT("firstperson.build")) { OutMode = EWMFirstPersonVisualMode::Build; return true; }
+    if (ModeId == TEXT("firstperson.scan")) { OutMode = EWMFirstPersonVisualMode::Scan; return true; }
+    if (ModeId == TEXT("firstperson.measure")) { OutMode = EWMFirstPersonVisualMode::Measure; return true; }
+    if (ModeId == TEXT("firstperson.observe")) { OutMode = EWMFirstPersonVisualMode::Observe; return true; }
+    return false;
+}
+
+bool UWMPresentationSubsystem::SetFirstPersonInteractionModeById(const FName ModeId, const bool bEnabled)
+{
+    if (!bEnabled)
+    {
+        return SetFirstPersonInteractionMode(FirstPersonMode, false);
+    }
+
+    EWMFirstPersonVisualMode Mode;
+    if (!TryParseFirstPersonModeId(ModeId, Mode)) return false;
+    return SetFirstPersonInteractionMode(Mode, true);
+}
+
 void UWMPresentationSubsystem::SetReducedMotion(const bool bEnabled)
 {
     bReducedMotion = bEnabled;
@@ -137,6 +205,10 @@ void UWMPresentationSubsystem::SetReducedMotion(const bool bEnabled)
         }
     }
     FWMPresentationRuntime::ResolveCameraProfile(EWMPresentationCameraMode::Explore, bReducedMotion, ActiveProfile);
+    if (bFirstPersonInteractionActive)
+    {
+        FWMReferenceVisualPolishRuntime::ResolveFirstPersonProfile(FirstPersonMode, bReducedMotion, FirstPersonProfile);
+    }
     PulseRemainingSeconds = 0.0f;
     if (IsValid(Overlay)) Overlay->DismissCue();
 }
@@ -152,6 +224,16 @@ FName UWMPresentationSubsystem::ResolveCueForEvent(const FName EventId) const
     return NAME_None;
 }
 
+FName UWMPresentationSubsystem::ResolveFirstPersonActionForEvent(const FName EventId) const
+{
+    const FString Id = EventId.ToString();
+    if (Id.StartsWith(TEXT("gameplay.build."))) return TEXT("build-confirm");
+    if (Id == TEXT("world.observe.reveal")) return TEXT("observe-focus");
+    if (Id == TEXT("mission.measure.reveal")) return TEXT("measure-focus");
+    if (Id.StartsWith(TEXT("science."))) return TEXT("scan-hold");
+    return NAME_None;
+}
+
 void UWMPresentationSubsystem::HandleVFXAccepted(const FName EventId, const FVector LocationCm, const float Intensity)
 {
     if (EventId.IsNone() || LocationCm.ContainsNaN() || !FMath::IsFinite(Intensity)) return;
@@ -162,6 +244,12 @@ void UWMPresentationSubsystem::HandleVFXAccepted(const FName EventId, const FVec
     if (!FWMPresentationRuntime::ResolveCameraProfile(Mode, bReducedMotion, Profile)) return;
     const float Duration = FMath::Clamp(Profile.HoldSeconds + FMath::Clamp(Intensity, 0.0f, 1.0f) * 0.25f, 0.25f, 2.2f);
     PulseCameraMode(Mode, Duration, ResolveCueForEvent(EventId));
+
+    const FName FirstPersonAction = ResolveFirstPersonActionForEvent(EventId);
+    if (IsValid(FirstPersonInteraction) && !FirstPersonAction.IsNone())
+    {
+        FirstPersonInteraction->PulseSemanticEvent(EventId, FirstPersonAction, FMath::Clamp(Duration, 0.55f, 1.40f));
+    }
 }
 
 void UWMPresentationSubsystem::UpdateMissionReveal()

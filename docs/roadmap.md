@@ -192,6 +192,18 @@ M5 is not complete when the repository merely contains educational text. It is c
 
 See `docs/fantastic-learning-universe.md` and `content/learning-objectives/core-curriculum-v1.json`.
 
+## Visual production continuation — reference-driven first-person interaction
+
+Current progression:
+
+- Reference-Driven Visual & Animation Polish — merged in PR #75; source policy now formalizes eco-futurist composition, contextual HUD density, first-person presentation profiles, character motion personalities and Reduced Motion safeguards.
+- First-Person Interaction Kit v1 — source-proxy implementation complete on `feat/first-person-interaction-kit-v1`: camera override, local owner-only hand/tool/wrist proxies, deterministic nine-action interaction vocabulary, semantic event routing, contextual UMG card, Reduced Motion handling, authored-asset slots, automation tests and Repository Quality gate.
+- First-Person Authored Asset Production & Native Integration — next: replace source proxies with authored arms/tools/animation assets while preserving stable action IDs and rollback, then validate natively in Unreal and on representative tablets.
+
+The source-proxy phase is not production art certification. Final skeletal arms, scanner/build/measure/wrist assets, first-person animation clips, skinning, animation blueprint behavior, camera comfort and tablet performance remain explicit native/manual evidence boundaries.
+
+See `docs/reference-driven-visual-animation-polish.md` and `docs/first-person-interaction-kit-v1.md`.
+
 ## M6 — Closed multiplayer prototype
 
 - Parent-approved invite/friend relationship.
