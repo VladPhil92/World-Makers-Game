@@ -56,18 +56,18 @@ Evidence contains a generic device class/model and OS version but must not conta
 
 ## Required device and tier coverage
 
-Certification requires both platform families:
+Certification requires **exactly one valid evidence record for every platform/profile pair**:
 
-- representative **iPadOS** tablet;
-- representative **Android** tablet.
+- iPadOS / `performance.tablet.low`;
+- iPadOS / `performance.tablet.medium`;
+- iPadOS / `performance.tablet.high`;
+- Android / `performance.tablet.low`;
+- Android / `performance.tablet.medium`;
+- Android / `performance.tablet.high`.
 
-It also requires evidence covering all three visual/performance tiers:
+Five of six cannot produce `CERTIFIED`. Duplicate evidence for one pair also blocks certification because it can hide a missing pair. Multiple profile captures may be produced on the same representative device when appropriate, but each of the six required pairs must appear exactly once and all six records must refer to the same build commit.
 
-- `performance.tablet.low`;
-- `performance.tablet.medium`;
-- `performance.tablet.high`.
-
-A single platform, a missing tier or evidence split across different build commits can never produce `CERTIFIED`. Multiple profile packages may be captured on the same representative device when appropriate, but the platform and all-tier coverage rules still apply.
+This exact-six rule closes an earlier ambiguity where observing both platforms and all three tiers somewhere in the evidence set could appear complete even when one platform/tier combination had never been measured.
 
 ## Human visual review
 
@@ -88,15 +88,15 @@ This evaluator does not collect GPU metrics itself. Native Unreal tools such as 
 
 ## CI model
 
-Ordinary PR/push CI runs `scripts/validate-v8-visual-certification.py`. It validates source structure and executes the assessor self-test, but it cannot return a production certification.
+Ordinary PR/push CI runs `scripts/validate-v8-visual-certification.py`. It validates source structure and executes the assessor self-test, including a five-of-six failure case, but it cannot return a production certification.
 
 Actual certification uses `.github/workflows/v8-visual-certification.yml`, which is manual (`workflow_dispatch`) and requires a self-hosted Windows/X64/Unreal runner plus:
 
 - `UNREAL_SELF_HOSTED_ENABLED=true`;
 - `UNREAL_ENGINE_ROOT`;
-- `V8_DEVICE_EVIDENCE_ROOT` containing the real iPadOS and Android evidence packages and referenced captures/screenshots.
+- `V8_DEVICE_EVIDENCE_ROOT` containing all six real iPadOS/Android Low/Mid/High evidence records and their referenced captures/screenshots.
 
-The workflow runs `WorldMakers.*` automation tests and then invokes the assessor with `--expected-commit "${{ github.sha }}" --require-certified`. Missing evidence, a missing tier, a mismatched build commit or failed budgets make the job fail.
+The workflow runs `WorldMakers.*` automation tests and then invokes the assessor with `--expected-commit "${{ github.sha }}" --require-certified`. Missing evidence, a duplicate pair, a mismatched build commit or failed budgets make the job fail.
 
 ## Accessibility / camera comfort
 
@@ -121,4 +121,4 @@ V8 can be **source-complete** while actual certification remains `BLOCKED`. Full
 
 ## After V8
 
-Once representative evidence passes, the V1–V8 visual-production track can be considered device-certified for the three captured tablet profiles on that exact build commit. Future visual changes must either preserve the evidence contract or trigger new captures when they materially affect render cost or camera/UI comfort.
+Once all six representative pairs pass, the V1–V8 visual-production track can be considered device-certified for the three captured tablet profiles on that exact build commit. N3 then composes V8 with N2, P5 and native package/install evidence before the build can become `RELEASE_CERTIFIED`. Future visual changes must either preserve the evidence contract or trigger new captures when they materially affect render cost or camera/UI comfort.

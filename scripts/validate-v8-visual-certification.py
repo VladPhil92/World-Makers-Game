@@ -70,7 +70,7 @@ def main() -> None:
             require(isinstance(item[key], int) and item[key] > 0, f"Invalid visual resource ceiling {key}: {item['profileId']}")
 
     rules = matrix.get("certificationRules", {})
-    for key in ("allRequiredScenariosPerDevice", "allMetricsWithinBudget", "captureHashRequired", "screenshotHashRequired", "visualReviewRequired", "certificationIsFailClosed"):
+    for key in ("allRequiredScenariosPerDevice", "allTabletProfilesRequired", "singleBuildCommitRequired", "allMetricsWithinBudget", "captureHashRequired", "screenshotHashRequired", "visualReviewRequired", "certificationIsFailClosed"):
         require(rules.get(key) is True, f"V8 release rule must be enabled: {key}")
     require(rules.get("sourceCiCanSelfCertify") is False, "Source CI must never self-certify V8")
 
@@ -111,6 +111,10 @@ def main() -> None:
         "--require-certified",
         "--self-test",
         'REQUIRED_TABLET_PLATFORMS = {"iPadOS", "Android"}',
+        "REQUIRED_PLATFORM_PROFILE_PAIRS",
+        "platformProfilePairsPresent",
+        "Counter(pairs)",
+        "Five of six platform/profile pairs must not certify",
         "MIN_FRAME_SAMPLES = 1800",
         "sha256_file",
         "captureSha256",
@@ -153,7 +157,7 @@ def main() -> None:
     require("V8 status: source-complete certification infrastructure." in roadmap, "Visual roadmap must mark V8 source-complete infrastructure")
     require("actual device certification remains blocked until representative evidence passes" in roadmap.lower(), "Visual roadmap must preserve external certification boundary")
 
-    print("V8 visual optimization/device-certification source contract validated: budgets, four stress scenarios, fail-closed dual-platform evidence, integrity hashes, native manual release gate and source tests are present.")
+    print("V8 visual optimization/device-certification source contract validated: budgets, four stress scenarios, exact six Android/iPadOS profile pairs, integrity hashes, native manual release gate and source tests are present.")
 
 
 if __name__ == "__main__":

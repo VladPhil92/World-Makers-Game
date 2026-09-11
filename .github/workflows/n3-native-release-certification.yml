@@ -1,0 +1,60 @@
+name: N3 Native Release Certification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate N3 source contract
+        run: python scripts/validate-n3-native-release-certification.py
+
+  native-release-certification:
+    if: ${{ vars.N3_RELEASE_COORDINATOR_ENABLED == 'true' }}
+    needs: source-contract
+    runs-on: [self-hosted, Windows, X64, unreal, release-coordinator]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify release coordinator evidence root
+        shell: pwsh
+        run: |
+          if (-not $env:N3_RELEASE_EVIDENCE_ROOT) { throw 'N3_RELEASE_EVIDENCE_ROOT is required.' }
+          if (-not (Test-Path $env:N3_RELEASE_EVIDENCE_ROOT)) { throw 'N3_RELEASE_EVIDENCE_ROOT does not exist.' }
+          New-Item -ItemType Directory -Force -Path artifacts\n3-native-release | Out-Null
+
+      - name: Validate N3 source contract
+        shell: pwsh
+        run: python scripts/validate-n3-native-release-certification.py
+
+      - name: Assess exact-build native release bundle
+        shell: pwsh
+        run: |
+          python scripts/assess-n3-native-release-certification.py `
+            --evidence-root "$env:N3_RELEASE_EVIDENCE_ROOT" `
+            --expected-commit "${{ github.sha }}" `
+            --output artifacts/n3-native-release/n3-release-assessment.json `
+            --require-release-certified
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: n3-native-release-certification-${{ github.sha }}
+          path: artifacts/n3-native-release
+          if-no-files-found: error
