@@ -85,6 +85,8 @@ jobs:
         run: python scripts/validate-n1-native-integration.py
       - name: Validate N2 Authored Activation Release Candidate
         run: python scripts/validate-n2-authored-release-candidate.py
+      - name: Validate N3 Native Release Certification
+        run: python scripts/validate-n3-native-release-certification.py
 
   parent-portal:
     runs-on: ubuntu-latest
