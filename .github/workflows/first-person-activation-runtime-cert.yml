@@ -1,0 +1,103 @@
+name: First-Person Activation Runtime Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_source_commit:
+        description: Full 40-character source commit SHA that passed native review
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  activation-runtime-certification:
+    runs-on: [self-hosted, Windows, X64, Unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+          lfs: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate activation-aware source contracts
+        shell: pwsh
+        run: |
+          python scripts/validate-first-person-authored-pack.py
+          python scripts/validate-first-person-native-review-activation.py
+
+      - name: Verify activation commit changed manifests only
+        shell: pwsh
+        run: python scripts/verify-first-person-activation-commit.py --reviewed-source ${{ inputs.reviewed_source_commit }} --activation-head $env:GITHUB_SHA
+
+      - name: Generate deterministic first-person source bundle
+        shell: pwsh
+        run: python scripts/generate-first-person-authored-source.py --output Build/FirstPersonActivation/first-person-authored-source-v1.json
+
+      - name: Export authored FBX set with Blender
+        shell: pwsh
+        run: |
+          if (-not $env:BLENDER_EXE) { throw "BLENDER_EXE is required" }
+          & $env:BLENDER_EXE --background --python scripts/blender-build-first-person-authored.py -- --source Build/FirstPersonActivation/first-person-authored-source-v1.json --output-dir Build/FirstPersonActivation/FBX
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Import deterministic authored set into Unreal
+        shell: pwsh
+        run: |
+          if (-not $env:UE_EDITOR_CMD) { throw "UE_EDITOR_CMD is required" }
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -ExecutePythonScript="scripts/unreal-import-first-person-authored.py -- --fbx-dir Build/FirstPersonActivation/FBX --report Build/FirstPersonActivation/native-import-report.json --commit-sha ${{ inputs.reviewed_source_commit }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Generate packaged build provenance
+        shell: pwsh
+        run: python scripts/generate-first-person-build-provenance.py --build-commit $env:GITHUB_SHA --activation-manifest game/Content/WorldMakers/Visual/first-person-native-activation-v1.json --output game/Content/WorldMakers/Visual/first-person-build-provenance-v1.json
+
+      - name: Run first-person automation without review bypass
+        shell: pwsh
+        run: |
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -unattended -nop4 -nosplash -WMBuildCommit=$env:GITHUB_SHA -ExecCmds="Automation RunTests WorldMakers.Visual.FirstPerson;Quit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Capture production takeover report
+        shell: pwsh
+        run: |
+          $report = (Resolve-Path .).Path + "\Build\FirstPersonActivation\runtime-takeover-valid.json"
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -game -unattended -nop4 -nosplash -WMBuildCommit=$env:GITHUB_SHA -WMFirstPersonTakeoverCertificationMode -WMFirstPersonTakeoverReport="$report" -ExecCmds="Automation RunTests WorldMakers.Visual.FirstPerson;Quit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path $report)) { throw "production takeover report was not produced" }
+
+      - name: Certify production authored takeover
+        shell: pwsh
+        run: |
+          python scripts/assess-first-person-runtime-takeover.py --activation game/Content/WorldMakers/Visual/first-person-native-activation-v1.json --provenance game/Content/WorldMakers/Visual/first-person-build-provenance-v1.json --runtime-report Build/FirstPersonActivation/runtime-takeover-valid.json --expected-build-commit $env:GITHUB_SHA --output Build/FirstPersonActivation/runtime-takeover-certification.json
+
+      - name: Prove wrong-build rollback to proxies
+        shell: pwsh
+        run: |
+          $wrong = "0000000000000000000000000000000000000000"
+          $report = (Resolve-Path .).Path + "\Build\FirstPersonActivation\runtime-takeover-fallback.json"
+          & $env:UE_EDITOR_CMD game/WorldMakers.uproject -game -unattended -nop4 -nosplash -WMBuildCommit=$wrong -WMFirstPersonTakeoverCertificationMode -WMFirstPersonTakeoverReport="$report" -ExecCmds="Automation RunTests WorldMakers.Visual.FirstPerson;Quit"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path $report)) { throw "fallback report was not produced" }
+          $fallback = Get-Content $report -Raw | ConvertFrom-Json
+          if ($fallback.status -ne "BLOCKED_OR_FALLBACK") { throw "wrong build did not fail closed" }
+          if ($fallback.productionActivationApproved -ne $false) { throw "wrong build retained production approval" }
+          if ($fallback.takeoverActive -ne $false) { throw "wrong build retained authored takeover" }
+          if ($fallback.authoredArmsVisible -ne $false) { throw "wrong build left authored arms visible" }
+          if ($fallback.proxyHandsHidden -ne $false) { throw "wrong build did not restore proxy hands" }
+
+      - name: Upload activation and takeover evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-person-runtime-cert-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            Build/FirstPersonActivation/native-import-report.json
+            Build/FirstPersonActivation/runtime-takeover-valid.json
+            Build/FirstPersonActivation/runtime-takeover-fallback.json
+            Build/FirstPersonActivation/runtime-takeover-certification.json
+            game/Content/WorldMakers/Visual/first-person-build-provenance-v1.json
