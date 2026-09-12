@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "simulationId": "simulation.planetary-commons-living-world.v1",
+  "prototypeOnly": true,
+  "deterministicStepModel": true,
+  "privacyModel": "stable-ids-no-child-free-text",
+  "legacyAdapter": {
+    "sourceId": "m3.4-reactive-ecosystem",
+    "mode": "seed-and-delta-projection",
+    "legacyRemainsLocalCareAuthority": true,
+    "c2OwnsCitizenshipSimulationHooks": true
+  },
+  "simulationHooks": [
+    "water-quality",
+    "air-quality",
+    "soil-health",
+    "biodiversity",
+    "habitat-connectivity",
+    "animal-stress",
+    "energy-reliability",
+    "material-demand",
+    "compute-energy-demand",
+    "human-wellbeing",
+    "civic-legitimacy"
+  ],
+  "derivedHooks": ["habitat-connectivity", "animal-stress"],
+  "initialState": {
+    "waterQuality": 0.62,
+    "airQuality": 0.78,
+    "soilHealth": 0.58,
+    "biodiversity": 0.55,
+    "energyReliability": 0.60,
+    "materialDemand": 0.20,
+    "computeEnergyDemand": 0.10,
+    "humanWellbeing": 0.64,
+    "civicLegitimacy": 0.55
+  },
+  "habitatLinks": [
+    {"linkId": "habitat-link.river-to-understory", "initialPermeability": 0.72},
+    {"linkId": "habitat-link.understory-to-canopy", "initialPermeability": 0.68},
+    {"linkId": "habitat-link.north-to-south-forest", "initialPermeability": 0.54}
+  ],
+  "coupling": {
+    "erosionToWaterRate": 0.05,
+    "ecologyRelaxationRate": 0.10,
+    "wellbeingRelaxationRate": 0.08,
+    "materialSoilPressureRate": 0.012,
+    "computeReliabilityPressureRate": 0.010
+  },
+  "speciesProfiles": [
+    {
+      "speciesId": "species.prototype.river-frog",
+      "scientificReviewState": "draft",
+      "minWaterQuality": 0.72,
+      "minAirQuality": 0.55,
+      "minSoilHealth": 0.58,
+      "minBiodiversity": 0.52,
+      "minHabitatConnectivity": 0.48,
+      "disturbanceSensitivity": 0.85
+    },
+    {
+      "speciesId": "species.prototype.canopy-pollinator",
+      "scientificReviewState": "draft",
+      "minWaterQuality": 0.48,
+      "minAirQuality": 0.68,
+      "minSoilHealth": 0.42,
+      "minBiodiversity": 0.70,
+      "minHabitatConnectivity": 0.62,
+      "disturbanceSensitivity": 0.60
+    },
+    {
+      "speciesId": "species.prototype.forest-cat",
+      "scientificReviewState": "draft",
+      "minWaterQuality": 0.55,
+      "minAirQuality": 0.52,
+      "minSoilHealth": 0.45,
+      "minBiodiversity": 0.66,
+      "minHabitatConnectivity": 0.78,
+      "disturbanceSensitivity": 0.90
+    }
+  ],
+  "interventions": [
+    {
+      "interventionId": "intervention.riparian-buffer-restoration",
+      "maxApplications": 1,
+      "delta": {"waterQuality": 0.14, "soilHealth": 0.10, "biodiversity": 0.05, "materialDemand": 0.03},
+      "habitatLinkDeltas": {"habitat-link.river-to-understory": 0.12}
+    },
+    {
+      "interventionId": "intervention.wildlife-corridor",
+      "maxApplications": 1,
+      "delta": {"biodiversity": 0.06, "materialDemand": 0.05},
+      "habitatLinkDeltas": {"habitat-link.north-to-south-forest": 0.30}
+    },
+    {
+      "interventionId": "intervention.road-fragmentation",
+      "maxApplications": 1,
+      "delta": {"airQuality": -0.04, "biodiversity": -0.08, "energyReliability": 0.10, "materialDemand": 0.20, "humanWellbeing": 0.05},
+      "habitatLinkDeltas": {"habitat-link.north-to-south-forest": -0.35}
+    },
+    {
+      "interventionId": "intervention.wastewater-discharge",
+      "maxApplications": 1,
+      "delta": {"waterQuality": -0.25, "biodiversity": -0.12, "humanWellbeing": -0.05},
+      "habitatLinkDeltas": {}
+    },
+    {
+      "interventionId": "intervention.renewable-microgrid",
+      "maxApplications": 1,
+      "delta": {"airQuality": 0.08, "energyReliability": 0.20, "materialDemand": 0.12, "humanWellbeing": 0.04},
+      "habitatLinkDeltas": {}
+    },
+    {
+      "interventionId": "intervention.compute-expansion",
+      "maxApplications": 1,
+      "delta": {"computeEnergyDemand": 0.25, "energyReliability": -0.08, "materialDemand": 0.08, "humanWellbeing": 0.03},
+      "habitatLinkDeltas": {}
+    }
+  ],
+  "contentBoundary": {
+    "speciesProfilesArePrototypeModels": true,
+    "speciesProfilesAreNotConservationClaims": true,
+    "scientificReviewRequiredBeforeProduction": true,
+    "noGenericAnimalState": true,
+    "noAutomaticMoralReward": true
+  }
+}

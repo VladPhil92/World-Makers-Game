@@ -20,6 +20,7 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/c*.md'
       - 'docs/first-person-*.md'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
@@ -44,6 +45,7 @@ on:
       - 'scripts/validate-m3-6-child-journey-ux.py'
       - 'scripts/validate-m3-7-tablet-performance.py'
       - 'scripts/validate-m3-8-vertical-slice-certification.py'
+      - 'scripts/validate-c*.py'
       - 'scripts/*first-person*.py'
       - '.github/workflows/unreal-ci.yml'
       - '.github/workflows/m3-certification.yml'
@@ -69,6 +71,7 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/c*.md'
       - 'docs/first-person-*.md'
       - 'scripts/**'
       - '.github/workflows/m3-certification.yml'
@@ -123,6 +126,10 @@ jobs:
         run: python scripts/validate-m3-7-tablet-performance.py
       - name: Validate M3.8 Vertical Slice Certification
         run: python scripts/validate-m3-8-vertical-slice-certification.py
+      - name: Validate C1 XXII Century Citizenship
+        run: python scripts/validate-c1-xxii-century-citizenship.py
+      - name: Validate C2 Planetary Commons Living World
+        run: python scripts/validate-c2-planetary-commons-living-world.py
       - name: Validate First-Person Authored Asset Pack
         run: python scripts/validate-first-person-authored-pack.py
       - name: Validate First-Person Native Review Activation
