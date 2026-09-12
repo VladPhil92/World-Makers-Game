@@ -318,8 +318,9 @@ export function createParentPortalServer() {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  createParentPortalServer().listen(port, '127.0.0.1', () => {
-    console.log(`World Makers Parent Portal listening on http://127.0.0.1:${port}`);
+  const host = process.env.HOST ?? '0.0.0.0';
+  createParentPortalServer().listen(port, host, () => {
+    console.log(`World Makers Parent Portal listening on http://${host}:${port}`);
     if (!supabaseConfigured) console.log('Supabase is not configured; only demo identity (if enabled) will work.');
     if (!demoAuthEnabled) console.log('Demo identity is disabled.');
     if (identityAssertionSecret.length < 32 || !playerDashboardUrl) console.log('Child launch hand-off to the player dashboard is not configured.');

@@ -335,8 +335,9 @@ export function createPlayerDashboardServer({ profileStore = defaultProfileStore
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  createPlayerDashboardServer().listen(port, '127.0.0.1', () => {
-    console.log(`World Makers Player Dashboard listening on http://127.0.0.1:${port}`);
+  const host = process.env.HOST ?? '0.0.0.0';
+  createPlayerDashboardServer().listen(port, host, () => {
+    console.log(`World Makers Player Dashboard listening on http://${host}:${port}`);
     if (!defaultProfileStore) console.log('Persistent profile store is not configured; authenticated APIs fail closed.');
     if (identityAssertionSecret.length < 32) console.log('CTG One identity assertion verification is not configured.');
     if (!demoAuthEnabled) console.log('Demo identity is disabled.');
