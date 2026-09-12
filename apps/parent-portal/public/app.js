@@ -5,6 +5,8 @@ const portal = $('#portal');
 const signOutButton = $('#sign-out');
 const childSelect = $('#child-select');
 const status = $('#status');
+const noChildrenPanel = $('#no-children');
+const childActionsPanel = $('#child-actions');
 let session = null;
 let activeDashboard = null;
 
@@ -37,6 +39,9 @@ function renderChildren(children) {
     option.textContent = child.displayAlias;
     childSelect.append(option);
   }
+  const hasChildren = children.length > 0;
+  noChildrenPanel.hidden = hasChildren;
+  childActionsPanel.hidden = !hasChildren;
 }
 
 function formatMinutes(minutes) {
@@ -131,29 +136,129 @@ async function loadDashboard(childProfileId) {
 
 async function hydrateSession() {
   try {
-    session = await api('/api/session');
-    setAuthenticated(true);
-    renderChildren(session.children);
-    if (session.children.length) await loadDashboard(session.children[0].childProfileId);
+    const health = await api('/api/health');
+    $('#demo-sign-in').hidden = health.authMode !== 'demo';
+  } catch {
+    // Health check is best-effort; leave the demo button hidden if it fails.
+  }
+  try {
+    await onAuthenticated(await api('/api/session'));
   } catch {
     session = null;
     setAuthenticated(false);
   }
 }
 
+async function onAuthenticated(newSession) {
+  session = newSession;
+  setAuthenticated(true);
+  renderChildren(session.children);
+  if (session.children.length) await loadDashboard(session.children[0].childProfileId);
+}
+
+function selectTab(tab) {
+  const isLogin = tab === 'login';
+  $('#tab-login').setAttribute('aria-selected', String(isLogin));
+  $('#tab-register').setAttribute('aria-selected', String(!isLogin));
+  $('#login-form').hidden = !isLogin;
+  $('#register-form').hidden = isLogin;
+  $('#auth-note').textContent = '';
+}
+
+$('#tab-login').addEventListener('click', () => selectTab('login'));
+$('#tab-register').addEventListener('click', () => selectTab('register'));
+
+$('#login-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const note = $('#auth-note');
+  note.textContent = 'Signing in…';
+  try {
+    const result = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: $('#login-email').value, password: $('#login-password').value }),
+    });
+    await onAuthenticated(result);
+  } catch (error) {
+    note.textContent = error.status === 503
+      ? 'Account sign-in is not configured on this deployment.'
+      : 'Incorrect email or password.';
+  }
+});
+
+$('#register-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const note = $('#auth-note');
+  note.textContent = 'Creating your account…';
+  try {
+    const result = await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        displayName: $('#register-name').value,
+        email: $('#register-email').value,
+        password: $('#register-password').value,
+      }),
+    });
+    if (result.authenticated) {
+      await onAuthenticated(result);
+      return;
+    }
+    note.textContent = result.message ?? 'Check your email to confirm your account, then sign in.';
+    selectTab('login');
+  } catch (error) {
+    note.textContent = error.status === 503
+      ? 'Account sign-up is not configured on this deployment.'
+      : 'Could not create that account. Check the details and try again.';
+  }
+});
+
 $('#demo-sign-in').addEventListener('click', async () => {
   const button = $('#demo-sign-in');
   button.disabled = true;
   $('#auth-note').textContent = 'Opening the guardian demo…';
   try {
-    session = await api('/api/demo/session', { method: 'POST', body: '{}' });
-    setAuthenticated(true);
-    renderChildren(session.children);
-    if (session.children.length) await loadDashboard(session.children[0].childProfileId);
+    await onAuthenticated(await api('/api/demo/session', { method: 'POST', body: '{}' }));
   } catch (error) {
     $('#auth-note').textContent = error.status === 503
       ? 'Demo access is disabled. Configure an approved identity provider for production.'
       : 'Could not open the guardian session.';
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('#add-child-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  try {
+    const result = await api('/api/children', {
+      method: 'POST',
+      body: JSON.stringify({ displayAlias: $('#child-alias').value }),
+    });
+    session = result.session;
+    renderChildren(session.children);
+    childSelect.value = result.child.childProfileId;
+    event.currentTarget.reset();
+    await loadDashboard(result.child.childProfileId);
+  } catch {
+    setStatus('Could not add that player profile. Try a shorter name.');
+  }
+});
+
+$('#launch-button').addEventListener('click', async () => {
+  const output = $('#launch-result');
+  const button = $('#launch-button');
+  button.disabled = true;
+  output.textContent = 'Preparing the launch link…';
+  try {
+    const result = await api('/api/children/launch', {
+      method: 'POST',
+      body: JSON.stringify({ childProfileId: childSelect.value }),
+    });
+    window.open(result.handoffUrl, '_blank', 'noopener');
+    output.textContent = 'Opened World Makers in a new tab.';
+  } catch (error) {
+    output.textContent = error.status === 503
+      ? 'Play is not configured on this deployment yet.'
+      : 'Could not launch this profile right now.';
   } finally {
     button.disabled = false;
   }

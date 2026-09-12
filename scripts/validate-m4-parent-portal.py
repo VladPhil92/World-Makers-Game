@@ -135,7 +135,7 @@ def main() -> None:
 
     roadmap = read("docs/roadmap.md")
     require("M4.1 — parent portal MVP" in roadmap and "source-complete" in roadmap, "Roadmap must mark M4.1 source-complete")
-    require("M4.2 — production identity, durable family linking and backend adapters: next" in roadmap, "Roadmap must identify M4.2 as next")
+    require("M4.2 — production identity, durable family linking and backend adapters: source-complete" in roadmap, "Roadmap must identify M4.2 status")
     require("M3.8 — vertical-slice certification infrastructure: source-complete" in roadmap, "M4 must not erase the M3.8 source/certification boundary")
 
     print("M4.1 Parent Portal MVP validated: server-side relationship guard, minimized family read model, explicit privacy/link requests, accessible UI and fail-closed production auth boundary are present.")

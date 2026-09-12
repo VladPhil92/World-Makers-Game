@@ -8,6 +8,7 @@ import { createLaunchContext } from './domain/launch.mjs';
 import { createNativeLaunchUri } from './domain/native-handoff.mjs';
 import { verifyIdentityAssertion, deriveIdentityLinkId } from './domain/identity.mjs';
 import { JsonFileProfileStore, ProfileConflictError } from './domain/profile-store.mjs';
+import { SupabaseProfileStore } from './domain/supabase-profile-store.mjs';
 import { appendStoreRequest, createPlayerProfile, profilePlayerReadModel, updateProfileLoadout, updateProfilePreferences, updateProfileSelection } from './domain/profile.mjs';
 import { createDemoPlayer } from './data/demo-player.mjs';
 
@@ -21,7 +22,11 @@ const identityLinkSecret = process.env.WORLD_MAKERS_IDENTITY_LINK_SECRET ?? iden
 const configuredProfileStorePath = process.env.WORLD_MAKERS_PROFILE_STORE_PATH ?? '';
 const developmentProfileStorePath = process.env.NODE_ENV === 'production' ? '' : join(process.cwd(), 'Build', 'PlayerDashboard', 'profiles.json');
 const defaultProfileStorePath = configuredProfileStorePath || developmentProfileStorePath;
-const defaultProfileStore = defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
+const supabaseUrl = process.env.SUPABASE_URL ?? '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? '';
+const defaultProfileStore = supabaseUrl && supabaseAnonKey
+  ? new SupabaseProfileStore({ url: supabaseUrl, anonKey: supabaseAnonKey })
+  : defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
 const cookieName = 'wm_player_session';
 const sessions = new Map();
 
@@ -29,6 +34,8 @@ const staticFiles = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/app.css', ['app.css', 'text/css; charset=utf-8']],
+  ['/handoff', ['handoff.html', 'text/html; charset=utf-8']],
+  ['/handoff.js', ['handoff.js', 'text/javascript; charset=utf-8']],
   ['/logo-primary.png', ['logo-primary.png', 'image/png']],
 ]);
 
@@ -332,8 +339,9 @@ export function createPlayerDashboardServer({ profileStore = defaultProfileStore
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  createPlayerDashboardServer().listen(port, '127.0.0.1', () => {
-    console.log(`World Makers Player Dashboard listening on http://127.0.0.1:${port}`);
+  const host = process.env.HOST ?? '0.0.0.0';
+  createPlayerDashboardServer().listen(port, host, () => {
+    console.log(`World Makers Player Dashboard listening on http://${host}:${port}`);
     if (!defaultProfileStore) console.log('Persistent profile store is not configured; authenticated APIs fail closed.');
     if (identityAssertionSecret.length < 32) console.log('CTG One identity assertion verification is not configured.');
     if (!demoAuthEnabled) console.log('Demo identity is disabled.');
