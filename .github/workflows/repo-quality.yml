@@ -36,6 +36,7 @@ jobs:
           - validate-m5-2-composable-runtime.py
           - validate-m5-3-science-simulation.py
           - validate-m5-4-language-thought-runtime.py
+          - validate-c1-xxii-century-citizenship.py
           - validate-v1-visual-production.py
           - validate-v2-materials-surface.py
           - validate-v3-environment-art.py

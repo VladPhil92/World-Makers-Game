@@ -1,4 +1,4 @@
-const state = { dashboard: null, activeView: 'home' };
+const state = { dashboard: null, activeView: 'home', lastLaunchUri: null };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -217,8 +217,11 @@ function renderLaunch() {
   const world = currentWorld();
   $('#launch-summary').textContent = `${mode?.name ?? 'Modo'} · ${world?.name ?? 'Mundo'}`;
   const ready = state.dashboard.launch.ready;
-  $('#launch-readiness').textContent = ready ? `Perfil r${state.dashboard.player.profileRevision} confirmado · contexto seguro listo.` : 'El servidor de lanzamiento todavía no tiene firma configurada.';
+  $('#launch-readiness').textContent = ready
+    ? `Perfil r${state.dashboard.player.profileRevision} confirmado · canal seguro listo para abrir World Makers.`
+    : 'El servidor de lanzamiento todavía no tiene firma configurada.';
   $('#play-button').classList.toggle('is-not-ready', !ready);
+  $('#play-button').disabled = !ready;
 }
 
 function renderAll() {
@@ -323,27 +326,31 @@ async function requestStoreItem(itemId) {
   }
 }
 
+function openNativeGame(uri) {
+  if (!uri) return toast('No hay un lanzamiento preparado.');
+  window.location.assign(uri);
+}
+
 async function launchGame() {
+  if (!state.dashboard?.launch?.ready) return toast('El lanzamiento seguro todavía no está disponible.');
   try {
     const payload = await api('/api/launch-context', { method: 'POST', body: '{}' });
+    if (!payload.launchUri?.startsWith('worldmakers://launch?')) throw new Error('invalid_native_launch_uri');
+    state.lastLaunchUri = payload.launchUri;
+
+    const expiresAt = new Date(payload.context.expiresAt);
     const dialog = $('#launch-dialog');
-    $('#launch-dialog-copy').textContent = `${currentMode().name} · ${currentWorld().name}. El launcher nativo debe consumir este contexto firmado.`;
-    const safePreview = {
-      protocol: payload.protocol,
-      playerId: payload.context.playerId,
-      profileRevision: payload.context.profileRevision,
-      avatarId: payload.context.avatarId,
-      selectedMode: payload.context.selectedMode,
-      selectedWorld: payload.context.selectedWorld,
-      missionId: payload.context.missionId,
-      expiresAt: payload.context.expiresAt,
-      signature: `${payload.context.signature.slice(0, 12)}…`,
-    };
-    $('#launch-context-preview').textContent = JSON.stringify(safePreview, null, 2);
+    $('#launch-dialog-copy').textContent = `${currentMode().name} · ${currentWorld().name}. El navegador solicitará permiso para abrir el cliente instalado de World Makers.`;
+    $('#launch-context-preview').textContent = [
+      `Perfil: r${payload.context.profileRevision}`,
+      `Protocolo: ${payload.protocol}`,
+      `Sesión válida hasta: ${expiresAt.toLocaleTimeString('es-CO')}`,
+    ].join('\n');
     dialog.showModal();
+    window.setTimeout(() => openNativeGame(payload.launchUri), 120);
   } catch (error) {
-    if (error.code === 'launch_signing_not_configured') return toast('PLAY está fail-closed hasta configurar la firma de lanzamiento.');
-    toast('No se pudo preparar el lanzamiento.');
+    if (error.code === 'launch_signing_not_configured') return toast('PLAY está protegido hasta configurar la firma de lanzamiento.');
+    toast('No se pudo preparar el lanzamiento del juego.');
   }
 }
 
@@ -380,10 +387,12 @@ $('#demo-login').addEventListener('click', signInDemo);
 $('#logout').addEventListener('click', async () => {
   await api('/api/session', { method: 'DELETE' }).catch(() => {});
   state.dashboard = null;
+  state.lastLaunchUri = null;
   $('#app-shell').hidden = true;
   $('#auth-view').hidden = false;
 });
 $('#play-button').addEventListener('click', launchGame);
+$('#retry-launch-button').addEventListener('click', () => openNativeGame(state.lastLaunchUri));
 $$('[data-view]').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
 
 hydrate();

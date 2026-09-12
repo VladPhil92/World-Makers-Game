@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dashboardCatalog } from './domain/catalog.mjs';
 import { createLaunchContext } from './domain/launch.mjs';
+import { createNativeLaunchUri } from './domain/native-handoff.mjs';
 import { verifyIdentityAssertion, deriveIdentityLinkId } from './domain/identity.mjs';
 import { JsonFileProfileStore, ProfileConflictError } from './domain/profile-store.mjs';
 import { SupabaseProfileStore } from './domain/supabase-profile-store.mjs';
@@ -35,6 +36,7 @@ const staticFiles = new Map([
   ['/app.css', ['app.css', 'text/css; charset=utf-8']],
   ['/handoff', ['handoff.html', 'text/html; charset=utf-8']],
   ['/handoff.js', ['handoff.js', 'text/javascript; charset=utf-8']],
+  ['/logo-primary.png', ['logo-primary.png', 'image/png']],
 ]);
 
 class AuthenticationError extends Error {}
@@ -141,6 +143,7 @@ function dashboardReadModel(session, profile) {
       ready: launchSigningSecret.length >= 32,
       ttlSeconds: 120,
       protocol: 'worldmakers-launch-v1',
+      nativeScheme: 'worldmakers',
     },
   };
 }
@@ -301,11 +304,12 @@ async function handleApi(req, res, url, store) {
     const profile = await loadProfile(store, session);
     if (launchSigningSecret.length < 32) return json(res, 503, { code: 'launch_signing_not_configured' });
     const player = profilePlayerReadModel(profile);
-    const context = createLaunchContext({ player, selection: profile.selection, secret: launchSigningSecret });
+    const context = { ...createLaunchContext({ player, selection: profile.selection, secret: launchSigningSecret }), profileRevision: profile.revision };
     return json(res, 201, {
       protocol: 'worldmakers-launch-v1',
-      context: { ...context, profileRevision: profile.revision },
-      next: 'handoff-to-unreal-launcher',
+      context,
+      launchUri: createNativeLaunchUri(context),
+      next: 'open-native-client',
     });
   }
 

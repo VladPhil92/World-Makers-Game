@@ -13,7 +13,7 @@
   <div class="ambient ambient-b" aria-hidden="true"></div>
 
   <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
-    <div class="brand-mark" aria-hidden="true"><span>W</span><span>M</span></div>
+    <img src="/logo-primary.png" width="320" height="160" alt="World Makers">
     <p class="eyebrow">WORLD MAKERS</p>
     <h1 id="auth-title">Tu mundo empieza aquí.</h1>
     <p class="auth-copy">Inicia sesión para preparar tu personaje, elegir cómo jugar y entrar al mundo con todo listo.</p>
@@ -24,7 +24,7 @@
   <div id="app-shell" class="app-shell" hidden>
     <aside class="sidebar" aria-label="Navegación principal">
       <button class="brand-button" data-view="home" type="button" aria-label="Ir al inicio">
-        <span class="brand-mark compact" aria-hidden="true"><span>W</span><span>M</span></span>
+        <img src="/logo-primary.png" width="64" height="32" alt="">
       </button>
       <nav class="nav-stack">
         <button class="nav-item is-active" data-view="home" type="button"><span>⌂</span><b>Inicio</b></button>
@@ -85,9 +85,9 @@
           <div>
             <p class="eyebrow">SESIÓN PREPARADA</p>
             <strong id="launch-summary">Exploración Libre · Rainforest World</strong>
-            <small id="launch-readiness">Configurando lanzamiento…</small>
+            <small id="launch-readiness">Preparando canal seguro con el juego…</small>
           </div>
-          <button id="play-button" class="play-button" type="button"><span>▶</span> JUGAR</button>
+          <button id="play-button" class="play-button" type="button"><span>▶</span> INICIAR JUEGO</button>
         </section>
       </section>
 
@@ -135,11 +135,14 @@
 
       <dialog id="launch-dialog" class="launch-dialog">
         <div class="launch-dialog-icon">▶</div>
-        <p class="eyebrow">WORLD MAKERS LAUNCH CONTEXT</p>
-        <h3>Tu sesión está lista.</h3>
+        <p class="eyebrow">WORLD MAKERS NATIVE LAUNCHER</p>
+        <h3>Abriendo World Makers…</h3>
         <p id="launch-dialog-copy"></p>
         <pre id="launch-context-preview"></pre>
-        <form method="dialog"><button class="secondary-button">Cerrar</button></form>
+        <div class="launch-dialog-actions">
+          <button id="retry-launch-button" class="primary-button" type="button">Abrir juego nuevamente</button>
+          <form method="dialog"><button class="secondary-button">Cerrar</button></form>
+        </div>
       </dialog>
 
       <div id="global-status" class="toast" aria-live="polite"></div>
