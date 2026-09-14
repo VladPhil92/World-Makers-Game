@@ -40,8 +40,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse")
     bool BeginAction(FName ActionId);
 
-    /** Trusted mechanism completion entry point. Call only after the mechanic validated the actual player result. */
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse")
+    /** Trusted C++ completion boundary. Deliberately not Blueprint/UI-callable. */
     bool ResolveTrustedAction(FName ActionId, float NumericValue = 1.0f);
 
     /** C++ bridge used by already-validated language/literature/thought runtimes. Not exposed as a player/UI completion API. */
