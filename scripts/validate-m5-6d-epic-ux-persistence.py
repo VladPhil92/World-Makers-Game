@@ -25,6 +25,8 @@ def main() -> None:
         "game/Source/WorldMakers/Adventure/WMEpicRuntime.cpp",
         "game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h",
         "game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp",
+        "game/Source/WorldMakers/Adventure/WMEclipseEngineExperienceSubsystem.cpp",
+        "game/Source/WorldMakers/Adventure/WMGardenEndWinterExperienceSubsystem.cpp",
         "game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp",
         "apps/player-dashboard/src/domain/epic-progress.mjs",
         "apps/player-dashboard/src/domain/profile.mjs",
@@ -68,6 +70,16 @@ def main() -> None:
     evidence_section = subsystem_cpp.split("bool UWMEpicRuntimeSubsystem::RecordEpicEvidence", 1)[1].split("bool UWMEpicRuntimeSubsystem::RecordEpicWorldState", 1)[0]
     if "SaveCurrentCheckpoint" in evidence_section:
         fail("Partial evidence must never trigger persistent checkpoints")
+
+    for label, path in (
+        ("Eclipse Engine", "game/Source/WorldMakers/Adventure/WMEclipseEngineExperienceSubsystem.cpp"),
+        ("Garden at the End of Winter", "game/Source/WorldMakers/Adventure/WMGardenEndWinterExperienceSubsystem.cpp"),
+    ):
+        experience = read(path)
+        if "ActivateOrResumeEpic(Catalog.EpicId)" not in experience:
+            fail(f"{label} start path must resume a valid persisted epic checkpoint")
+        if "ActivateEpic(Catalog.EpicId)" in experience:
+            fail(f"{label} start path must not overwrite a resumable checkpoint with a fresh chapter-zero activation")
 
     unreal_tests = read("game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp")
     for name in (
