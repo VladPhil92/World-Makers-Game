@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GAME = ROOT / "game"
 SOURCE = GAME / "Source" / "WorldMakers"
 CERTIFICATION_MAP = GAME / "Content" / "WorldMakers" / "Maps" / "WM_PrototypeCertification.umap"
+ENGINE_RESOLVER = ROOT / "scripts" / "resolve-unreal-engine.ps1"
 READINESS_SCRIPT = ROOT / "scripts" / "run-unreal-readiness-gate.ps1"
 READINESS_DOC = ROOT / "docs" / "native-unreal-readiness-gate.md"
 
@@ -177,6 +178,20 @@ def main() -> None:
         ".gitattributes",
     )
 
+    engine_resolver = require_file(ENGINE_RESOLVER)
+    require_tokens(
+        engine_resolver,
+        (
+            "UNREAL_ENGINE_ROOT",
+            "EpicGamesLauncher",
+            "Build.version",
+            "ExpectedVersion",
+            "Multiple Unreal Engine",
+            "epic-default-root",
+        ),
+        "scripts/resolve-unreal-engine.ps1",
+    )
+
     readiness_script = require_file(READINESS_SCRIPT)
     require_tokens(
         readiness_script,
@@ -186,6 +201,10 @@ def main() -> None:
             "git lfs pull",
             "fetch origin main",
             "origin/main",
+            "resolve-unreal-engine.ps1",
+            "engineRootResolved",
+            "engineResolutionSource",
+            "UnrealEditor-Cmd.exe",
             "validate-unreal-source-preflight.py",
             "build-unreal.ps1",
             "test-unreal.ps1",
@@ -202,6 +221,8 @@ def main() -> None:
         (
             "WorldMakersEditor Win64 Development",
             "WM_PrototypeCertification.umap",
+            "UNREAL_ENGINE_ROOT",
+            "auto-discovery",
             "artifacts/unreal-readiness/",
             "representative-device certification",
         ),
@@ -221,8 +242,8 @@ def main() -> None:
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
-        "native_readiness_orchestrator=present, unity_mode=disabled, "
-        "material_vector_api=ue58. "
+        "native_readiness_orchestrator=present, engine_autodiscovery=present, "
+        "unity_mode=disabled, material_vector_api=ue58. "
         "Native UE build/test certification remains a separate gate."
     )
 
