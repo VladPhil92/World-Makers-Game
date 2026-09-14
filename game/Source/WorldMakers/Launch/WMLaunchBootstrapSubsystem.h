@@ -89,6 +89,7 @@ private:
     FString ApiBaseUrl;
     FString LaunchTicket;
     FString ProgressSyncToken;
+    FName ProgressSyncEpicId;
     FName SelectedModeId;
     FName SelectedWorldId;
     FName SelectedMissionId;
