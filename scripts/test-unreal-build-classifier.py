@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +14,7 @@ spec = importlib.util.spec_from_file_location("worldmakers_unreal_classifier", C
 if spec is None or spec.loader is None:
     raise SystemExit("Unable to load classify-unreal-build-log.py")
 classifier = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = classifier
 spec.loader.exec_module(classifier)
 
 
@@ -40,7 +42,7 @@ def main() -> None:
         actionable=False,
     )
     expect(
-        r"C:\Users\Builder\World-Makers-Game\game\Source\WorldMakers\Foo.cpp(17): fatal error C1083: Cannot open include file: 'Missing.h': No such file or directory\nResult: Failed",
+        "C:\\Users\\Builder\\World-Makers-Game\\game\\Source\\WorldMakers\\Foo.cpp(17): fatal error C1083: Cannot open include file: 'Missing.h': No such file or directory\nResult: Failed",
         "include-file-missing",
         actionable=True,
     )
@@ -50,7 +52,7 @@ def main() -> None:
         actionable=True,
     )
     expect(
-        r"D:\repo\game\Source\WorldMakers\Foo.cpp(42): error C2664: cannot convert argument 2\nResult: Failed",
+        "D:\\repo\\game\\Source\\WorldMakers\\Foo.cpp(42): error C2664: cannot convert argument 2\nResult: Failed",
         "compiler-error",
         actionable=True,
     )
@@ -82,7 +84,7 @@ def main() -> None:
     expect("Total time in Parallel executor: 1.24 seconds\nResult: Succeeded", "none", actionable=False)
     expect("AutomationTool exiting with ExitCode=6 (6)\nResult: Failed", "unknown-native-build-failure", actionable=True)
 
-    privacy_log = r"C:\Users\JuanPablo\Desktop\WorldMakers\Foo.cpp(7): error C2065: identifier not found"
+    privacy_log = "C:\\Users\\JuanPablo\\Desktop\\WorldMakers\\Foo.cpp(7): error C2065: identifier not found"
     privacy_result = classifier.classify_text(privacy_log, ROOT)
     diagnostics = privacy_result["diagnostics"]
     assert diagnostics, privacy_result
@@ -90,7 +92,9 @@ def main() -> None:
     assert "<user>" in diagnostics[0]["source"], diagnostics[0]
 
     compiler_result = classifier.classify_text(
-        r"C:\Users\Builder\repo\Foo.cpp(10,3): error C2143: syntax error\nC:\Users\Builder\repo\Foo.cpp(11): warning C4996: old API\nResult: Failed",
+        "C:\\Users\\Builder\\repo\\Foo.cpp(10,3): error C2143: syntax error\n"
+        "C:\\Users\\Builder\\repo\\Foo.cpp(11): warning C4996: old API\n"
+        "Result: Failed",
         ROOT,
     )
     assert compiler_result["diagnosticCount"] == 2, compiler_result
