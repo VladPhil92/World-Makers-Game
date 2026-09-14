@@ -1,0 +1,70 @@
+name: G1 Native Unreal Certification
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/g1-native-certification-v1.json'
+      - 'docs/g1-native-unreal-certification.md'
+      - 'scripts/run-g1-native-certification.ps1'
+      - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'scripts/validate-g1-native-certification-contract.py'
+      - 'WorldMakers-G1-Certify.cmd'
+      - '.github/workflows/g1-native-certification.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'content/production/g1-native-certification-v1.json'
+      - 'docs/g1-native-unreal-certification.md'
+      - 'scripts/run-g1-native-certification.ps1'
+      - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'scripts/validate-g1-native-certification-contract.py'
+      - 'WorldMakers-G1-Certify.cmd'
+      - '.github/workflows/g1-native-certification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    name: Validate G1 source contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate G1 source contract
+        run: python scripts/validate-g1-native-certification-contract.py
+
+  native-certification:
+    name: Execute G1 on locked UE 5.8.2 runner
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+      - unreal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 0
+      - name: Run clean G1 native certification
+        shell: powershell
+        run: ./scripts/run-g1-native-certification.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\g1-native' -CleanIntermediate
+      - name: Upload G1 native evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g1-native-${{ github.sha }}
+          path: artifacts/g1-native/**
+          if-no-files-found: warn
+          retention-days: 30
