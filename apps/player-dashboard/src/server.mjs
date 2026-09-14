@@ -38,6 +38,7 @@ const defaultProfileStore = supabaseUrl && supabaseAnonKey
   : defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
 const cookieName = 'wm_player_session';
 const sessions = new Map();
+const nativeCheckpointFields = new Set(['epicId', 'chapterId', 'chapterIndex', 'state']);
 
 const staticFiles = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -218,6 +219,7 @@ function createStoreRequest(itemId) {
 
 function nativeCheckpointCandidate(profile, checkpoint) {
   if (!checkpoint || typeof checkpoint !== 'object' || Array.isArray(checkpoint)) throw new TypeError('Epic checkpoint is required.');
+  if (Object.keys(checkpoint).some((key) => !nativeCheckpointFields.has(key))) throw new TypeError('Epic checkpoint contains unsupported fields.');
   const epicId = String(checkpoint.epicId ?? '');
   const existing = Array.isArray(profile.progress?.epics)
     ? profile.progress.epics.find((item) => item.epicId === epicId)
