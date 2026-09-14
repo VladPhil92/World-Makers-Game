@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +50,54 @@ def require_tokens(text: str, tokens: tuple[str, ...], subject: str) -> None:
         fail(f"{subject} is missing readiness-contract tokens: {missing}")
 
 
+def anonymous_namespace_blocks(text: str) -> list[str]:
+    blocks: list[str] = []
+    for match in re.finditer(r"\bnamespace\s*\{", text):
+        open_brace = text.find("{", match.start())
+        depth = 0
+        for index in range(open_brace, len(text)):
+            char = text[index]
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[open_brace + 1 : index])
+                    break
+    return blocks
+
+
+def find_duplicate_unity_helpers() -> dict[str, list[str]]:
+    """Find anonymous-namespace helper definitions duplicated across .cpp files.
+
+    Unreal unity builds may combine multiple .cpp files into one translation unit.
+    Anonymous namespace declarations then share the same translation unit, so
+    same-named helper definitions can become C2084/C2264 build failures.
+    """
+
+    helper_pattern = re.compile(
+        r"(?m)^\s*(?:static\s+)?(?:inline\s+)?"
+        r"[A-Za-z_][\w:<>,*&\s]*\s+([A-Za-z_]\w*)\s*"
+        r"\([^;{}]*\)\s*(?:const\s*)?\{"
+    )
+    definitions: dict[str, set[str]] = defaultdict(set)
+
+    for path in SOURCE.rglob("*.cpp"):
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        rel = path.relative_to(ROOT).as_posix()
+        for block in anonymous_namespace_blocks(text):
+            for helper_name in helper_pattern.findall(block):
+                definitions[helper_name].add(rel)
+
+    return {
+        name: sorted(paths)
+        for name, paths in definitions.items()
+        if len(paths) > 1
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-authored-map", action="store_true")
@@ -82,6 +131,17 @@ def main() -> None:
         fail(
             "Local UMG variable named Slot shadows UWidget::Slot under the locked compiler: "
             + ", ".join(slot_shadowing)
+        )
+
+    duplicate_helpers = find_duplicate_unity_helpers()
+    if duplicate_helpers:
+        details = "; ".join(
+            f"{name}: {', '.join(paths)}"
+            for name, paths in sorted(duplicate_helpers.items())
+        )
+        fail(
+            "Anonymous-namespace helper names collide across .cpp files and may fail Unreal unity builds: "
+            + details
         )
 
     game_ini = require_file(GAME / "Config" / "DefaultGame.ini")
@@ -146,7 +206,7 @@ def main() -> None:
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
-        "native_readiness_orchestrator=present. "
+        "native_readiness_orchestrator=present, unity_helper_collisions=none. "
         "Native UE build/test certification remains a separate gate."
     )
 
