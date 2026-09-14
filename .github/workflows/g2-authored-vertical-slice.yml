@@ -1,0 +1,93 @@
+name: G2 Authored Vertical Slice
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/g2-*.json'
+      - 'content/visual/authored/authored-assets-p1.json'
+      - 'game/Content/WorldMakers/Maps/**'
+      - 'game/UNREAL_ENGINE_VERSION'
+      - 'game/WorldMakers.uproject'
+      - 'scripts/validate-g2-authored-vertical-slice.py'
+      - 'scripts/run-g2-authored-certification.ps1'
+      - 'scripts/unreal/author-g2-certification-map.py'
+      - 'scripts/unreal/inspect-g2-certification-map.py'
+      - 'WorldMakers-G2-Author.cmd'
+      - 'WorldMakers-G2-Certify.cmd'
+      - 'docs/g2-authored-vertical-slice.md'
+      - '.gitattributes'
+      - '.github/workflows/g2-authored-vertical-slice.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'content/production/g2-*.json'
+      - 'content/visual/authored/authored-assets-p1.json'
+      - 'game/Content/WorldMakers/Maps/**'
+      - 'scripts/validate-g2-authored-vertical-slice.py'
+      - 'scripts/run-g2-authored-certification.ps1'
+      - 'scripts/unreal/author-g2-certification-map.py'
+      - 'scripts/unreal/inspect-g2-certification-map.py'
+      - 'WorldMakers-G2-Author.cmd'
+      - 'WorldMakers-G2-Certify.cmd'
+      - 'docs/g2-authored-vertical-slice.md'
+      - '.github/workflows/g2-authored-vertical-slice.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-g2-source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate G2 authored vertical slice source contract
+        run: python scripts/validate-g2-authored-vertical-slice.py
+
+  g2-native-map-inspection:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' && vars.G2_AUTHORED_MAP_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require committed authored map and approved rainforest takeover
+        shell: pwsh
+        run: python scripts/validate-g2-authored-vertical-slice.py --require-authored-map
+      - name: Verify locked UE 5.8.2 runner
+        shell: pwsh
+        run: |
+          if (-not '${{ vars.UNREAL_ENGINE_ROOT }}') { throw 'UNREAL_ENGINE_ROOT is required.' }
+          $versionFile = Join-Path '${{ vars.UNREAL_ENGINE_ROOT }}' 'Engine\Build\Build.version'
+          $editor = Join-Path '${{ vars.UNREAL_ENGINE_ROOT }}' 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $versionFile)) { throw 'Unreal Build.version is missing.' }
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe is missing.' }
+          $v = Get-Content $versionFile -Raw | ConvertFrom-Json
+          $actual = "$($v.MajorVersion).$($v.MinorVersion).$($v.PatchVersion)"
+          if ($actual -ne '5.8.2') { throw "Expected UE 5.8.2, found $actual" }
+      - name: Inspect G2 map and native assets in Unreal
+        shell: pwsh
+        env:
+          WM_G2_INSPECTION_REPORT: ${{ github.workspace }}\artifacts\g2-authored\g2-native-map-inspection.json
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\g2-authored | Out-Null
+          $editor = Join-Path '${{ vars.UNREAL_ENGINE_ROOT }}' 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecutePythonScript="$pwd\scripts\unreal\inspect-g2-certification-map.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload G2 native inspection evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g2-native-map-inspection-${{ github.sha }}
+          path: artifacts/g2-authored/**
+          if-no-files-found: error
+          retention-days: 30
