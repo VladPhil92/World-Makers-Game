@@ -2,6 +2,7 @@
 
 #include "Adventure/WMAdventureRuntimeSubsystem.h"
 #include "Adventure/WMEclipseEngineExperienceSubsystem.h"
+#include "Adventure/WMGardenEndWinterExperienceSubsystem.h"
 #include "Adventure/WMEpicRuntimeSubsystem.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/FileHelper.h"
@@ -41,15 +42,20 @@ bool UWMLanguageThoughtSubsystem::SubmitEvidenceToActiveMission(const FWMThought
         return false;
     }
 
-    // M5.6B: when The Eclipse Engine is active, validated thought results must pass through the
-    // diegetic experience boundary so the epic can enforce chapter, producer, discipline and objective attribution.
-    // Never fall back directly to Mission Runtime while the epic is active; that would bypass epic progression authority.
+    // Epic authority wins over the generic Mission Runtime. This prevents a validated thought result
+    // from satisfying a chapter outside its active world route.
     if (UWMEpicRuntimeSubsystem* EpicSubsystem = GetWorld()->GetSubsystem<UWMEpicRuntimeSubsystem>())
     {
         if (EpicSubsystem->GetActiveEpicId() == TEXT("epic.eclipse-engine"))
         {
             UWMEclipseEngineExperienceSubsystem* Experience = GetWorld()->GetSubsystem<UWMEclipseEngineExperienceSubsystem>();
             return Experience && Experience->ResolveValidatedEvidence(
+                ProducerRefId, Result.PrimitiveId, Result.EvidenceEventId, Result.NumericValue);
+        }
+        if (EpicSubsystem->GetActiveEpicId() == TEXT("epic.garden-end-winter"))
+        {
+            UWMGardenEndWinterExperienceSubsystem* Garden = GetWorld()->GetSubsystem<UWMGardenEndWinterExperienceSubsystem>();
+            return Garden && Garden->ResolveValidatedEvidence(
                 ProducerRefId, Result.PrimitiveId, Result.EvidenceEventId, Result.NumericValue);
         }
     }
