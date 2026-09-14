@@ -7,6 +7,7 @@
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Player/WMPlayerCharacter.h"
 #include "Visual/WMFirstPersonInteractionComponent.h"
 
 void UWMEclipseEngineExperienceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -101,9 +102,18 @@ void UWMEclipseEngineExperienceSubsystem::PulseFirstPerson(const FWMEclipseActio
 {
     if (!GetWorld()) return;
     APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    APawn* Pawn = PC ? PC->GetPawn() : nullptr;
-    UWMFirstPersonInteractionComponent* FirstPerson = Pawn ? Pawn->FindComponentByClass<UWMFirstPersonInteractionComponent>() : nullptr;
-    if (FirstPerson) FirstPerson->PulseSemanticEvent(Action.FirstPersonEventId, Action.FirstPersonActionId, 0.95f);
+    AWMPlayerCharacter* Player = PC ? Cast<AWMPlayerCharacter>(PC->GetPawn()) : nullptr;
+    if (!Player) return;
+
+    UWMFirstPersonInteractionComponent* FirstPerson = Player->FirstPersonInteractionComponent;
+    if (!FirstPerson)
+    {
+        FirstPerson = NewObject<UWMFirstPersonInteractionComponent>(Player, TEXT("FirstPersonInteractionComponent"));
+        if (!FirstPerson) return;
+        FirstPerson->RegisterComponent();
+        Player->FirstPersonInteractionComponent = FirstPerson;
+    }
+    FirstPerson->PulseSemanticEvent(Action.FirstPersonEventId, Action.FirstPersonActionId, 0.95f);
 }
 
 bool UWMEclipseEngineExperienceSubsystem::BeginAction(const FName ActionId)
