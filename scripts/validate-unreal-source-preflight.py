@@ -18,6 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 GAME = ROOT / "game"
 SOURCE = GAME / "Source" / "WorldMakers"
 CERTIFICATION_MAP = GAME / "Content" / "WorldMakers" / "Maps" / "WM_PrototypeCertification.umap"
+READINESS_SCRIPT = ROOT / "scripts" / "run-unreal-readiness-gate.ps1"
+READINESS_DOC = ROOT / "docs" / "native-unreal-readiness-gate.md"
 
 
 def fail(message: str) -> None:
@@ -39,6 +41,12 @@ def scan_sources(pattern: re.Pattern[str]) -> list[str]:
         if pattern.search(text):
             matches.append(path.relative_to(ROOT).as_posix())
     return matches
+
+
+def require_tokens(text: str, tokens: tuple[str, ...], subject: str) -> None:
+    missing = [token for token in tokens if token not in text]
+    if missing:
+        fail(f"{subject} is missing readiness-contract tokens: {missing}")
 
 
 def main() -> None:
@@ -85,6 +93,45 @@ def main() -> None:
     logo_exception = "apps/player-dashboard/public/logo-primary.png -filter -diff -merge -text"
     if logo_exception not in attributes:
         fail("Dashboard logo must be explicitly exempted from the global PNG LFS rule")
+    require_tokens(
+        attributes,
+        (
+            "*.uasset filter=lfs diff=lfs merge=lfs -text",
+            "*.umap filter=lfs diff=lfs merge=lfs -text",
+        ),
+        ".gitattributes",
+    )
+
+    readiness_script = require_file(READINESS_SCRIPT)
+    require_tokens(
+        readiness_script,
+        (
+            "RequireAuthoredMap",
+            "RunAutomation",
+            "git lfs pull",
+            "fetch origin main",
+            "origin/main",
+            "validate-unreal-source-preflight.py",
+            "build-unreal.ps1",
+            "test-unreal.ps1",
+            "readiness-result.json",
+            "pre-editor-native-readiness",
+            "authored-map-certification-readiness",
+        ),
+        "scripts/run-unreal-readiness-gate.ps1",
+    )
+
+    readiness_doc = require_file(READINESS_DOC)
+    require_tokens(
+        readiness_doc,
+        (
+            "WorldMakersEditor Win64 Development",
+            "WM_PrototypeCertification.umap",
+            "artifacts/unreal-readiness/",
+            "representative-device certification",
+        ),
+        "docs/native-unreal-readiness-gate.md",
+    )
 
     map_status = "present" if CERTIFICATION_MAP.is_file() else "missing"
     if args.require_authored_map and map_status != "present":
@@ -98,7 +145,8 @@ def main() -> None:
     print(
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
-        f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}. "
+        f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
+        "native_readiness_orchestrator=present. "
         "Native UE build/test certification remains a separate gate."
     )
 
