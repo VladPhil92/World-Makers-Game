@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "experienceId": "experience.garden-end-winter-v1",
+  "epicId": "epic.garden-end-winter",
+  "prototypeOnly": true,
+  "playerPromise": "bring-a-frozen-living-garden-back-into-motion",
+  "presentationRule": "world-first-no-school-ui",
+  "rewardModel": "living-world-transformation-and-new-access",
+  "failureModel": "reversible-ecosystem-experimentation",
+  "hintModel": "player-requested-progressive-environmental-hints",
+  "privacyModel": "stable-ids-no-child-free-text",
+  "chapters": [
+    {
+      "chapterId": "chapter.garden.restore-cellular-balance",
+      "fantasyGoalKey": "garden.goal.wake-root-lanterns",
+      "tensionKey": "garden.tension.roots-dark-and-still",
+      "completionReactionKey": "garden.reaction.root-network-glows",
+      "actions": [
+        {"actionId":"garden.balance-cell-energy","interactionVerb":"tune","promptKey":"garden.prompt.balance-cell-energy","feedbackKey":"garden.feedback.cells-pulse","firstPersonEventId":"science.garden.cell-energy","firstPersonActionId":"scan-hold","prototypeLocationCm":[520,-140,95],"evidence":{"objectiveId":"biology.cell.explain-system-interdependence","disciplineId":"biology","producerKind":"science","producerRefId":"science.cell.metabolism-balance","primitiveId":"model-system","evidenceEventId":"science.biology.cell-system-balance-demonstrated"},"hints":["garden.hint.cell-watch-energy","garden.hint.cell-balance-resources","garden.hint.cell-link-transport"]},
+        {"actionId":"garden.restore-transport-flow","interactionVerb":"route","promptKey":"garden.prompt.restore-transport-flow","feedbackKey":"garden.feedback.channels-flow","firstPersonEventId":"science.garden.transport","firstPersonActionId":"scan-hold","prototypeLocationCm":[730,120,95],"evidence":{"objectiveId":"biology.cell.model-transport-homeostasis","disciplineId":"biology","producerKind":"world","producerRefId":"world.cell.transport-network","primitiveId":"model-system","evidenceEventId":"science.biology.transport-model-demonstrated"},"hints":["garden.hint.transport-find-blockage","garden.hint.transport-watch-waste","garden.hint.transport-balance-flow"]},
+        {"actionId":"garden.tune-root-water-ratio","interactionVerb":"tune","promptKey":"garden.prompt.tune-root-water-ratio","feedbackKey":"garden.feedback.channels-harmonize","firstPersonEventId":"mission.measure.reveal","firstPersonActionId":"measure-focus","prototypeLocationCm":[940,-80,85],"masteryGate":{"gateId":"mastery.garden.irrigation-ratio","disciplineId":"mathematics"},"hints":["garden.hint.ratio-compare-streams","garden.hint.ratio-match-cycle","garden.hint.ratio-scale-both-sides"]},
+        {"actionId":"garden.wake-root-lanterns","interactionVerb":"awaken","promptKey":"garden.prompt.wake-root-lanterns","feedbackKey":"garden.feedback.roots-light-path","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[1160,0,120],"worldState":{"producerKind":"world","producerRefId":"world.garden.organism-network","worldStateId":"world-state.garden.organisms-responsive"},"hints":["garden.hint.roots-finish-living-network"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.garden.repair-soil-water",
+      "fantasyGoalKey": "garden.goal.clean-sleeping-water",
+      "tensionKey": "garden.tension.water-carries-winter-salts",
+      "completionReactionKey": "garden.reaction.water-runs-clear",
+      "actions": [
+        {"actionId":"garden.test-sleeping-water","interactionVerb":"test","promptKey":"garden.prompt.test-sleeping-water","feedbackKey":"garden.feedback-crystals-reveal-limit","firstPersonEventId":"science.garden.solution","firstPersonActionId":"scan-hold","prototypeLocationCm":[1420,-130,90],"evidence":{"objectiveId":"chemistry.solution.reason-about-solubility","disciplineId":"chemistry","producerKind":"science","producerRefId":"science.solution.sodium-chloride","primitiveId":"predict-test-revise","evidenceEventId":"science.chemistry.solution-saturation-demonstrated"},"hints":["garden.hint.solution-add-small","garden.hint.solution-watch-undissolved","garden.hint.solution-find-capacity"]},
+        {"actionId":"garden.balance-mineral-transformation","interactionVerb":"balance","promptKey":"garden.prompt.balance-mineral-transformation","feedbackKey":"garden.feedback-mass-path-closes","firstPersonEventId":"science.garden.conservation","firstPersonActionId":"scan-hold","prototypeLocationCm":[1640,130,95],"evidence":{"objectiveId":"chemistry.reaction.apply-conservation","disciplineId":"chemistry","producerKind":"science","producerRefId":"reaction.iron-oxidation","primitiveId":"model-system","evidenceEventId":"science.chemistry.mass-conservation-demonstrated"},"hints":["garden.hint.mass-track-before-after","garden.hint.mass-find-limiting-side","garden.hint.mass-close-balance"]},
+        {"actionId":"garden.release-soil-water-loop","interactionVerb":"release","promptKey":"garden.prompt.release-soil-water-loop","feedbackKey":"garden.feedback-soil-darkens-water-moves","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[1850,0,110],"worldState":{"producerKind":"science","producerRefId":"science.garden.soil-water","worldStateId":"world-state.garden.soil-water-stable"},"hints":["garden.hint.water-finish-two-tests"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.garden.restore-pollination",
+      "fantasyGoalKey": "garden.goal.bring-back-messengers",
+      "tensionKey": "garden.tension.flowers-open-but-silent",
+      "completionReactionKey": "garden.reaction-wings-return-and-fruit-sets",
+      "actions": [
+        {"actionId":"garden.find-growth-bottleneck","interactionVerb":"observe","promptKey":"garden.prompt.find-growth-bottleneck","feedbackKey":"garden.feedback-growth-responds","firstPersonEventId":"science.garden.plant-growth","firstPersonActionId":"observe-focus","prototypeLocationCm":[2140,-150,95],"evidence":{"objectiveId":"ecology.plant.identify-limiting-factor","disciplineId":"ecology","producerKind":"science","producerRefId":"plant.rainforest-learning-prototype","primitiveId":"predict-test-revise","evidenceEventId":"science.botany.growth-limiting-factor-demonstrated"},"hints":["garden.hint.growth-change-one-condition","garden.hint.growth-compare-response","garden.hint.growth-name-bottleneck"]},
+        {"actionId":"garden.restore-pollinator-route","interactionVerb":"route","promptKey":"garden.prompt.restore-pollinator-route","feedbackKey":"garden.feedback-fruit-begins-forming","firstPersonEventId":"science.garden.pollination","firstPersonActionId":"observe-focus","prototypeLocationCm":[2360,140,100],"evidence":{"objectiveId":"ecology.pollination.explain-interdependence","disciplineId":"ecology","producerKind":"science","producerRefId":"plant.rainforest-learning-prototype","primitiveId":"model-system","evidenceEventId":"science.botany.pollination-fruiting-link-demonstrated"},"hints":["garden.hint.pollination-watch-flower","garden.hint.pollination-compare-without-with","garden.hint.pollination-connect-fruiting"]},
+        {"actionId":"garden.call-back-messengers","interactionVerb":"awaken","promptKey":"garden.prompt.call-back-messengers","feedbackKey":"garden.feedback-pollinator-corridor-lives","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[2580,0,120],"worldState":{"producerKind":"world","producerRefId":"world.garden.pollination-network","worldStateId":"world-state.garden.pollination-network-active"},"hints":["garden.hint.pollinators-finish-living-link"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.garden.choose-shared-restoration",
+      "fantasyGoalKey": "garden.goal.choose-what-thaw-becomes",
+      "tensionKey": "garden.tension-not-everything-can-be-restored-first",
+      "completionReactionKey": "garden.reaction-winter-releases-garden",
+      "actions": [
+        {"actionId":"garden.choose-shared-restoration","interactionVerb":"deliberate","promptKey":"garden.prompt.choose-shared-restoration","feedbackKey":"garden.feedback-perspectives-change-plan","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[2880,-130,115],"evidence":{"objectiveId":"ethics.reason.from-multiple-perspectives","disciplineId":"ethics","producerKind":"thought","producerRefId":"ethics.bridge-two-villages-prototype","primitiveId":"reason-through-dilemma","evidenceEventId":"ethics.multi-perspective-reasoning-demonstrated"},"hints":["garden.hint.shared-list-affected","garden.hint.shared-name-tradeoff","garden.hint.shared-reason-from-two-views"]},
+        {"actionId":"garden.revise-winter-cause","interactionVerb":"rethink","promptKey":"garden.prompt.revise-winter-cause","feedbackKey":"garden.feedback-causal-web-appears","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[3100,130,120],"masteryGate":{"gateId":"mastery.garden.causal-revision","disciplineId":"philosophy-for-children"},"hints":["garden.hint.cause-name-first-assumption","garden.hint.cause-use-failed-single-fix","garden.hint.cause-revise-network-model"]},
+        {"actionId":"garden.release-thaw","interactionVerb":"release","promptKey":"garden.prompt.release-thaw","feedbackKey":"garden.feedback-season-turns","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[3340,0,150],"worldState":{"producerKind":"world","producerRefId":"world.garden.seasonal-system","worldStateId":"world-state.garden.seasonal-transition-restored"},"hints":["garden.hint.thaw-finish-shared-plan-and-causal-model"]}
+      ]
+    }
+  ]
+}
