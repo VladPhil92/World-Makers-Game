@@ -4,7 +4,7 @@
   "title": "World Makers parent family dashboard read model",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "child", "playTime", "learning", "recentBuilds", "adventures", "wellbeing"],
+  "required": ["schemaVersion", "child", "playTime", "learning", "recentBuilds", "adventures", "epics", "wellbeing"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "child": {
@@ -66,6 +66,39 @@
           "adventureId": { "type": "string", "maxLength": 96 },
           "label": { "type": "string", "maxLength": 80 },
           "state": { "enum": ["ready", "in-progress", "complete"] }
+        }
+      }
+    },
+    "epics": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["epicId", "label", "state", "chaptersCompleted", "chapterCount", "progressPercent", "objectives"],
+        "properties": {
+          "epicId": { "enum": ["epic.eclipse-engine", "epic.garden-end-winter"] },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "state": { "enum": ["in-progress", "complete"] },
+          "chaptersCompleted": { "type": "integer", "minimum": 0, "maximum": 24 },
+          "chapterCount": { "type": "integer", "minimum": 1, "maximum": 24 },
+          "progressPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+          "objectives": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["objectiveGroupId", "label", "completedUnits", "totalUnits", "progressPercent"],
+              "properties": {
+                "objectiveGroupId": { "type": "string", "maxLength": 48 },
+                "label": { "type": "string", "maxLength": 80 },
+                "completedUnits": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "totalUnits": { "type": "integer", "minimum": 1, "maximum": 100 },
+                "progressPercent": { "type": "number", "minimum": 0, "maximum": 100 }
+              }
+            }
+          }
         }
       }
     },

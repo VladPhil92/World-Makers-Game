@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { validateLoadout, validateSelection } from './catalog.mjs';
+import { buildLaunchEpicResume } from './epic-progress.mjs';
 
 const launchVersion = 1;
 const defaultTtlSeconds = 120;
@@ -14,6 +15,7 @@ function canonicalPayload(payload) {
     selectedWorld: payload.selectedWorld,
     missionId: payload.missionId,
     inventoryEntitlements: payload.inventoryEntitlements,
+    epicResume: payload.epicResume,
     issuedAt: payload.issuedAt,
     expiresAt: payload.expiresAt,
   });
@@ -39,6 +41,7 @@ export function createLaunchContext({ player, selection = player?.selection, sec
     selectedWorld: normalizedSelection.worldId,
     missionId: normalizedSelection.missionId,
     inventoryEntitlements: [...new Set(player.entitlements ?? [])].sort(),
+    epicResume: buildLaunchEpicResume(player.progress),
     issuedAt,
     expiresAt,
   };

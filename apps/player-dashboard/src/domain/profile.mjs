@@ -1,4 +1,5 @@
 import { cloneDefaultLoadout, cloneDefaultSelection, validateLoadout, validateSelection } from './catalog.mjs';
+import { buildPlayerEpicReadModel, normalizePlayerProgress, updateProfileEpicProgress } from './epic-progress.mjs';
 
 function clone(value) { return structuredClone(value); }
 
@@ -13,7 +14,7 @@ export function createPlayerProfile({ playerProfileId, identityLinkId, displayNa
     loadout: validateLoadout(seed.loadout ?? cloneDefaultLoadout()),
     selection: validateSelection(seed.selection ?? cloneDefaultSelection()),
     entitlements: Array.isArray(seed.entitlements) ? [...new Set(seed.entitlements.filter((item) => typeof item === 'string'))] : [],
-    progress: clone(seed.progress ?? { level: 1, discoveries: 0, builds: 0, currentAdventure: null }),
+    progress: normalizePlayerProgress(seed.progress),
     preferences: {
       reducedMotion: seed.preferences?.reducedMotion === true,
       preferredModeId: seed.preferences?.preferredModeId ?? null,
@@ -27,6 +28,7 @@ export function createPlayerProfile({ playerProfileId, identityLinkId, displayNa
 }
 
 export function profilePlayerReadModel(profile) {
+  const progress = normalizePlayerProgress(profile.progress);
   return {
     playerId: profile.playerProfileId,
     displayName: profile.displayName,
@@ -34,7 +36,8 @@ export function profilePlayerReadModel(profile) {
     loadout: clone(profile.loadout),
     selection: clone(profile.selection),
     entitlements: clone(profile.entitlements),
-    progress: clone(profile.progress),
+    progress,
+    epicJourney: buildPlayerEpicReadModel(progress),
     preferences: clone(profile.preferences),
     profileRevision: profile.revision,
     profileUpdatedAt: profile.updatedAt,
@@ -58,6 +61,10 @@ export function updateProfilePreferences(profile, patch) {
   if ('preferredModeId' in patch) next.preferences.preferredModeId = patch.preferredModeId === null ? null : String(patch.preferredModeId);
   if ('preferredWorldId' in patch) next.preferences.preferredWorldId = patch.preferredWorldId === null ? null : String(patch.preferredWorldId);
   return next;
+}
+
+export function updateProfileEpicCheckpoint(profile, epicProgress) {
+  return updateProfileEpicProgress(profile, epicProgress);
 }
 
 export function appendStoreRequest(profile, request) {

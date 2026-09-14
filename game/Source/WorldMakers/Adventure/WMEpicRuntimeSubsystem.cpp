@@ -1,13 +1,21 @@
 #include "Adventure/WMEpicRuntimeSubsystem.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+
+namespace
+{
+    const FString EpicJourneySaveSlot(TEXT("WM_EpicJourney_v1"));
+    constexpr int32 EpicJourneySaveUserIndex = 0;
+}
 
 void UWMEpicRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     ReloadEpicCatalog();
+    LoadEpicCheckpoints();
 }
 
 bool UWMEpicRuntimeSubsystem::ReloadEpicCatalog()
@@ -39,6 +47,75 @@ TArray<FName> UWMEpicRuntimeSubsystem::GetEpicIds() const
     return Result;
 }
 
+int32 UWMEpicRuntimeSubsystem::FindCheckpointIndex(const FName EpicId) const
+{
+    return Checkpoints.IndexOfByPredicate([EpicId](const FWMEpicCheckpoint& Item)
+    {
+        return Item.EpicId == EpicId;
+    });
+}
+
+bool UWMEpicRuntimeSubsystem::IsCheckpointValidForCatalog(const FWMEpicCheckpoint& Checkpoint) const
+{
+    const FWMEpicDefinition* Epic = Catalog.FindEpic(Checkpoint.EpicId);
+    if (!Epic || Checkpoint.ChapterCount != Epic->Chapters.Num()) return false;
+    if (Checkpoint.bCompleted)
+    {
+        return Checkpoint.ChapterIndex == Epic->Chapters.Num() && Checkpoint.ChapterId.IsNone();
+    }
+    return Epic->Chapters.IsValidIndex(Checkpoint.ChapterIndex) &&
+        Epic->Chapters[Checkpoint.ChapterIndex].ChapterId == Checkpoint.ChapterId;
+}
+
+bool UWMEpicRuntimeSubsystem::LoadEpicCheckpoints()
+{
+    Checkpoints.Reset();
+    if (!bCatalogLoaded) return false;
+    if (!UGameplayStatics::DoesSaveGameExist(EpicJourneySaveSlot, EpicJourneySaveUserIndex)) return true;
+
+    UWMEpicJourneySaveGame* Save = Cast<UWMEpicJourneySaveGame>(
+        UGameplayStatics::LoadGameFromSlot(EpicJourneySaveSlot, EpicJourneySaveUserIndex));
+    if (!Save || Save->FormatVersion != UWMEpicJourneySaveGame::CurrentFormatVersion) return false;
+
+    TSet<FName> SeenEpicIds;
+    for (const FWMEpicCheckpoint& Candidate : Save->Checkpoints)
+    {
+        if (Candidate.EpicId.IsNone() || SeenEpicIds.Contains(Candidate.EpicId) || !IsCheckpointValidForCatalog(Candidate)) continue;
+        SeenEpicIds.Add(Candidate.EpicId);
+        Checkpoints.Add(Candidate);
+    }
+    return true;
+}
+
+bool UWMEpicRuntimeSubsystem::SaveEpicCheckpoints() const
+{
+    UWMEpicJourneySaveGame* Save = Cast<UWMEpicJourneySaveGame>(
+        UGameplayStatics::CreateSaveGameObject(UWMEpicJourneySaveGame::StaticClass()));
+    if (!Save) return false;
+    Save->FormatVersion = UWMEpicJourneySaveGame::CurrentFormatVersion;
+    Save->Checkpoints = Checkpoints;
+    return UGameplayStatics::SaveGameToSlot(Save, EpicJourneySaveSlot, EpicJourneySaveUserIndex);
+}
+
+bool UWMEpicRuntimeSubsystem::SaveCurrentCheckpoint()
+{
+    const FWMEpicProgressReadModel ReadModel = Progress.BuildReadModel();
+    if (ReadModel.EpicId.IsNone() || ReadModel.ChapterCount <= 0) return false;
+
+    FWMEpicCheckpoint Checkpoint;
+    Checkpoint.EpicId = ReadModel.EpicId;
+    Checkpoint.ChapterId = ReadModel.bCompleted ? NAME_None : ReadModel.CurrentChapterId;
+    Checkpoint.ChapterIndex = ReadModel.bCompleted ? ReadModel.ChapterCount : ReadModel.CurrentChapterIndex;
+    Checkpoint.ChapterCount = ReadModel.ChapterCount;
+    Checkpoint.bCompleted = ReadModel.bCompleted;
+    if (!IsCheckpointValidForCatalog(Checkpoint)) return false;
+
+    const int32 ExistingIndex = FindCheckpointIndex(Checkpoint.EpicId);
+    if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Checkpoint);
+    else Checkpoints[ExistingIndex] = Checkpoint;
+    return SaveEpicCheckpoints();
+}
+
 bool UWMEpicRuntimeSubsystem::ActivateEpic(const FName EpicId)
 {
     if (!bCatalogLoaded || !GetWorld()) return false;
@@ -48,7 +125,48 @@ bool UWMEpicRuntimeSubsystem::ActivateEpic(const FName EpicId)
     UWMMissionRuntimeSubsystem* MissionSubsystem = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
     if (!MissionSubsystem || !MissionSubsystem->ActivateMission(Epic->Chapters[0].MissionId)) return false;
     if (!Progress.Begin(*Epic)) return false;
+    return SaveCurrentCheckpoint();
+}
+
+bool UWMEpicRuntimeSubsystem::HasResumableEpicCheckpoint(const FName EpicId) const
+{
+    const int32 Index = FindCheckpointIndex(EpicId);
+    return Checkpoints.IsValidIndex(Index) && !Checkpoints[Index].bCompleted && IsCheckpointValidForCatalog(Checkpoints[Index]);
+}
+
+FName UWMEpicRuntimeSubsystem::GetEpicCheckpointChapterId(const FName EpicId) const
+{
+    const int32 Index = FindCheckpointIndex(EpicId);
+    return Checkpoints.IsValidIndex(Index) && IsCheckpointValidForCatalog(Checkpoints[Index]) ? Checkpoints[Index].ChapterId : NAME_None;
+}
+
+bool UWMEpicRuntimeSubsystem::ResumeEpic(const FName EpicId)
+{
+    if (!bCatalogLoaded || !GetWorld() || !HasResumableEpicCheckpoint(EpicId)) return false;
+    const int32 CheckpointIndex = FindCheckpointIndex(EpicId);
+    const FWMEpicCheckpoint Checkpoint = Checkpoints[CheckpointIndex];
+    const FWMEpicDefinition* Epic = Catalog.FindEpic(EpicId);
+    if (!Epic || !Epic->Chapters.IsValidIndex(Checkpoint.ChapterIndex)) return false;
+
+    UWMMissionRuntimeSubsystem* MissionSubsystem = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
+    if (!MissionSubsystem || !MissionSubsystem->ActivateMission(Epic->Chapters[Checkpoint.ChapterIndex].MissionId)) return false;
+    if (!Progress.ResumeAtChapter(*Epic, Checkpoint.ChapterIndex)) return false;
+
+    // No partial evidence is restored. The checkpoint itself is unchanged and remains chapter-granular.
     return true;
+}
+
+bool UWMEpicRuntimeSubsystem::ActivateOrResumeEpic(const FName EpicId)
+{
+    return HasResumableEpicCheckpoint(EpicId) ? ResumeEpic(EpicId) : ActivateEpic(EpicId);
+}
+
+bool UWMEpicRuntimeSubsystem::ClearEpicCheckpoint(const FName EpicId)
+{
+    const int32 Index = FindCheckpointIndex(EpicId);
+    if (Index == INDEX_NONE) return true;
+    Checkpoints.RemoveAt(Index);
+    return SaveEpicCheckpoints();
 }
 
 bool UWMEpicRuntimeSubsystem::RecordEpicEvidence(
@@ -86,5 +204,6 @@ bool UWMEpicRuntimeSubsystem::AdvanceEpicIfReady()
         UWMMissionRuntimeSubsystem* MissionSubsystem = GetWorld()->GetSubsystem<UWMMissionRuntimeSubsystem>();
         if (!MissionSubsystem || !MissionSubsystem->ActivateMission(NextChapter->MissionId)) return false;
     }
-    return Progress.AdvanceChapter();
+    if (!Progress.AdvanceChapter()) return false;
+    return SaveCurrentCheckpoint();
 }
