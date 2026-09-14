@@ -86,6 +86,7 @@ p { line-height: 1.6; color: var(--muted); }
 .ack { display: flex; align-items: center; gap: 10px; margin: 18px 0; color: var(--ink); }
 .ack input { min-height: auto; width: 18px; height: 18px; }
 .privacy-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.divider { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
 
 [hidden] { display: none !important; }
 

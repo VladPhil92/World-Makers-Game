@@ -59,12 +59,13 @@ M4.2 implementation status:
 - `player-dashboard`'s persistent profile store (D2) now has a Supabase-backed implementation alongside the original local `JsonFileProfileStore`, so profiles survive redeploys once `SUPABASE_URL`/`SUPABASE_ANON_KEY` are configured.
 - Both apps are deployed on Railway for the first live web playtest.
 - Custom SMTP (Resend, on a dedicated `mail.ctgone.com` sending subdomain) is configured for the Supabase project, so guardian confirmation emails deliver reliably instead of hitting the default mailer's very low rate limit.
-- Privacy requests are real, not a stub: `export-child-data` returns a downloadable bundle of the child's profile, dashboard stats and player-dashboard profile; `delete-child-data` actually deletes the child's rows (family membership, dashboard stats, and their player-dashboard profile via `wm_delete_player_profile`), verified end to end against the live database. `unlink-child-profile` is explicitly blocked (409, `co_parent_support_required`) rather than faked, since removing one guardian's access while preserving a child's data for another guardian is meaningless until family membership supports more than one guardian.
+- Privacy requests are real, not a stub: `export-child-data` returns a downloadable bundle of the child's profile, dashboard stats and player-dashboard profile; `delete-child-data` actually deletes the child's rows (family membership, dashboard stats, and their player-dashboard profile via `wm_delete_player_profile`), verified end to end against the live database. `unlink-child-profile` is still explicitly blocked (409, `co_parent_support_required`) rather than faked; family membership now supports more than one guardian (see below), but the unlink operation itself still needs logic to keep a child's data when one of several guardians leaves.
+- A guardian can invite a co-parent into their family: `wm_create_family_invite`/`wm_redeem_family_invite` (`SECURITY DEFINER`, `authenticated`-only) mint and redeem an 8-character, 48-hour invite code; redeeming merges the joining guardian into the inviter's family and only succeeds while that guardian has no child profile of their own (`family_not_empty` guard), so a family with children can't be silently abandoned. Verified end to end against the live database, including the already-used, expired and family-not-empty rejection paths.
 
 M4.2 remaining outcomes:
 
 - Real gameplay-telemetry sync into `child_dashboard_stats` (currently zeroed on child creation; the game/runtime side of that pipeline is separate future work).
-- Co-parent invite flow (today a guardian can only self-link the family they created at signup) — this also unblocks `unlink-child-profile`.
+- Let `unlink-child-profile` actually run once a family has more than one guardian, instead of always returning `co_parent_support_required`.
 - Audit/retention logging for privacy requests (today they execute immediately with no durable request record).
 - Production localization.
 

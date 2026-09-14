@@ -110,3 +110,15 @@ export async function deleteChildProfile(client, accessToken, childProfileId) {
     extraHeaders: { Prefer: 'return=minimal' },
   });
 }
+
+export async function createFamilyInvite(client, accessToken, familyId) {
+  const row = await client.rpc('wm_create_family_invite', { p_family_id: familyId }, { accessToken });
+  return { inviteCode: row.inviteCode, expiresAt: row.expiresAt };
+}
+
+export async function redeemFamilyInvite(client, accessToken, inviteCode) {
+  const trimmed = String(inviteCode || '').trim().toUpperCase();
+  if (trimmed.length < 1) throw new TypeError('inviteCode is required.');
+  const row = await client.rpc('wm_redeem_family_invite', { p_invite_code: trimmed }, { accessToken });
+  return { familyId: row.familyId };
+}

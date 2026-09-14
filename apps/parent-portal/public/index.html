@@ -108,6 +108,20 @@
           </form>
           <p id="link-result" class="fine-print" aria-live="polite"></p>
         </section>
+
+        <section class="panel" aria-labelledby="invite-title">
+          <div class="panel-heading"><div><p class="eyebrow">Family</p><h2 id="invite-title">Invite a co-guardian</h2></div></div>
+          <p>Generate a one-time code for a partner or co-parent to join this family. The code expires in 48 hours.</p>
+          <button id="invite-generate" class="button button-secondary" type="button">Generate invite code</button>
+          <p id="invite-generate-result" class="fine-print" aria-live="polite"></p>
+          <hr class="divider">
+          <p>Have a code from another guardian? Redeeming it joins their family and only works while you have no child profiles of your own.</p>
+          <form id="invite-redeem-form" class="inline-form">
+            <label>Invite code<input id="invite-redeem-code" name="inviteCode" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" required></label>
+            <button class="button button-secondary" type="submit">Join family</button>
+          </form>
+          <p id="invite-redeem-result" class="fine-print" aria-live="polite"></p>
+        </section>
       </div>
 
       <section class="panel privacy-panel" aria-labelledby="privacy-title">
