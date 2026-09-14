@@ -180,6 +180,7 @@ def main() -> None:
             "Start-Process",
             "editor-launch-result.json",
             "manual-only-no-auto-install",
+            "foreach ($StaleEvidence in @($ReadinessResult, $FailureSummary, $LaunchResult))",
             "Remove-Item $StaleEvidence -Force",
             "nativeBuildStatus",
         ),
@@ -258,7 +259,7 @@ def main() -> None:
 
     print(
         "World Makers Windows workstation contract passed: diagnostic-first, no-auto-install, "
-        "native failure classification, scalar classifier output, current-run evidence only, guarded editor launch, "
+        "native failure classification, scalar classifier output, fresh readiness evidence only, guarded editor launch, "
         "engine auto-resolution, Live Coding blocker classification, Visual Studio/SDK verification, "
         "Windows PowerShell 5.1 compatibility, CMD launchers present."
     )

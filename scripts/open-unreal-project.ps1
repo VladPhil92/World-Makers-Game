@@ -20,7 +20,10 @@ New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 
 # Evidence from an earlier attempt must never be presented as the current
 # readiness failure. The active readiness/build run will recreate these files.
-foreach ($StaleEvidence in @($FailureSummary, $LaunchResult)) {
+# In particular, readiness-result.json must be removed because the readiness
+# script intentionally preserves an existing report if it aborts before its
+# normal Write-ReadinessReport path.
+foreach ($StaleEvidence in @($ReadinessResult, $FailureSummary, $LaunchResult)) {
     if (Test-Path $StaleEvidence -PathType Leaf) {
         Remove-Item $StaleEvidence -Force
     }
