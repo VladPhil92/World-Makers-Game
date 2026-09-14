@@ -50,8 +50,11 @@ def main() -> None:
     runtime_h = read("game/Source/WorldMakers/Adventure/WMEpicRuntime.h")
     subsystem_h = read("game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h")
     subsystem_cpp = read("game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp")
-    if "ResumeAtChapter" not in runtime_h or "CurrentEvidenceCounts.Reset()" not in runtime_h or "CurrentWorldStates.Reset()" not in runtime_h:
-        fail("ResumeAtChapter must fail closed by resetting partial chapter progress")
+    resume_body = runtime_h.split("bool ResumeAtChapter", 1)[1].split("bool CanAcceptEvidence", 1)[0] if "bool ResumeAtChapter" in runtime_h else ""
+    if "Reset();" not in resume_body or "InDefinition.Chapters.IsValidIndex" not in resume_body:
+        fail("ResumeAtChapter must validate the chapter and reset all partial progress before restore")
+    if "CurrentEvidenceCounts.Reset()" not in runtime_h or "CurrentWorldStates.Reset()" not in runtime_h:
+        fail("The progress model reset path must clear partial evidence and world state")
     for token in ("ResumeEpic", "ActivateOrResumeEpic", "HasResumableEpicCheckpoint", "ClearEpicCheckpoint", "SaveCurrentCheckpoint"):
         if token not in subsystem_h and token not in subsystem_cpp:
             fail(f"Epic persistence subsystem missing: {token}")
@@ -78,9 +81,10 @@ def main() -> None:
     ):
         if token not in epic_progress:
             fail(f"Player epic progress domain missing: {token}")
-    garden_section = epic_progress.split("'epic.garden-end-winter'", 1)[1].split("}),", 1)[0]
+    garden_definition = epic_progress.split("'epic.garden-end-winter': Object.freeze({", 1)[1].split("});\n\nconst STATE_IN_PROGRESS", 1)[0]
+    persistent_groups = garden_definition.split("persistentObjectiveGroups:", 1)[1]
     for forbidden in ("'mathematics'", "'philosophy-for-children'"):
-        if forbidden in garden_section:
+        if forbidden in persistent_groups:
             fail("Garden session-only mathematics/philosophy mastery must not enter persistent objective groups")
 
     profile = read("apps/player-dashboard/src/domain/profile.mjs")
@@ -103,9 +107,12 @@ def main() -> None:
             fail(f"Player persistence/tamper test coverage missing: {token}")
 
     parent = read("apps/parent-portal/src/domain/dashboard.mjs")
-    for token in ("safeEpics", "objectiveSummary", "chaptersCompleted", "rawevidence", "evidenceeventid", "personalityscore", "ideologylabel"):
-        if token not in parent.lower() if token == token.lower() else token not in parent:
-            fail(f"Parent epic projection/minimization missing: {token}")
+    for token in ("safeEpics", "objectiveSummary", "chaptersCompleted"):
+        if token not in parent:
+            fail(f"Parent epic projection missing: {token}")
+    for token in ("rawevidence", "evidenceeventid", "personalityscore", "ideologylabel"):
+        if token not in parent.lower():
+            fail(f"Parent minimization guard missing: {token}")
     if "epics: safeEpics(source.adventures)" not in parent:
         fail("Parent portal must reuse existing adventures aggregate rather than require a new child telemetry table")
 
