@@ -37,6 +37,11 @@ test('M5.6D Garden checkpoint persists chapter state without session-only master
   }), /objectiveSummary/);
 });
 
+test('M5.6F unknown epic progress states fail closed', () => {
+  assert.throws(() => normalizeEpicProgressRecord({ ...gardenCheckpoint, state: 'paused' }), /state is invalid/);
+  assert.throws(() => normalizeEpicProgressRecord({ ...gardenCheckpoint, state: undefined }), /state is invalid/);
+});
+
 test('M5.6D epic profile progress is monotonic and completed journeys cannot regress', () => {
   const profile = { progress: normalizePlayerProgress({ currentEpicId: 'epic.garden-end-winter', epics: [gardenCheckpoint] }) };
   assert.throws(() => updateProfileEpicProgress(profile, {
