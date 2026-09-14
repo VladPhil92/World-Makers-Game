@@ -86,13 +86,20 @@ def main() -> None:
             "verifyLaunchContext(redeemed.context, launchSigningSecret)",
             "/api/native/epic-checkpoint",
             "nativeLaunchStore.authorizeProgressSync",
-            "updateProfileEpicCheckpoint(profile, candidate)",
             "objectiveSummary: existing?.objectiveSummary ?? []",
             "updatedAt: new Date().toISOString()",
             "protocol: 'worldmakers-launch-v2'",
             "createNativeLaunchTicketUri(issued.ticket)",
         ),
     )
+    if not any(
+        token in server
+        for token in (
+            "updateProfileEpicCheckpoint(profile, candidate)",
+            "reconcileProfileEpicProgress(profile, candidate)",
+        )
+    ):
+        fail("Native checkpoint API must persist through the monotonic M5.6F/M5.6G epic progress boundary")
     if "new Set(['epicId', 'chapterId', 'chapterIndex', 'state'])" not in server:
         fail("Native checkpoint API must expose only the four approved checkpoint fields")
     if "Epic checkpoint contains unsupported fields." not in server:
