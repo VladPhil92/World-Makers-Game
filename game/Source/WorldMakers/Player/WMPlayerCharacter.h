@@ -12,6 +12,7 @@ class UStaticMeshComponent;
 class UWMBuildingComponent;
 class UWMBuildHUDWidget;
 class UWMCharacterAnimationComponent;
+class UWMFirstPersonInteractionComponent;
 class UWMMissionMeasurementComponent;
 class UWMExplorationComponent;
 class UWMInteractionComponent;
@@ -133,6 +134,10 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Interaction")
     TObjectPtr<UWMInteractionComponent> InteractionComponent;
+
+    /** Presentation-only first-person hands/tool bridge used by gameplay systems without owning outcome authority. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|First Person")
+    TObjectPtr<UWMFirstPersonInteractionComponent> FirstPersonInteractionComponent;
 
     /** V5 animation state/read-model bridge for both procedural art and the future production AnimBP. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Animation")

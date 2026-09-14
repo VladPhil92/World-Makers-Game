@@ -63,6 +63,8 @@ jobs:
         run: python scripts/validate-m5-5-fantastic-adventure-pack.py
       - name: Validate M5.6A Cross-Disciplinary Epic Orchestration
         run: python scripts/validate-m5-6-epic-orchestration.py
+      - name: Validate M5.6B Eclipse Engine Player Experience
+        run: python scripts/validate-m5-6b-eclipse-player-experience.py
       - name: Validate C1 XXII Century Citizenship
         run: python scripts/validate-c1-xxii-century-citizenship.py
       - name: Validate C2 Planetary Commons Living World

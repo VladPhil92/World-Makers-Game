@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "experienceId": "experience.eclipse-engine-v1",
+  "epicId": "epic.eclipse-engine",
+  "prototypeOnly": true,
+  "playerPromise": "repair-an-impossible-celestial-machine-through-discovery",
+  "presentationRule": "world-first-no-school-ui",
+  "rewardModel": "world-transformation-and-new-capability",
+  "failureModel": "reversible-experimentation-with-visible-consequence",
+  "hintModel": "player-requested-progressive-environmental-hints",
+  "privacyModel": "stable-ids-no-child-free-text",
+  "forbiddenPlayerFacingTerms": ["lesson", "quiz", "learning-objective", "grade", "score", "streak", "homework", "correct-answer", "wrong-answer", "mathematics", "geometry", "physics"],
+  "chapters": [
+    {
+      "chapterId": "chapter.eclipse.decode-orbit",
+      "fantasyGoalKey": "eclipse.goal.wake-orbit-ring",
+      "tensionKey": "eclipse.tension.orbit-drifting",
+      "completionReactionKey": "eclipse.reaction.orbit-locks-into-rhythm",
+      "actions": [
+        {"actionId":"eclipse.read-orbit-rhythm","interactionVerb":"observe","promptKey":"eclipse.prompt.read-orbit-rhythm","feedbackKey":"eclipse.feedback.pattern-emerges","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[420,0,120],"evidence":{"objectiveId":"math.pattern.infer-rule","disciplineId":"mathematics","producerKind":"world","producerRefId":"world.vault.pattern-table","primitiveId":"sequence-and-infer","evidenceEventId":"fantastic.vault.pattern-rule-inferred"},"hints":["eclipse.hint.orbit-watch-repetition","eclipse.hint.orbit-compare-gaps","eclipse.hint.orbit-predict-next"]},
+        {"actionId":"eclipse.balance-orbit-ratio","interactionVerb":"tune","promptKey":"eclipse.prompt.balance-orbit-ratio","feedbackKey":"eclipse.feedback.gears-harmonize","firstPersonEventId":"science.eclipse.orbit-ratio","firstPersonActionId":"scan-hold","prototypeLocationCm":[620,120,105],"evidence":{"objectiveId":"math.ratio.apply-equivalence","disciplineId":"mathematics","producerKind":"world","producerRefId":"world.vault.ratio-lock","primitiveId":"model-system","evidenceEventId":"fantastic.vault.ratio-equivalence-applied"},"hints":["eclipse.hint.ratio-listen-pulse","eclipse.hint.ratio-pair-cycles","eclipse.hint.ratio-equivalent-turns"]},
+        {"actionId":"eclipse.build-orbit-route","interactionVerb":"build","promptKey":"eclipse.prompt.build-orbit-route","feedbackKey":"eclipse.feedback.route-carries-motion","firstPersonEventId":"gameplay.build.place","firstPersonActionId":"build-confirm","prototypeLocationCm":[820,-100,90],"evidence":{"objectiveId":"math.optimization.compare-solutions","disciplineId":"mathematics","producerKind":"building","producerRefId":"building.vault.staircase-route","primitiveId":"construct-to-constraint","evidenceEventId":"fantastic.vault.route-optimized"},"hints":["eclipse.hint.route-test-shorter","eclipse.hint.route-remove-waste","eclipse.hint.route-compare-two-builds"]},
+        {"actionId":"eclipse.lock-orbit-path","interactionVerb":"engage","promptKey":"eclipse.prompt.lock-orbit-path","feedbackKey":"eclipse.feedback.first-ring-awakens","firstPersonEventId":"science.eclipse.orbit-lock","firstPersonActionId":"scan-hold","prototypeLocationCm":[1030,0,115],"worldState":{"producerKind":"world","producerRefId":"world.eclipse.orbit-mechanism","worldStateId":"world-state.eclipse.orbit-path-stable"},"hints":["eclipse.hint.lock-finish-three-systems"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.eclipse.align-mirror-lattice",
+      "fantasyGoalKey": "eclipse.goal-bend-starlight",
+      "tensionKey": "eclipse.tension-light-scattered",
+      "completionReactionKey": "eclipse.reaction-light-bridge-ignites",
+      "actions": [
+        {"actionId":"eclipse.restore-mirror-symmetry","interactionVerb":"rotate","promptKey":"eclipse.prompt.restore-mirror-symmetry","feedbackKey":"eclipse.feedback-reflections-pair","firstPersonEventId":"mission.measure.reveal","firstPersonActionId":"measure-focus","prototypeLocationCm":[1320,-180,125],"evidence":{"objectiveId":"geometry.transform.apply-symmetry","disciplineId":"geometry","producerKind":"building","producerRefId":"building.impossible-city.symmetry-plaza","primitiveId":"solve-spatial-system","evidenceEventId":"fantastic.city.symmetry-restored"},"hints":["eclipse.hint-mirror-find-axis","eclipse.hint-mirror-match-distance","eclipse.hint-mirror-reflect-position"]},
+        {"actionId":"eclipse-angle-light-bridge","interactionVerb":"align","promptKey":"eclipse.prompt.angle-light-bridge","feedbackKey":"eclipse.feedback-beam-reaches-node","firstPersonEventId":"gameplay.build.place","firstPersonActionId":"build-point","prototypeLocationCm":[1510,20,135],"evidence":{"objectiveId":"geometry.angle.solve-constraint","disciplineId":"geometry","producerKind":"building","producerRefId":"building.impossible-city.angle-bridge","primitiveId":"construct-to-constraint","evidenceEventId":"fantastic.city.angle-scale-constraint-solved"},"hints":["eclipse.hint-angle-trace-ray","eclipse.hint-angle-compare-entry-exit","eclipse.hint-angle-adjust-reflection"]},
+        {"actionId":"eclipse-prove-light-path","interactionVerb":"inspect","promptKey":"eclipse.prompt.prove-light-path","feedbackKey":"eclipse.feedback-path-holds-under-rotation","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[1700,190,125],"evidence":{"objectiveId":"geometry.reason.spatial-proof","disciplineId":"geometry","producerKind":"world","producerRefId":"world.impossible-city.spatial-proof","primitiveId":"model-system","evidenceEventId":"fantastic.city.spatial-proof-demonstrated"},"hints":["eclipse.hint-proof-test-another-position","eclipse.hint-proof-look-for-invariant","eclipse.hint-proof-explain-why-path-persists"]},
+        {"actionId":"eclipse-stabilize-optical-path","interactionVerb":"engage","promptKey":"eclipse.prompt.stabilize-optical-path","feedbackKey":"eclipse.feedback-skyline-focuses","firstPersonEventId":"science.eclipse.optics-stable","firstPersonActionId":"scan-hold","prototypeLocationCm":[1900,0,150],"worldState":{"producerKind":"world","producerRefId":"world.eclipse.mirror-array","worldStateId":"world-state.eclipse.optical-path-stable"},"hints":["eclipse.hint-optics-finish-array"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.eclipse.power-core",
+      "fantasyGoalKey": "eclipse.goal-reignite-moonforge",
+      "tensionKey": "eclipse.tension-core-starved",
+      "completionReactionKey": "eclipse.reaction-core-thunders-awake",
+      "actions": [
+        {"actionId":"eclipse-test-counterweight","interactionVerb":"test","promptKey":"eclipse.prompt.test-counterweight","feedbackKey":"eclipse.feedback-mass-shifts-trajectory","firstPersonEventId":"science.eclipse.force","firstPersonActionId":"scan-hold","prototypeLocationCm":[2180,-140,100],"evidence":{"objectiveId":"physics.force.predict-motion","disciplineId":"physics","producerKind":"science","producerRefId":"science.physics.moonforge-force","primitiveId":"predict-test-revise","evidenceEventId":"science.physics.force-motion-demonstrated"},"hints":["eclipse.hint-force-predict-first","eclipse.hint-force-change-one-variable","eclipse.hint-force-compare-motion"]},
+        {"actionId":"eclipse-route-core-current","interactionVerb":"route","promptKey":"eclipse.prompt.route-core-current","feedbackKey":"eclipse.feedback-circuit-glows","firstPersonEventId":"science.eclipse.circuit","firstPersonActionId":"scan-hold","prototypeLocationCm":[2380,120,105],"evidence":{"objectiveId":"physics.circuit.solve-relationship","disciplineId":"physics","producerKind":"science","producerRefId":"science.circuit.moonforge","primitiveId":"model-system","evidenceEventId":"science.physics.ohms-law-demonstrated"},"hints":["eclipse.hint-current-watch-resistance","eclipse.hint-current-compare-paths","eclipse.hint-current-balance-voltage"]},
+        {"actionId":"eclipse-stabilize-power-core","interactionVerb":"ignite","promptKey":"eclipse.prompt.stabilize-power-core","feedbackKey":"eclipse.feedback-core-pulse-steady","firstPersonEventId":"science.eclipse.core-stable","firstPersonActionId":"scan-hold","prototypeLocationCm":[2580,0,120],"worldState":{"producerKind":"science","producerRefId":"science.eclipse.power-core","worldStateId":"world-state.eclipse.power-core-stable"},"hints":["eclipse.hint-core-finish-force-and-circuit"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.eclipse.recover-language",
+      "fantasyGoalKey": "eclipse.goal-teach-engine-to-listen",
+      "tensionKey": "eclipse.tension-archive-does-not-understand",
+      "completionReactionKey": "eclipse.reaction-archive-speaks-back",
+      "actions": [
+        {"actionId":"eclipse-restore-command","interactionVerb":"communicate","promptKey":"eclipse.prompt.restore-command","feedbackKey":"eclipse.feedback-command-recognized","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[2870,-130,125],"evidence":{"objectiveId":"english.context.communicate-intent","disciplineId":"english-language","producerKind":"thought","producerRefId":"language.en.dragon-restore-command","primitiveId":"communicate-in-language","evidenceEventId":"language.english.dragon-contextual-command-demonstrated"},"hints":["eclipse.hint-language-read-context","eclipse.hint-language-match-intent","eclipse.hint-language-adjust-register"]},
+        {"actionId":"eclipse-decode-context-fragment","interactionVerb":"decode","promptKey":"eclipse.prompt.decode-context-fragment","feedbackKey":"eclipse.feedback-fragment-resolves","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[3070,130,125],"evidence":{"objectiveId":"english.inference.use-context","disciplineId":"english-language","producerKind":"world","producerRefId":"world.dragon.context-clue","primitiveId":"sequence-and-infer","evidenceEventId":"fantastic.dragon.context-inference-demonstrated"},"hints":["eclipse.hint-context-neighboring-symbols","eclipse.hint-context-eliminate-impossible","eclipse.hint-context-test-meaning"]},
+        {"actionId":"eclipse-restore-operating-knowledge","interactionVerb":"awaken","promptKey":"eclipse.prompt.restore-operating-knowledge","feedbackKey":"eclipse.feedback-archive-panels-unfold","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[3270,0,140],"worldState":{"producerKind":"world","producerRefId":"world.eclipse.archive","worldStateId":"world-state.eclipse.operating-knowledge-restored"},"hints":["eclipse.hint-archive-finish-communication"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.eclipse.decode-archive-myth",
+      "fantasyGoalKey": "eclipse.goal-find-route-hidden-in-story",
+      "tensionKey": "eclipse.tension-map-disguised-as-myth",
+      "completionReactionKey": "eclipse.reaction-symbols-become-map",
+      "actions": [
+        {"actionId":"eclipse-follow-story-thread","interactionVerb":"interpret","promptKey":"eclipse.prompt.follow-story-thread","feedbackKey":"eclipse.feedback-clues-connect","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[3560,-120,130],"evidence":{"objectiveId":"literature.infer-from-context","disciplineId":"literature","producerKind":"thought","producerRefId":"story.labyrinth-minotaur-prototype","primitiveId":"interpret-text-world","evidenceEventId":"literature.inference.context-clue-used"},"hints":["eclipse.hint-story-follow-repeated-image","eclipse.hint-story-separate-event-from-symbol","eclipse.hint-story-connect-clue-to-place"]},
+        {"actionId":"eclipse-read-symbolic-perspective","interactionVerb":"interpret","promptKey":"eclipse.prompt.read-symbolic-perspective","feedbackKey":"eclipse.feedback-perspective-changes-route","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[3760,120,130],"evidence":{"objectiveId":"literature.interpret-point-of-view-symbolism","disciplineId":"literature","producerKind":"thought","producerRefId":"story.labyrinth-minotaur-prototype","primitiveId":"interpret-text-world","evidenceEventId":"literature.point-of-view-and-symbolism-interpreted"},"hints":["eclipse.hint-symbol-who-is-speaking","eclipse.hint-symbol-what-changes-by-perspective","eclipse.hint-symbol-map-metaphor-to-space"]},
+        {"actionId":"eclipse-reveal-archive-route","interactionVerb":"reveal","promptKey":"eclipse.prompt.reveal-archive-route","feedbackKey":"eclipse.feedback-hidden-route-appears","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"tool-raise","prototypeLocationCm":[3960,0,145],"worldState":{"producerKind":"world","producerRefId":"world.eclipse.archive-map","worldStateId":"world-state.eclipse.archive-route-understood"},"hints":["eclipse.hint-map-complete-interpretation"]}
+      ]
+    },
+    {
+      "chapterId": "chapter.eclipse.revise-explanation",
+      "fantasyGoalKey": "eclipse.goal-understand-why-engine-still-resists",
+      "tensionKey": "eclipse.tension-first-theory-fails",
+      "completionReactionKey": "eclipse.reaction-eclipse-engine-synchronizes",
+      "actions": [
+        {"actionId":"eclipse-revise-causal-model","interactionVerb":"rethink","promptKey":"eclipse.prompt.revise-causal-model","feedbackKey":"eclipse.feedback-new-model-fits","firstPersonEventId":"world.observe.reveal","firstPersonActionId":"observe-focus","prototypeLocationCm":[4260,-80,135],"evidence":{"objectiveId":"philosophy.identity.construct-revisable-argument","disciplineId":"philosophy-for-children","producerKind":"thought","producerRefId":"philosophy.ship-theseus-prototype","primitiveId":"argue-and-revise","evidenceEventId":"philosophy.argument-revised-after-counterexample"},"hints":["eclipse.hint-model-name-assumption","eclipse.hint-model-use-counterexample","eclipse.hint-model-revise-not-defend"]},
+        {"actionId":"eclipse-synchronize-engine","interactionVerb":"synchronize","promptKey":"eclipse.prompt.synchronize-engine","feedbackKey":"eclipse.feedback-sky-returns","firstPersonEventId":"science.eclipse.synchronized","firstPersonActionId":"tool-raise","prototypeLocationCm":[4480,0,160],"worldState":{"producerKind":"world","producerRefId":"world.eclipse.engine","worldStateId":"world-state.eclipse.engine-synchronized"},"hints":["eclipse.hint-final-revise-model-first"]}
+      ]
+    }
+  ]
+}
