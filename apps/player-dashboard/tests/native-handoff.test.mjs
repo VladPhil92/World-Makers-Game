@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createNativeLaunchUri, decodeNativeLaunchUri } from '../src/domain/native-handoff.mjs';
+import {
+  createNativeLaunchTicketUri,
+  createNativeLaunchUri,
+  decodeNativeLaunchTicketUri,
+  decodeNativeLaunchUri,
+} from '../src/domain/native-handoff.mjs';
 
-test('native handoff round-trips the signed launch context', () => {
+test('native handoff round-trips the legacy signed launch context', () => {
   const context = {
     version: 1,
     playerId: 'player.demo',
@@ -23,6 +28,19 @@ test('native handoff round-trips the signed launch context', () => {
   });
 });
 
-test('native handoff rejects unrelated URI schemes', () => {
+test('M5.6F ticket handoff carries no player context and round-trips the opaque ticket', () => {
+  const ticket = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
+  const uri = createNativeLaunchTicketUri(ticket);
+  assert.match(uri, /^worldmakers:\/\/launch\?protocol=worldmakers-launch-v2&ticket=/);
+  assert.equal(uri.includes('playerId'), false);
+  assert.equal(uri.includes('payload='), false);
+  assert.deepEqual(decodeNativeLaunchTicketUri(uri), { protocol: 'worldmakers-launch-v2', ticket });
+});
+
+test('native handoff rejects unrelated URI schemes and payload-bearing v2 tickets', () => {
   assert.throws(() => decodeNativeLaunchUri('https://example.com/launch?payload=x&protocol=y'), /Unsupported World Makers launch URI/);
+  assert.throws(
+    () => decodeNativeLaunchTicketUri('worldmakers://launch?protocol=worldmakers-launch-v2&ticket=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-&payload=secret'),
+    /must not embed player context/,
+  );
 });
