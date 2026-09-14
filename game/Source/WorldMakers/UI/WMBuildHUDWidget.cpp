@@ -175,11 +175,11 @@ UButton* UWMBuildHUDWidget::CreateActionButton(UHorizontalBox* Row, const FName 
     LabelText->SetJustification(ETextJustify::Center);
     Button->AddChild(LabelText);
     TouchTarget->AddChild(Button);
-    if (UHorizontalBoxSlot* Slot = Row->AddChildToHorizontalBox(TouchTarget))
+    if (UHorizontalBoxSlot* LayoutSlot = Row->AddChildToHorizontalBox(TouchTarget))
     {
-        Slot->SetPadding(FMargin(4.0f));
-        Slot->SetHorizontalAlignment(HAlign_Center);
-        Slot->SetVerticalAlignment(VAlign_Center);
+        LayoutSlot->SetPadding(FMargin(4.0f));
+        LayoutSlot->SetHorizontalAlignment(HAlign_Center);
+        LayoutSlot->SetVerticalAlignment(VAlign_Center);
     }
     return Button;
 }
