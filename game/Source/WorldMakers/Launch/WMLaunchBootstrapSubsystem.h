@@ -51,11 +51,20 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Launch")
     FString GetNativeLaunchError() const { return NativeLaunchError; }
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Launch")
+    FName GetSelectedModeId() const { return SelectedModeId; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Launch")
+    FName GetSelectedWorldId() const { return SelectedWorldId; }
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Launch")
+    FName GetSelectedMissionId() const { return SelectedMissionId; }
+
     /** Native v2 launches suppress config-driven auto-start until ticket redemption succeeds or fails closed. */
     UFUNCTION(BlueprintPure, Category = "World Makers|Launch")
     bool ShouldDeferAutomaticExperienceStart() const { return bNativeLaunchRequested && !bNativeLaunchReady; }
 
-    /** Apply a redeemed epic resume once the gameplay world has begun play. */
+    /** Apply the redeemed launch selection and optional epic resume once the gameplay world has begun play. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Launch")
     bool TryApplyEpicResume();
 
@@ -69,6 +78,7 @@ private:
     bool IsTrustedApiBaseUrl(const FString& Candidate) const;
     void BeginTicketRedemption();
     bool ConsumeRedemptionJson(const FString& Json);
+    bool StartSelectedContent();
     void SetLaunchError(const FString& Error);
 
     bool bNativeLaunchRequested = false;
@@ -79,5 +89,8 @@ private:
     FString ApiBaseUrl;
     FString LaunchTicket;
     FString ProgressSyncToken;
+    FName SelectedModeId;
+    FName SelectedWorldId;
+    FName SelectedMissionId;
     FWMNativeEpicResume EpicResume;
 };
