@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,12 +67,28 @@ RULES: tuple[Rule, ...] = (
         rx(r"windows sdk.*must be installed", r"unable to find windows sdk", r"windows sdk is not installed", r"Windows Kits\\10.*not found"),
     ),
     Rule(
+        "out-of-memory",
+        96,
+        "high",
+        False,
+        "Close memory-heavy applications and retry a clean build. If repeatable, reduce parallel compile pressure before changing source dependencies.",
+        rx(r"fatal error C1060", r"out of heap space", r"out of memory", r"insufficient memory", r"LNK1102"),
+    ),
+    Rule(
         "include-file-missing",
         95,
         "high",
         True,
         "Fix the include path/module dependency or restore the missing generated/source file in the repository before changing workstation dependencies.",
         rx(r"fatal error C1083:.*cannot open include file", r"cannot open source file", r"fatal error: .* file not found"),
+    ),
+    Rule(
+        "file-lock-or-access-denied",
+        94,
+        "medium",
+        False,
+        "Close processes holding generated binaries/intermediate files, verify antivirus/file permissions, then retry. Do not reinstall Unreal first.",
+        rx(r"access is denied", r"being used by another process", r"permission denied", r"failed to delete .*Intermediate"),
     ),
     Rule(
         "unreal-header-tool-error",
@@ -118,22 +133,6 @@ RULES: tuple[Rule, ...] = (
             r"unable to instantiate module",
             r"module .* could not be found",
         ),
-    ),
-    Rule(
-        "file-lock-or-access-denied",
-        84,
-        "medium",
-        False,
-        "Close processes holding generated binaries/intermediate files, verify antivirus/file permissions, then retry. Do not reinstall Unreal first.",
-        rx(r"access is denied", r"being used by another process", r"cannot open file .*\.dll", r"permission denied", r"failed to delete .*Intermediate"),
-    ),
-    Rule(
-        "out-of-memory",
-        82,
-        "high",
-        False,
-        "Close memory-heavy applications and retry a clean build. If repeatable, reduce parallel compile pressure before changing source dependencies.",
-        rx(r"fatal error C1060", r"out of heap space", r"out of memory", r"insufficient memory", r"LNK1102"),
     ),
     Rule(
         "git-lfs-or-binary-pointer-error",
