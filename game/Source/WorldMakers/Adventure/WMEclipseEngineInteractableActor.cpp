@@ -40,6 +40,7 @@ void AWMEclipseEngineInteractableActor::Configure(const FName InChapterId, const
     SetActorLocation(Definition.PrototypeLocationCm);
     bResolved = false;
     bAvailable = false;
+    PrototypeInteractionStep = 0;
 
     if (ProxyMesh)
     {
@@ -69,13 +70,22 @@ bool AWMEclipseEngineInteractableActor::Interact(AActor* Interactor)
     UWMEclipseEngineExperienceSubsystem* Experience = World ? World->GetSubsystem<UWMEclipseEngineExperienceSubsystem>() : nullptr;
     if (!Experience || !Experience->BeginAction(ActionId)) return false;
 
-    // Causal world-state controls are allowed to resolve only after the chapter's underlying mission is complete.
-    // Evidence-bearing puzzle affordances merely enter their interaction mode here; their mechanic must call
-    // ResolveTrustedAction after validating the actual player result.
     if (Experience->IsWorldStateAction(ActionId))
     {
         return Experience->ResolveTrustedAction(ActionId);
     }
+
+    // Source-proxy tactile tuning: every accepted interaction advances a bounded world-mechanism state.
+    // The click itself is never evidence. C++ mechanic validators decide whether the resulting state is solved.
+    PrototypeInteractionStep = (PrototypeInteractionStep % 8) + 1;
+    if (ProxyMesh)
+    {
+        ProxyMesh->AddLocalRotation(FRotator(0.0f, 22.5f, InteractionVerb == TEXT("rotate") ? 12.0f : 0.0f));
+        const float Pulse = 1.0f + 0.025f * static_cast<float>((PrototypeInteractionStep % 3) - 1);
+        ProxyMesh->SetRelativeScale3D(ProxyMesh->GetRelativeScale3D().GetSafeNormal() * FMath::Max(0.25f, ProxyMesh->GetRelativeScale3D().Size()) * Pulse);
+    }
+
+    Experience->AdvancePrototypeMechanic(ActionId, PrototypeInteractionStep);
     return true;
 }
 

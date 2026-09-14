@@ -68,4 +68,5 @@ public:
 private:
     bool bResolved = false;
     bool bAvailable = false;
+    int32 PrototypeInteractionStep = 0;
 };

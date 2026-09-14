@@ -13,8 +13,8 @@ struct WORLDMAKERS_API FWMEclipseOpticsRuntime
 };
 
 /**
- * Trusted adapter between physical/spatial puzzle results and the hidden learning-evidence ledger.
- * Raw clicks never reach this subsystem; callers submit measured puzzle state.
+ * Trusted C++ adapter between physical/spatial puzzle results and the hidden learning-evidence ledger.
+ * Raw clicks and player-facing Blueprint/UI cannot directly award evidence.
  */
 UCLASS()
 class WORLDMAKERS_API UWMEclipseOpticsSubsystem : public UWorldSubsystem
@@ -22,12 +22,7 @@ class WORLDMAKERS_API UWMEclipseOpticsSubsystem : public UWorldSubsystem
     GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Optics")
     bool SubmitMirrorSymmetry(float LeftMirrorAngleDeg, float RightMirrorAngleDeg);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Optics")
     bool SubmitReflectionBridge(float IncidenceAngleDeg, float ReflectionAngleDeg, float TargetDeviationDeg);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Optics")
     bool SubmitSpatialStability(const TArray<float>& PerturbationDeviationDeg);
 };
