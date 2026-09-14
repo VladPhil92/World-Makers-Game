@@ -8,7 +8,7 @@ import { createParentDashboardReadModel } from './domain/dashboard.mjs';
 import { buildPrivacyRequest, validateLinkCode } from './domain/privacy.mjs';
 import { demoFamily } from './data/demo-family.mjs';
 import { createSupabaseClient, SupabaseAuthError, SupabaseQueryError } from './domain/supabase-client.mjs';
-import { ensureFamilyForParent, fetchFamilyReadModel, createChildProfile } from './domain/family-store.mjs';
+import { ensureFamilyForParent, fetchFamilyReadModel, createChildProfile, exportChildData, deleteChildProfile, derivePlayerProfileId } from './domain/family-store.mjs';
 import { createIdentityAssertion } from './domain/identity-issuer.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -255,7 +255,7 @@ async function handleApi(req, res, url) {
     }
     const family = session.demo ? demoFamily : await loadFamilyForSession(session);
     const child = requireAuthorizedChild(family, session.parentId, body.childProfileId);
-    const playerProfileId = `player.${child.childProfileId.replace(/^child\./, '')}`;
+    const playerProfileId = derivePlayerProfileId(child.childProfileId);
     const assertion = createIdentityAssertion(
       { subject: child.childProfileId, playerProfileId, displayName: child.displayAlias },
       identityAssertionSecret,
@@ -275,7 +275,31 @@ async function handleApi(req, res, url) {
       operation: body.operation,
       acknowledged: body.acknowledged,
     });
-    return json(res, 202, { ...request, requestId: `privacy.${randomUUID()}` });
+    const requestId = `privacy.${randomUUID()}`;
+
+    if (session.demo) {
+      return json(res, 202, { ...request, requestId });
+    }
+
+    if (request.operation === 'unlink-child-profile') {
+      // Unlinking one guardian while keeping a child's data for another only makes sense once a
+      // family can have more than one guardian. Say so plainly rather than pretending to act.
+      return json(res, 409, { ...request, requestId, status: 'blocked', reason: 'co_parent_support_required' });
+    }
+
+    const accessToken = await ensureFreshAccessToken(session);
+
+    if (request.operation === 'export-child-data') {
+      const exportBundle = await exportChildData(supabase, accessToken, request.childProfileId);
+      return json(res, 200, { ...request, requestId, status: 'completed', export: exportBundle });
+    }
+
+    // delete-child-data: remove the player-dashboard profile first (best-effort; the child may
+    // never have launched into it), then the child row itself (cascades child_dashboard_stats).
+    await supabase.rpc('wm_delete_player_profile', { p_player_profile_id: derivePlayerProfileId(request.childProfileId) }).catch(() => null);
+    await deleteChildProfile(supabase, accessToken, request.childProfileId);
+    const updatedFamily = await loadFamilyForSession(session);
+    return json(res, 200, { ...request, requestId, status: 'completed', session: buildSessionReadModel(updatedFamily, session.parentId) });
   }
 
   if (req.method === 'POST' && url.pathname === '/api/link-requests') {

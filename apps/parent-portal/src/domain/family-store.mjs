@@ -67,3 +67,46 @@ export async function createChildProfile(client, accessToken, familyId, displayA
   });
   return { childProfileId: row.child_profile_id, displayAlias: row.display_alias };
 }
+
+export function derivePlayerProfileId(childProfileId) {
+  return `player.${childProfileId.replace(/^child\./, '')}`;
+}
+
+export async function exportChildData(client, accessToken, childProfileId) {
+  const select = 'child_profile_id,display_alias,created_at,child_dashboard_stats(play_time_last7_minutes,sessions_last7,learning,recent_builds,adventures,updated_at)';
+  const [child] = await client.rest(`/children?child_profile_id=eq.${encodeURIComponent(childProfileId)}&select=${select}`, { accessToken });
+  if (!child) throw new Error('Child not found.');
+  const stats = child.child_dashboard_stats?.[0] ?? child.child_dashboard_stats ?? {};
+  let playerProfile = null;
+  try {
+    playerProfile = await client.rpc('wm_get_player_profile', { p_player_profile_id: derivePlayerProfileId(childProfileId) });
+  } catch {
+    // The child may never have launched into player-dashboard yet; export without it.
+  }
+  return {
+    exportedAt: new Date().toISOString(),
+    child: {
+      childProfileId: child.child_profile_id,
+      displayAlias: child.display_alias,
+      createdAt: child.created_at,
+    },
+    dashboard: {
+      playTime: {
+        last7DaysMinutes: stats.play_time_last7_minutes ?? 0,
+        sessionsLast7Days: stats.sessions_last7 ?? 0,
+      },
+      learning: stats.learning ?? [],
+      recentBuilds: stats.recent_builds ?? [],
+      adventures: stats.adventures ?? [],
+    },
+    playerProfile: playerProfile ?? null,
+  };
+}
+
+export async function deleteChildProfile(client, accessToken, childProfileId) {
+  await client.rest(`/children?child_profile_id=eq.${encodeURIComponent(childProfileId)}`, {
+    accessToken,
+    method: 'DELETE',
+    extraHeaders: { Prefer: 'return=minimal' },
+  });
+}
