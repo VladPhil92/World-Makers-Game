@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "buildCommit": "",
+  "unrealVersion": "5.8.2",
+  "reviewerRoles": [],
+  "materialsLightingReview": {
+    "masterSurfaceApproved": false,
+    "waterMaterialApproved": false,
+    "exposureApproved": false,
+    "singlePrimaryDirectionalSunConfirmed": false,
+    "skyAtmosphereApproved": false,
+    "skyLightApproved": false,
+    "heightFogApproved": false,
+    "shadowQualityApproved": false
+  },
+  "environmentReview": {
+    "authoredRainforestTakeoverApproved": false,
+    "lodTransitionsApproved": false,
+    "hlodAndCullingApproved": false,
+    "foliageOverdrawApproved": false,
+    "textureStreamingApproved": false,
+    "texturePoolOverBudgetMB": null,
+    "noCriticalMipPopIn": false,
+    "noPlaceholderGeometry": false
+  },
+  "characterAnimationReview": {
+    "authoredCharacterApproved": false,
+    "animationBlueprintApproved": false,
+    "ikApproved": false,
+    "physicsAssetApproved": false,
+    "deformationApproved": false,
+    "cosmeticClippingApproved": false,
+    "maxObservedFootSlideCm": null,
+    "criticalDeformationCount": null,
+    "criticalCosmeticClippingCount": null
+  },
+  "vfxReview": {
+    "allRequiredEffectsPresent": false,
+    "semanticParityApproved": false,
+    "reducedMotionApproved": false,
+    "overdrawApproved": false
+  },
+  "presentationReview": {
+    "cameraDataApproved": false,
+    "levelSequencesApproved": false,
+    "uiMotionStyleApproved": false,
+    "cameraComfortApproved": false,
+    "uiLegibilityApproved": false,
+    "safeAreaApproved": false,
+    "reducedMotionApproved": false,
+    "maxObservedRevealDurationSeconds": null,
+    "noInputLock": false,
+    "noForcedViewTarget": false,
+    "noGlobalTimeScaleChange": false
+  },
+  "artifacts": [
+    {"kind": "visual-contact-sheet", "file": "", "sha256": ""},
+    {"kind": "animation-review", "file": "", "sha256": ""},
+    {"kind": "vfx-overdraw", "file": "", "sha256": ""},
+    {"kind": "camera-ui-review", "file": "", "sha256": ""}
+  ],
+  "notes": "Copy this template into artifacts/g3-visual/g3-review.json and populate only from real UE 5.8.2 Editor/PIE review evidence."
+}
