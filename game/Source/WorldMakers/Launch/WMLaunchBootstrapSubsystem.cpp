@@ -83,6 +83,7 @@ void UWMLaunchBootstrapSubsystem::Deinitialize()
 {
     LaunchTicket.Reset();
     ProgressSyncToken.Reset();
+    ProgressSyncEpicId = NAME_None;
     SelectedModeId = NAME_None;
     SelectedWorldId = NAME_None;
     SelectedMissionId = NAME_None;
@@ -255,6 +256,7 @@ bool UWMLaunchBootstrapSubsystem::ConsumeRedemptionJson(const FString& Json)
     }
 
     ProgressSyncToken = MoveTemp(Token);
+    ProgressSyncEpicId = ParsedResume.IsSet() ? ParsedResume.EpicId : NAME_None;
     SelectedModeId = ParsedModeId;
     SelectedWorldId = FName(*WorldId);
     SelectedMissionId = ParsedMissionId;
@@ -270,6 +272,7 @@ void UWMLaunchBootstrapSubsystem::SetLaunchError(const FString& Error)
 {
     LaunchTicket.Reset();
     ProgressSyncToken.Reset();
+    ProgressSyncEpicId = NAME_None;
     bNativeLaunchReady = false;
     bNativeLaunchError = true;
     NativeLaunchError = Error;
@@ -354,7 +357,7 @@ bool UWMLaunchBootstrapSubsystem::SyncEpicCheckpoint(const FWMEpicCheckpoint& Ch
 {
     if (!bNativeLaunchRequested || !bNativeLaunchReady || bNativeLaunchError || ProgressSyncToken.IsEmpty()) return false;
     if (Checkpoint.EpicId.IsNone() || Checkpoint.ChapterCount <= 0) return false;
-    if (EpicResume.IsSet() && Checkpoint.EpicId != EpicResume.EpicId) return false;
+    if (!ProgressSyncEpicId.IsNone() && Checkpoint.EpicId != ProgressSyncEpicId) return false;
 
     const TSharedRef<FJsonObject> CheckpointJson = MakeShared<FJsonObject>();
     CheckpointJson->SetStringField(TEXT("epicId"), Checkpoint.EpicId.ToString());
@@ -389,5 +392,7 @@ bool UWMLaunchBootstrapSubsystem::SyncEpicCheckpoint(const FWMEpicCheckpoint& Ch
         });
 
     // Dispatch failure or any non-2xx response leaves the durable outbox untouched for the next launch/retry.
-    return Request->ProcessRequest();
+    const bool bDispatched = Request->ProcessRequest();
+    if (bDispatched && ProgressSyncEpicId.IsNone()) ProgressSyncEpicId = Checkpoint.EpicId;
+    return bDispatched;
 }
