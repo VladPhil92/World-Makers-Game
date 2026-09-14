@@ -123,8 +123,42 @@ export function updateProfileEpicProgress(profile, input) {
 
   if (existingIndex >= 0) next.progress.epics[existingIndex] = incoming;
   else next.progress.epics.push(incoming);
-  next.progress.currentEpicId = incoming.state === STATE_COMPLETE ? null : incoming.epicId;
+  if (incoming.state === STATE_COMPLETE) {
+    if (next.progress.currentEpicId === incoming.epicId) next.progress.currentEpicId = null;
+  } else {
+    next.progress.currentEpicId = incoming.epicId;
+  }
   return next;
+}
+
+/**
+ * Native retry reconciliation. A stale/equal client checkpoint is successful without a new profile write;
+ * only genuinely newer progress mutates the profile. The returned authoritative record is safe to project
+ * back to the native client as the minimal chapter checkpoint.
+ */
+export function reconcileProfileEpicProgress(profile, input) {
+  const normalizedProgress = normalizePlayerProgress(profile?.progress);
+  const incoming = normalizeEpicProgressRecord(input);
+  const existing = normalizedProgress.epics.find((item) => item.epicId === incoming.epicId) ?? null;
+
+  if (existing) {
+    const serverAhead = existing.state === STATE_COMPLETE || existing.chapterIndex > incoming.chapterIndex;
+    if (serverAhead) {
+      return { profile: clone(profile), disposition: 'server-ahead', authoritative: clone(existing), changed: false };
+    }
+    if (existing.chapterIndex === incoming.chapterIndex && existing.state === incoming.state) {
+      return { profile: clone(profile), disposition: 'idempotent', authoritative: clone(existing), changed: false };
+    }
+  }
+
+  const changedProfile = updateProfileEpicProgress(profile, incoming);
+  const authoritative = changedProfile.progress.epics.find((item) => item.epicId === incoming.epicId);
+  return {
+    profile: changedProfile,
+    disposition: existing ? 'advanced' : 'created',
+    authoritative: clone(authoritative),
+    changed: true,
+  };
 }
 
 function playerJourney(record) {
