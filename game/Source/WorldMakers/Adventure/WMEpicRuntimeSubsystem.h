@@ -51,8 +51,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
     bool ClearEpicCheckpoint(FName EpicId);
 
-    /** Retry all coalesced checkpoints retained after offline/failed sync. */
-    bool FlushPendingEpicCheckpointSyncs();
+    /** Retry the coalesced checkpoint for the epic authorized by the current native sync token. */
+    bool FlushPendingEpicCheckpointSyncs(FName EpicId);
 
     /** Remove an outbox item only when the server confirms equal/newer progress. */
     bool AcknowledgeEpicCheckpointSync(const FWMEpicCheckpoint& AcknowledgedCheckpoint);
