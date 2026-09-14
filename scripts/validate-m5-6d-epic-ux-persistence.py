@@ -22,12 +22,14 @@ def main() -> None:
         "docs/m5-6d-epic-ux-persistence.md",
         "game/Source/WorldMakers/Adventure/WMEpicJourneySaveGame.h",
         "game/Source/WorldMakers/Adventure/WMEpicRuntime.h",
+        "game/Source/WorldMakers/Adventure/WMEpicRuntime.cpp",
         "game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h",
         "game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp",
         "game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp",
         "apps/player-dashboard/src/domain/epic-progress.mjs",
         "apps/player-dashboard/src/domain/profile.mjs",
         "apps/player-dashboard/src/domain/launch.mjs",
+        "apps/player-dashboard/public/app.js",
         "apps/player-dashboard/tests/epic-progress.test.mjs",
         "apps/player-dashboard/tests/epic-launch.test.mjs",
         "apps/player-dashboard/tests/epic-profile-store.test.mjs",
@@ -48,23 +50,24 @@ def main() -> None:
             fail(f"Epic SaveGame must remain chapter-level and privacy-minimized: {forbidden}")
 
     runtime_h = read("game/Source/WorldMakers/Adventure/WMEpicRuntime.h")
+    runtime_cpp = read("game/Source/WorldMakers/Adventure/WMEpicRuntime.cpp")
     subsystem_h = read("game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h")
     subsystem_cpp = read("game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp")
     resume_body = runtime_h.split("bool ResumeAtChapter", 1)[1].split("bool CanAcceptEvidence", 1)[0] if "bool ResumeAtChapter" in runtime_h else ""
     if "Reset();" not in resume_body or "InDefinition.Chapters.IsValidIndex" not in resume_body:
         fail("ResumeAtChapter must validate the chapter and reset all partial progress before restore")
-    if "CurrentEvidenceCounts.Reset()" not in runtime_h or "CurrentWorldStates.Reset()" not in runtime_h:
-        fail("The progress model reset path must clear partial evidence and world state")
+    reset_sources = runtime_h + "\n" + runtime_cpp
+    if "CurrentEvidenceCounts.Reset()" not in reset_sources or "CurrentWorldStates.Reset()" not in reset_sources:
+        fail("The progress model reset implementation must clear partial evidence and world state")
     for token in ("ResumeEpic", "ActivateOrResumeEpic", "HasResumableEpicCheckpoint", "ClearEpicCheckpoint", "SaveCurrentCheckpoint"):
         if token not in subsystem_h and token not in subsystem_cpp:
             fail(f"Epic persistence subsystem missing: {token}")
     for token in ("UGameplayStatics::LoadGameFromSlot", "UGameplayStatics::SaveGameToSlot", "IsCheckpointValidForCatalog", "ResumeAtChapter"):
         if token not in subsystem_cpp:
             fail(f"Epic persistence implementation missing: {token}")
-    if "RecordEpicEvidence" in subsystem_cpp:
-        evidence_section = subsystem_cpp.split("bool UWMEpicRuntimeSubsystem::RecordEpicEvidence", 1)[1].split("bool UWMEpicRuntimeSubsystem::RecordEpicWorldState", 1)[0]
-        if "SaveCurrentCheckpoint" in evidence_section:
-            fail("Partial evidence must never trigger persistent checkpoints")
+    evidence_section = subsystem_cpp.split("bool UWMEpicRuntimeSubsystem::RecordEpicEvidence", 1)[1].split("bool UWMEpicRuntimeSubsystem::RecordEpicWorldState", 1)[0]
+    if "SaveCurrentCheckpoint" in evidence_section:
+        fail("Partial evidence must never trigger persistent checkpoints")
 
     unreal_tests = read("game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp")
     for name in (
@@ -96,6 +99,11 @@ def main() -> None:
     canonical = launch.split("function canonicalPayload", 1)[1].split("function sign", 1)[0]
     if "epicResume: payload.epicResume" not in canonical or "epicResume: buildLaunchEpicResume" not in launch:
         fail("epicResume must be part of the signed canonical launch payload")
+
+    browser = read("apps/player-dashboard/public/app.js")
+    for token in ("epicJourney?.current", "Capítulo ${journey.chapterNumber} de ${journey.chapterCount}", "Continuar viaje"):
+        if token not in browser:
+            fail(f"Visible calm epic resume UX missing: {token}")
 
     player_tests = "\n".join(read(path) for path in (
         "apps/player-dashboard/tests/epic-progress.test.mjs",
