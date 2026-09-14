@@ -120,11 +120,6 @@
     ]
   },
   "productionGates": [
-    {"id": "G0", "name": "Source and architecture readiness", "requires": ["hosted-source-ci-green", "production-baseline-validator-green", "lfs-policy-clean", "ue-source-preflight-green"]},
-    {"id": "G1", "name": "Native Unreal readiness", "requires": ["worldmakerseditor-win64-development-build-green", "worldmakers-automation-green", "no-known-fatal-compiler-errors"]},
-    {"id": "G2", "name": "Authored vertical slice", "requires": ["certification-map-committed-via-lfs", "first-person-route-playable", "authored-assets-resolve-at-stable-paths"]},
-    {"id": "G3", "name": "Visual and animation target", "requires": ["lighting-material-animation-vfx-quality-review", "reduced-motion-review", "no-placeholder-proxies-in-certified-route"]},
-    {"id": "G4", "name": "Performance certification", "requires": ["desktop-reference-budget-pass", "representative-ipados-evidence", "representative-android-evidence", "fail-closed-certification-result"]}
     {
       "id": "G0",
       "name": "Source and architecture readiness",
