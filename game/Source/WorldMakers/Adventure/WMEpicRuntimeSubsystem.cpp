@@ -311,20 +311,16 @@ bool UWMEpicRuntimeSubsystem::AcknowledgeEpicCheckpointSync(const FWMEpicCheckpo
     return false;
 }
 
-bool UWMEpicRuntimeSubsystem::FlushPendingEpicCheckpointSyncs()
+bool UWMEpicRuntimeSubsystem::FlushPendingEpicCheckpointSyncs(const FName EpicId)
 {
-    if (!GetWorld()) return false;
+    if (!GetWorld() || EpicId.IsNone()) return false;
     UGameInstance* GameInstance = GetWorld()->GetGameInstance();
     UWMLaunchBootstrapSubsystem* Launch = GameInstance ? GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>() : nullptr;
     if (!Launch || !Launch->IsNativeLaunchReady()) return false;
 
-    bool bAllDispatched = true;
-    const TArray<FWMEpicCheckpoint> PendingSnapshot = PendingSyncCheckpoints;
-    for (const FWMEpicCheckpoint& Pending : PendingSnapshot)
-    {
-        bAllDispatched = Launch->SyncEpicCheckpoint(Pending) && bAllDispatched;
-    }
-    return bAllDispatched;
+    const int32 PendingIndex = FindPendingSyncCheckpointIndex(EpicId);
+    if (!PendingSyncCheckpoints.IsValidIndex(PendingIndex)) return true;
+    return Launch->SyncEpicCheckpoint(PendingSyncCheckpoints[PendingIndex]);
 }
 
 bool UWMEpicRuntimeSubsystem::RecordEpicEvidence(
