@@ -3,6 +3,7 @@ name: G3 Visual Fidelity
 on:
   pull_request:
     paths:
+      - 'content/production/g2-*'
       - 'content/production/g3-*'
       - 'content/visual/**'
       - 'scripts/assess-g3-visual-fidelity.py'
@@ -16,6 +17,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'content/production/g2-*'
       - 'content/production/g3-*'
       - 'content/visual/**'
       - 'scripts/assess-g3-visual-fidelity.py'
