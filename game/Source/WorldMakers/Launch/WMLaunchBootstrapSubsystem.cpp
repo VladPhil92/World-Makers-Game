@@ -311,7 +311,6 @@ bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
             return false;
         }
         bEpicResumeApplied = true;
-        if (Epic) Epic->FlushPendingEpicCheckpointSyncs();
         return true;
     }
 
@@ -347,7 +346,7 @@ bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
         return false;
     }
     bEpicResumeApplied = true;
-    Epic->FlushPendingEpicCheckpointSyncs();
+    Epic->FlushPendingEpicCheckpointSyncs(EpicResume.EpicId);
     return true;
 }
 
@@ -355,6 +354,7 @@ bool UWMLaunchBootstrapSubsystem::SyncEpicCheckpoint(const FWMEpicCheckpoint& Ch
 {
     if (!bNativeLaunchRequested || !bNativeLaunchReady || bNativeLaunchError || ProgressSyncToken.IsEmpty()) return false;
     if (Checkpoint.EpicId.IsNone() || Checkpoint.ChapterCount <= 0) return false;
+    if (EpicResume.IsSet() && Checkpoint.EpicId != EpicResume.EpicId) return false;
 
     const TSharedRef<FJsonObject> CheckpointJson = MakeShared<FJsonObject>();
     CheckpointJson->SetStringField(TEXT("epicId"), Checkpoint.EpicId.ToString());
