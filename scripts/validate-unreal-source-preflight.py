@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +50,55 @@ def require_tokens(text: str, tokens: tuple[str, ...], subject: str) -> None:
         fail(f"{subject} is missing readiness-contract tokens: {missing}")
 
 
+def anonymous_namespace_blocks(text: str) -> list[str]:
+    blocks: list[str] = []
+    for match in re.finditer(r"\bnamespace\s*\{", text):
+        open_brace = text.find("{", match.start())
+        depth = 0
+        for index in range(open_brace, len(text)):
+            char = text[index]
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[open_brace + 1 : index])
+                    break
+    return blocks
+
+
+def find_duplicate_unity_helpers() -> dict[str, list[str]]:
+    """Return anonymous helper names duplicated across .cpp files.
+
+    These names are valid with normal C++ translation units but may collide when
+    Unreal unity aggregation combines multiple implementation files. The module
+    is intentionally compiled with bUseUnity=false; this scanner makes any future
+    attempt to re-enable unity compilation fail with actionable diagnostics.
+    """
+
+    helper_pattern = re.compile(
+        r"(?m)^\s*(?:static\s+)?(?:inline\s+)?"
+        r"[A-Za-z_][\w:<>,*&\s]*\s+([A-Za-z_]\w*)\s*"
+        r"\([^;{}]*\)\s*(?:const\s*)?\{"
+    )
+    definitions: dict[str, set[str]] = defaultdict(set)
+
+    for path in SOURCE.rglob("*.cpp"):
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        rel = path.relative_to(ROOT).as_posix()
+        for block in anonymous_namespace_blocks(text):
+            for helper_name in helper_pattern.findall(block):
+                definitions[helper_name].add(rel)
+
+    return {
+        name: sorted(paths)
+        for name, paths in definitions.items()
+        if len(paths) > 1
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-authored-map", action="store_true")
@@ -67,6 +117,18 @@ def main() -> None:
         fail("WorldMakers.Build.cs must expose ModuleDirectory for module-root-qualified includes")
     if '"ProceduralMeshComponent"' not in build_rules:
         fail("WorldMakers must declare the ProceduralMeshComponent module dependency")
+
+    if "bUseUnity = false;" not in build_rules:
+        duplicate_helpers = find_duplicate_unity_helpers()
+        details = "; ".join(
+            f"{name}: {', '.join(paths)}"
+            for name, paths in sorted(duplicate_helpers.items())
+        )
+        suffix = f" Existing collisions: {details}" if details else ""
+        fail(
+            "WorldMakers.Build.cs must keep bUseUnity = false for deterministic independent translation units."
+            + suffix
+        )
 
     bad_procedural_include = scan_sources(re.compile(r'#include\s+"Components/ProceduralMeshComponent\.h"'))
     if bad_procedural_include:
@@ -146,7 +208,7 @@ def main() -> None:
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
-        "native_readiness_orchestrator=present. "
+        "native_readiness_orchestrator=present, unity_mode=disabled. "
         "Native UE build/test certification remains a separate gate."
     )
 
