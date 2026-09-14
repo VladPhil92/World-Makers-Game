@@ -114,8 +114,7 @@ def main() -> None:
         epic_progress,
         (
             "reconcileProfileEpicProgress",
-            "disposition: 'created'",
-            "disposition: 'advanced'",
+            "existing ? 'advanced' : 'created'",
             "disposition: 'idempotent'",
             "disposition: 'server-ahead'",
             "changed: false",
