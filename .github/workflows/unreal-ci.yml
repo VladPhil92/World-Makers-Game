@@ -27,6 +27,8 @@ on:
       - 'scripts/test-unreal.ps1'
       - 'scripts/preflight-unreal-runner.ps1'
       - 'scripts/collect-unreal-certification-evidence.ps1'
+      - 'scripts/collect-m5-6e-epic-evidence.ps1'
+      - 'scripts/assess-m5-6e-epic-certification.py'
       - 'scripts/assess-m3-8-certification.py'
       - 'scripts/validate-m1-prototype.py'
       - 'scripts/validate-m1-certification.py'
@@ -51,6 +53,7 @@ on:
       - 'scripts/*first-person*.py'
       - '.github/workflows/unreal-ci.yml'
       - '.github/workflows/m3-certification.yml'
+      - '.github/workflows/m5-6e-epic-native-certification.yml'
       - '.github/workflows/first-person-*.yml'
   push:
     branches:
@@ -78,6 +81,7 @@ on:
       - 'docs/first-person-*.md'
       - 'scripts/**'
       - '.github/workflows/m3-certification.yml'
+      - '.github/workflows/m5-6e-epic-native-certification.yml'
       - '.github/workflows/first-person-*.yml'
   workflow_dispatch:
 
@@ -137,6 +141,8 @@ jobs:
         run: python scripts/validate-m5-6c-garden-end-winter.py
       - name: Validate M5.6D Epic UX and Persistence
         run: python scripts/validate-m5-6d-epic-ux-persistence.py
+      - name: Validate M5.6E Native Epic Continuity Certification
+        run: python scripts/validate-m5-6e-native-epic-certification.py
       - name: Validate C1 XXII Century Citizenship
         run: python scripts/validate-c1-xxii-century-citizenship.py
       - name: Validate C2 Planetary Commons Living World
