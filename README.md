@@ -45,11 +45,18 @@ The M5 composable mission layer uses reusable gameplay/learning primitives such 
 
 Human-reviewable canonical content lives under `content/`. Runtime-staged JSON lives under `game/Content/WorldMakers/`. Repository Quality gates enforce schema/semantic contracts and canonical/runtime parity for staged science and thought catalogs.
 
+## Unreal production baseline
+
+The locked cross-disciplinary production contract is `docs/unreal-production-baseline-v1.md`, backed by `content/production/unreal-production-baseline-v1.json` and a Repository Quality validator. It freezes the UE 5.8.2 certification baseline, C++/Blueprint authority boundary, premium-stylized rendering strategy, advanced animation direction, hybrid authored/PCG world strategy, vertical-slice capabilities and G0–G4 production gates.
+
+This baseline is source governance only. Native build, authored-map, visual and representative-device certification remain separate evidence gates.
+
 Key design references:
 
 - `docs/GDD.md`
 - `docs/TDD.md`
 - `docs/roadmap.md`
+- `docs/unreal-production-baseline-v1.md`
 - `docs/unreal-readiness-audit.md`
 - `docs/native-unreal-readiness-gate.md`
 - `docs/fantastic-learning-universe.md`
