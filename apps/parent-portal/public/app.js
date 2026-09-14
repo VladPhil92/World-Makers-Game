@@ -118,9 +118,22 @@ async function api(path, options = {}) {
   if (!response.ok) {
     const error = new Error(payload.code ?? 'request_failed');
     error.status = response.status;
+    error.payload = payload;
     throw error;
   }
   return payload;
+}
+
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function loadDashboard(childProfileId) {
@@ -298,20 +311,38 @@ for (const button of document.querySelectorAll('.privacy-action')) {
       output.textContent = 'Please acknowledge the profile scope before submitting a privacy request.';
       return;
     }
+    const operation = button.dataset.operation;
+    const childProfileId = activeDashboard.child.childProfileId;
+    const displayAlias = activeDashboard.child.displayAlias;
     output.textContent = 'Submitting guardian request…';
     try {
       const result = await api('/api/privacy-requests', {
         method: 'POST',
-        body: JSON.stringify({
-          childProfileId: activeDashboard.child.childProfileId,
-          operation: button.dataset.operation,
-          acknowledged,
-        }),
+        body: JSON.stringify({ childProfileId, operation, acknowledged }),
       });
-      output.textContent = `Request accepted: ${result.operation}. Status: ${result.status}.`;
       $('#privacy-ack').checked = false;
-    } catch {
-      output.textContent = 'The request was not accepted. Guardian authorization is required.';
+
+      if (operation === 'export-child-data' && result.export) {
+        downloadJson(`${displayAlias.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-data-export.json`, result.export);
+        output.textContent = `Export ready — downloaded ${displayAlias}'s data as a file.`;
+        return;
+      }
+
+      if (operation === 'delete-child-data' && result.session) {
+        session = result.session;
+        renderChildren(session.children);
+        activeDashboard = null;
+        if (session.children.length) await loadDashboard(session.children[0].childProfileId);
+        else setStatus('No linked profiles yet.');
+        output.textContent = `${displayAlias}'s profile and data were deleted.`;
+        return;
+      }
+
+      output.textContent = `Request accepted: ${result.operation}. Status: ${result.status}.`;
+    } catch (error) {
+      output.textContent = error.status === 409 && error.payload?.reason === 'co_parent_support_required'
+        ? 'Unlinking a profile needs a second linked guardian first — that feature is not available yet.'
+        : 'The request was not accepted. Guardian authorization is required.';
     }
   });
 }

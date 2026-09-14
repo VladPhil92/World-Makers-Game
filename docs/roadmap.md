@@ -59,12 +59,13 @@ M4.2 implementation status:
 - `player-dashboard`'s persistent profile store (D2) now has a Supabase-backed implementation alongside the original local `JsonFileProfileStore`, so profiles survive redeploys once `SUPABASE_URL`/`SUPABASE_ANON_KEY` are configured.
 - Both apps are deployed on Railway for the first live web playtest.
 - Custom SMTP (Resend, on a dedicated `mail.ctgone.com` sending subdomain) is configured for the Supabase project, so guardian confirmation emails deliver reliably instead of hitting the default mailer's very low rate limit.
+- Privacy requests are real, not a stub: `export-child-data` returns a downloadable bundle of the child's profile, dashboard stats and player-dashboard profile; `delete-child-data` actually deletes the child's rows (family membership, dashboard stats, and their player-dashboard profile via `wm_delete_player_profile`), verified end to end against the live database. `unlink-child-profile` is explicitly blocked (409, `co_parent_support_required`) rather than faked, since removing one guardian's access while preserving a child's data for another guardian is meaningless until family membership supports more than one guardian.
 
 M4.2 remaining outcomes:
 
 - Real gameplay-telemetry sync into `child_dashboard_stats` (currently zeroed on child creation; the game/runtime side of that pipeline is separate future work).
-- Co-parent invite flow (today a guardian can only self-link the family they created at signup).
-- Durable export/delete/unlink workflows with audit and retention semantics (privacy-request endpoints exist but remain a stub, as in M4.1).
+- Co-parent invite flow (today a guardian can only self-link the family they created at signup) — this also unblocks `unlink-child-profile`.
+- Audit/retention logging for privacy requests (today they execute immediately with no durable request record).
 - Production localization.
 
 ## M5 — Fantastic Learning Universe
