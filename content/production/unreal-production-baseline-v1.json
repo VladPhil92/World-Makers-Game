@@ -24,7 +24,9 @@
       "gameplay-rules-independent-from-rendering",
       "science-simulation-independent-from-vfx",
       "mission-evidence-independent-from-presentation",
-      "child-runtime-independent-from-payment-sdk"
+      "save-state-independent-from-transient-uobject-details",
+      "child-runtime-independent-from-payment-sdk",
+      "visual-assets-replaceable-without-changing-stable-gameplay-ids"
     ]
   },
   "rendering": {
