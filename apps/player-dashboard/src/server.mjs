@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dashboardCatalog } from './domain/catalog.mjs';
+import { reconcileProfileEpicProgress } from './domain/epic-progress.mjs';
 import { createLaunchContext, verifyLaunchContext } from './domain/launch.mjs';
 import { createNativeLaunchTicketUri } from './domain/native-handoff.mjs';
 import { NativeLaunchSessionStore } from './domain/native-launch-session.mjs';
@@ -14,7 +15,6 @@ import {
   appendStoreRequest,
   createPlayerProfile,
   profilePlayerReadModel,
-  updateProfileEpicCheckpoint,
   updateProfileLoadout,
   updateProfilePreferences,
   updateProfileSelection,
@@ -234,6 +234,15 @@ function nativeCheckpointCandidate(profile, checkpoint) {
   };
 }
 
+function nativeAuthoritativeCheckpoint(record) {
+  return {
+    epicId: record.epicId,
+    chapterId: record.chapterId,
+    chapterIndex: record.chapterIndex,
+    state: record.state,
+  };
+}
+
 async function handleApi(req, res, url, store, nativeLaunchStore) {
   if (req.method === 'GET' && url.pathname === '/api/health') {
     return json(res, 200, {
@@ -266,11 +275,15 @@ async function handleApi(req, res, url, store, nativeLaunchStore) {
     const profile = await profileStore.get(auth.playerId);
     if (!profile) throw new AuthenticationError('Player profile not available.');
     const candidate = nativeCheckpointCandidate(profile, body.checkpoint);
-    const changed = updateProfileEpicCheckpoint(profile, candidate);
-    const saved = await profileStore.put(changed, { expectedRevision: profile.revision });
+    const reconciliation = reconcileProfileEpicProgress(profile, candidate);
+    const saved = reconciliation.changed
+      ? await profileStore.put(reconciliation.profile, { expectedRevision: profile.revision })
+      : profile;
     const player = profilePlayerReadModel(saved);
     return json(res, 200, {
       accepted: true,
+      disposition: reconciliation.disposition,
+      authoritativeCheckpoint: nativeAuthoritativeCheckpoint(reconciliation.authoritative),
       epicJourney: player.epicJourney,
       profileRevision: saved.revision,
       profileUpdatedAt: saved.updatedAt,
