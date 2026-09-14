@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'content/production/unreal-production-baseline-v1.json'
+      - 'content/performance/tablet-performance-profiles.json'
       - 'docs/unreal-production-baseline-v1.md'
       - 'scripts/validate-unreal-production-baseline.py'
       - 'game/UNREAL_ENGINE_VERSION'
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - 'content/production/unreal-production-baseline-v1.json'
+      - 'content/performance/tablet-performance-profiles.json'
       - 'docs/unreal-production-baseline-v1.md'
       - 'scripts/validate-unreal-production-baseline.py'
       - 'game/UNREAL_ENGINE_VERSION'
