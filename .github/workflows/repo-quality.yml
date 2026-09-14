@@ -73,6 +73,8 @@ jobs:
         run: python scripts/validate-m5-6e-native-epic-certification.py
       - name: Validate M5.6F Native Bootstrap and Progress Sync
         run: python scripts/validate-m5-6f-native-bootstrap-progress-sync.py
+      - name: Validate M5.6G Durable Epic Sync Outbox
+        run: python scripts/validate-m5-6g-durable-epic-sync-outbox.py
       - name: Validate C1 XXII Century Citizenship
         run: python scripts/validate-c1-xxii-century-citizenship.py
       - name: Validate C2 Planetary Commons Living World
