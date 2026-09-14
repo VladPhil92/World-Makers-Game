@@ -2,7 +2,7 @@
 
 #include "Animation/AnimInstance.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
-#include "Components/ProceduralMeshComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"

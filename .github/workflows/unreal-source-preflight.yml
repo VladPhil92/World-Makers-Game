@@ -1,0 +1,34 @@
+name: Unreal Source Preflight
+
+on:
+  pull_request:
+    paths:
+      - 'game/**'
+      - 'scripts/validate-unreal-source-preflight.py'
+      - '.gitattributes'
+      - '.github/workflows/unreal-source-preflight.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'game/**'
+      - 'scripts/validate-unreal-source-preflight.py'
+      - '.gitattributes'
+      - '.github/workflows/unreal-source-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate UE 5.8 source readiness
+        run: python scripts/validate-unreal-source-preflight.py
