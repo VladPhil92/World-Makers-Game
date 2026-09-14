@@ -37,11 +37,19 @@ class WORLDMAKERS_API UWMEpicJourneySaveGame : public USaveGame
     GENERATED_BODY()
 
 public:
-    static constexpr int32 CurrentFormatVersion = 1;
+    static constexpr int32 MinimumSupportedFormatVersion = 1;
+    static constexpr int32 CurrentFormatVersion = 2;
 
     UPROPERTY(SaveGame)
     int32 FormatVersion = CurrentFormatVersion;
 
     UPROPERTY(SaveGame)
     TArray<FWMEpicCheckpoint> Checkpoints;
+
+    /**
+     * Durable, privacy-minimized remote-sync outbox. Contains only coalesced chapter checkpoints;
+     * launch tickets, sync tokens, player identifiers and learning evidence are never persisted here.
+     */
+    UPROPERTY(SaveGame)
+    TArray<FWMEpicCheckpoint> PendingSyncCheckpoints;
 };
