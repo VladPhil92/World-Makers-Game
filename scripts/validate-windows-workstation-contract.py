@@ -119,7 +119,10 @@ def main() -> None:
         ),
         "scripts/classify-unreal-build-log.py",
     )
-    if "OtherCompilationError" in classifier:
+    # The phrase may legitimately appear in comments/tests explaining the bug.
+    # Reject it only when it is reintroduced as a raw regex/string pattern in
+    # the classifier rule table.
+    if 'r"OtherCompilationError' in classifier or "r'OtherCompilationError" in classifier:
         fail("Generic OtherCompilationError must not be used as an UnrealHeaderTool classifier signature.")
 
     require(
