@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Player/WMPlayerCharacter.h"
@@ -14,6 +15,20 @@ void UWMEclipseEngineExperienceSubsystem::Initialize(FSubsystemCollectionBase& C
 {
     Super::Initialize(Collection);
     ReloadExperienceCatalog();
+}
+
+void UWMEclipseEngineExperienceSubsystem::OnWorldBeginPlay(UWorld& InWorld)
+{
+    Super::OnWorldBeginPlay(InWorld);
+    bool bAutoStart = false;
+    if (GConfig)
+    {
+        GConfig->GetBool(TEXT("/Script/WorldMakers.WMGameMode"), TEXT("bStartEclipseEngineVerticalSlice"), bAutoStart, GGameIni);
+    }
+    if (bAutoStart)
+    {
+        StartEclipseEngine();
+    }
 }
 
 bool UWMEclipseEngineExperienceSubsystem::ReloadExperienceCatalog()
@@ -58,10 +73,11 @@ bool UWMEclipseEngineExperienceSubsystem::EnsurePrototypeTargets()
             AWMEclipseEngineInteractableActor* Target = GetWorld()->SpawnActor<AWMEclipseEngineInteractableActor>(
                 AWMEclipseEngineInteractableActor::StaticClass(), Action.PrototypeLocationCm, FRotator::ZeroRotator, SpawnParams);
             if (!Target) return false;
-            Target->Configure(Action);
+            Target->Configure(Chapter.ChapterId, Action);
             PrototypeTargets.Add(Target);
         }
     }
+    RefreshPrototypeTargetAvailability();
     return !PrototypeTargets.IsEmpty();
 }
 
@@ -72,6 +88,16 @@ void UWMEclipseEngineExperienceSubsystem::DestroyPrototypeTargets()
         if (IsValid(Target)) Target->Destroy();
     }
     PrototypeTargets.Reset();
+}
+
+void UWMEclipseEngineExperienceSubsystem::RefreshPrototypeTargetAvailability()
+{
+    FName CurrentChapterId = NAME_None;
+    if (const FWMEclipseChapterExperience* Chapter = GetCurrentChapter()) CurrentChapterId = Chapter->ChapterId;
+    for (AWMEclipseEngineInteractableActor* Target : PrototypeTargets)
+    {
+        if (IsValid(Target)) Target->SetAvailable(!CurrentChapterId.IsNone() && Target->ChapterId == CurrentChapterId);
+    }
 }
 
 const FWMEclipseChapterExperience* UWMEclipseEngineExperienceSubsystem::GetCurrentChapter() const
@@ -158,7 +184,25 @@ bool UWMEclipseEngineExperienceSubsystem::ResolveTrustedAction(const FName Actio
     {
         if (IsValid(Target) && Target->ActionId == ActionId) Target->MarkResolved();
     }
+    RefreshPrototypeTargetAvailability();
     return true;
+}
+
+bool UWMEclipseEngineExperienceSubsystem::ResolveValidatedEvidence(
+    const FName ProducerRefId,
+    const FName PrimitiveId,
+    const FName EvidenceEventId,
+    const float NumericValue)
+{
+    const FWMEclipseChapterExperience* Chapter = GetCurrentChapter();
+    if (!Chapter || ProducerRefId.IsNone() || PrimitiveId.IsNone() || EvidenceEventId.IsNone()) return false;
+    const FWMEclipseActionDefinition* Match = Chapter->Actions.FindByPredicate(
+        [ProducerRefId, PrimitiveId, EvidenceEventId](const FWMEclipseActionDefinition& Action)
+        {
+            return Action.bHasEvidenceRoute && Action.Evidence.ProducerRefId == ProducerRefId &&
+                Action.Evidence.PrimitiveId == PrimitiveId && Action.Evidence.EvidenceEventId == EvidenceEventId;
+        });
+    return Match && ResolveTrustedAction(Match->ActionId, NumericValue);
 }
 
 FName UWMEclipseEngineExperienceSubsystem::RequestHint(const FName ActionId)
