@@ -51,6 +51,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
     bool ClearEpicCheckpoint(FName EpicId);
 
+    /** Retry the coalesced checkpoint for the epic authorized by the current native sync token. */
+    bool FlushPendingEpicCheckpointSyncs(FName EpicId);
+
+    /** Remove an outbox item only when the server confirms equal/newer progress. */
+    bool AcknowledgeEpicCheckpointSync(const FWMEpicCheckpoint& AcknowledgedCheckpoint);
+
     /** Trusted pedagogical evidence boundary. Objective + discipline + producer + primitive + event must all match. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
     bool RecordEpicEvidence(
@@ -84,13 +90,17 @@ public:
 
     const FWMEpicCatalog& GetCatalog() const { return Catalog; }
     const TArray<FWMEpicCheckpoint>& GetCheckpointsForTests() const { return Checkpoints; }
+    const TArray<FWMEpicCheckpoint>& GetPendingSyncCheckpointsForTests() const { return PendingSyncCheckpoints; }
 
 private:
     bool LoadEpicCheckpoints();
     bool SaveEpicCheckpoints() const;
     bool SaveCurrentCheckpoint();
     int32 FindCheckpointIndex(FName EpicId) const;
+    int32 FindPendingSyncCheckpointIndex(FName EpicId) const;
+    bool QueuePendingSyncCheckpoint(const FWMEpicCheckpoint& Checkpoint);
     bool IsCheckpointValidForCatalog(const FWMEpicCheckpoint& Checkpoint) const;
+    static bool IsAtLeastAsAdvanced(const FWMEpicCheckpoint& Candidate, const FWMEpicCheckpoint& Baseline);
 
     bool bCatalogLoaded = false;
     FWMEpicCatalog Catalog;
@@ -98,4 +108,7 @@ private:
 
     UPROPERTY(Transient)
     TArray<FWMEpicCheckpoint> Checkpoints;
+
+    UPROPERTY(Transient)
+    TArray<FWMEpicCheckpoint> PendingSyncCheckpoints;
 };

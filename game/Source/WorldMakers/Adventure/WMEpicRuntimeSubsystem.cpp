@@ -57,6 +57,40 @@ int32 UWMEpicRuntimeSubsystem::FindCheckpointIndex(const FName EpicId) const
     });
 }
 
+int32 UWMEpicRuntimeSubsystem::FindPendingSyncCheckpointIndex(const FName EpicId) const
+{
+    return PendingSyncCheckpoints.IndexOfByPredicate([EpicId](const FWMEpicCheckpoint& Item)
+    {
+        return Item.EpicId == EpicId;
+    });
+}
+
+bool UWMEpicRuntimeSubsystem::IsAtLeastAsAdvanced(
+    const FWMEpicCheckpoint& Candidate,
+    const FWMEpicCheckpoint& Baseline)
+{
+    if (Candidate.EpicId != Baseline.EpicId || Candidate.ChapterCount != Baseline.ChapterCount) return false;
+    if (Candidate.bCompleted) return true;
+    if (Baseline.bCompleted) return false;
+    return Candidate.ChapterIndex >= Baseline.ChapterIndex;
+}
+
+bool UWMEpicRuntimeSubsystem::QueuePendingSyncCheckpoint(const FWMEpicCheckpoint& Checkpoint)
+{
+    if (!IsCheckpointValidForCatalog(Checkpoint)) return false;
+    const int32 ExistingIndex = FindPendingSyncCheckpointIndex(Checkpoint.EpicId);
+    if (ExistingIndex == INDEX_NONE)
+    {
+        PendingSyncCheckpoints.Add(Checkpoint);
+        return true;
+    }
+    if (IsAtLeastAsAdvanced(Checkpoint, PendingSyncCheckpoints[ExistingIndex]))
+    {
+        PendingSyncCheckpoints[ExistingIndex] = Checkpoint;
+    }
+    return true;
+}
+
 bool UWMEpicRuntimeSubsystem::IsCheckpointValidForCatalog(const FWMEpicCheckpoint& Checkpoint) const
 {
     const FWMEpicDefinition* Epic = Catalog.FindEpic(Checkpoint.EpicId);
@@ -72,12 +106,15 @@ bool UWMEpicRuntimeSubsystem::IsCheckpointValidForCatalog(const FWMEpicCheckpoin
 bool UWMEpicRuntimeSubsystem::LoadEpicCheckpoints()
 {
     Checkpoints.Reset();
+    PendingSyncCheckpoints.Reset();
     if (!bCatalogLoaded) return false;
     if (!UGameplayStatics::DoesSaveGameExist(EpicJourneySaveSlot, EpicJourneySaveUserIndex)) return true;
 
     UWMEpicJourneySaveGame* Save = Cast<UWMEpicJourneySaveGame>(
         UGameplayStatics::LoadGameFromSlot(EpicJourneySaveSlot, EpicJourneySaveUserIndex));
-    if (!Save || Save->FormatVersion != UWMEpicJourneySaveGame::CurrentFormatVersion) return false;
+    if (!Save ||
+        Save->FormatVersion < UWMEpicJourneySaveGame::MinimumSupportedFormatVersion ||
+        Save->FormatVersion > UWMEpicJourneySaveGame::CurrentFormatVersion) return false;
 
     TSet<FName> SeenEpicIds;
     for (const FWMEpicCheckpoint& Candidate : Save->Checkpoints)
@@ -85,6 +122,14 @@ bool UWMEpicRuntimeSubsystem::LoadEpicCheckpoints()
         if (Candidate.EpicId.IsNone() || SeenEpicIds.Contains(Candidate.EpicId) || !IsCheckpointValidForCatalog(Candidate)) continue;
         SeenEpicIds.Add(Candidate.EpicId);
         Checkpoints.Add(Candidate);
+    }
+
+    if (Save->FormatVersion >= 2)
+    {
+        for (const FWMEpicCheckpoint& Pending : Save->PendingSyncCheckpoints)
+        {
+            if (!Pending.EpicId.IsNone() && IsCheckpointValidForCatalog(Pending)) QueuePendingSyncCheckpoint(Pending);
+        }
     }
     return true;
 }
@@ -96,6 +141,7 @@ bool UWMEpicRuntimeSubsystem::SaveEpicCheckpoints() const
     if (!Save) return false;
     Save->FormatVersion = UWMEpicJourneySaveGame::CurrentFormatVersion;
     Save->Checkpoints = Checkpoints;
+    Save->PendingSyncCheckpoints = PendingSyncCheckpoints;
     return UGameplayStatics::SaveGameToSlot(Save, EpicJourneySaveSlot, EpicJourneySaveUserIndex);
 }
 
@@ -112,27 +158,36 @@ bool UWMEpicRuntimeSubsystem::SaveCurrentCheckpoint()
     Checkpoint.bCompleted = ReadModel.bCompleted;
     if (!IsCheckpointValidForCatalog(Checkpoint)) return false;
 
-    const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
-    const int32 ExistingIndex = FindCheckpointIndex(Checkpoint.EpicId);
-    if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Checkpoint);
-    else Checkpoints[ExistingIndex] = Checkpoint;
-
-    if (!SaveEpicCheckpoints())
-    {
-        Checkpoints = PreviousCheckpoints;
-        return false;
-    }
-
+    UWMLaunchBootstrapSubsystem* Launch = nullptr;
     if (GetWorld())
     {
         if (UGameInstance* GameInstance = GetWorld()->GetGameInstance())
         {
-            if (UWMLaunchBootstrapSubsystem* Launch = GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>())
-            {
-                Launch->SyncEpicCheckpoint(Checkpoint);
-            }
+            Launch = GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>();
         }
     }
+
+    const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
+    const TArray<FWMEpicCheckpoint> PreviousPendingSyncCheckpoints = PendingSyncCheckpoints;
+    const int32 ExistingIndex = FindCheckpointIndex(Checkpoint.EpicId);
+    if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Checkpoint);
+    else Checkpoints[ExistingIndex] = Checkpoint;
+
+    if (Launch && Launch->IsNativeLaunchRequested() && !QueuePendingSyncCheckpoint(Checkpoint))
+    {
+        Checkpoints = PreviousCheckpoints;
+        PendingSyncCheckpoints = PreviousPendingSyncCheckpoints;
+        return false;
+    }
+
+    if (!SaveEpicCheckpoints())
+    {
+        Checkpoints = PreviousCheckpoints;
+        PendingSyncCheckpoints = PreviousPendingSyncCheckpoints;
+        return false;
+    }
+
+    if (Launch && Launch->IsNativeLaunchReady()) Launch->SyncEpicCheckpoint(Checkpoint);
     return true;
 }
 
@@ -169,14 +224,28 @@ bool UWMEpicRuntimeSubsystem::ApplyExternalResumeCheckpoint(
     {
         const FWMEpicCheckpoint& Existing = Checkpoints[ExistingIndex];
         // Local completion or an equal/newer local chapter is never regressed by server bootstrap state.
-        if (Existing.bCompleted || Existing.ChapterIndex >= Incoming.ChapterIndex) return true;
+        if (Existing.bCompleted || Existing.ChapterIndex >= Incoming.ChapterIndex)
+        {
+            // An equal server bootstrap proves that any equal/older outbox entry is already durable remotely.
+            return AcknowledgeEpicCheckpointSync(Incoming);
+        }
     }
 
     const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
+    const TArray<FWMEpicCheckpoint> PreviousPendingSyncCheckpoints = PendingSyncCheckpoints;
     if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Incoming);
     else Checkpoints[ExistingIndex] = Incoming;
+
+    const int32 PendingIndex = FindPendingSyncCheckpointIndex(EpicId);
+    if (PendingSyncCheckpoints.IsValidIndex(PendingIndex) &&
+        IsAtLeastAsAdvanced(Incoming, PendingSyncCheckpoints[PendingIndex]))
+    {
+        PendingSyncCheckpoints.RemoveAt(PendingIndex);
+    }
+
     if (SaveEpicCheckpoints()) return true;
     Checkpoints = PreviousCheckpoints;
+    PendingSyncCheckpoints = PreviousPendingSyncCheckpoints;
     return false;
 }
 
@@ -216,12 +285,42 @@ bool UWMEpicRuntimeSubsystem::ActivateOrResumeEpic(const FName EpicId)
 bool UWMEpicRuntimeSubsystem::ClearEpicCheckpoint(const FName EpicId)
 {
     const int32 Index = FindCheckpointIndex(EpicId);
-    if (Index == INDEX_NONE) return true;
+    const int32 PendingIndex = FindPendingSyncCheckpointIndex(EpicId);
+    if (Index == INDEX_NONE && PendingIndex == INDEX_NONE) return true;
+
     const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
-    Checkpoints.RemoveAt(Index);
+    const TArray<FWMEpicCheckpoint> PreviousPendingSyncCheckpoints = PendingSyncCheckpoints;
+    if (Index != INDEX_NONE) Checkpoints.RemoveAt(Index);
+    if (PendingIndex != INDEX_NONE) PendingSyncCheckpoints.RemoveAt(PendingIndex);
     if (SaveEpicCheckpoints()) return true;
     Checkpoints = PreviousCheckpoints;
+    PendingSyncCheckpoints = PreviousPendingSyncCheckpoints;
     return false;
+}
+
+bool UWMEpicRuntimeSubsystem::AcknowledgeEpicCheckpointSync(const FWMEpicCheckpoint& AcknowledgedCheckpoint)
+{
+    const int32 PendingIndex = FindPendingSyncCheckpointIndex(AcknowledgedCheckpoint.EpicId);
+    if (!PendingSyncCheckpoints.IsValidIndex(PendingIndex)) return true;
+    if (!IsAtLeastAsAdvanced(AcknowledgedCheckpoint, PendingSyncCheckpoints[PendingIndex])) return true;
+
+    const TArray<FWMEpicCheckpoint> PreviousPendingSyncCheckpoints = PendingSyncCheckpoints;
+    PendingSyncCheckpoints.RemoveAt(PendingIndex);
+    if (SaveEpicCheckpoints()) return true;
+    PendingSyncCheckpoints = PreviousPendingSyncCheckpoints;
+    return false;
+}
+
+bool UWMEpicRuntimeSubsystem::FlushPendingEpicCheckpointSyncs(const FName EpicId)
+{
+    if (!GetWorld() || EpicId.IsNone()) return false;
+    UGameInstance* GameInstance = GetWorld()->GetGameInstance();
+    UWMLaunchBootstrapSubsystem* Launch = GameInstance ? GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>() : nullptr;
+    if (!Launch || !Launch->IsNativeLaunchReady()) return false;
+
+    const int32 PendingIndex = FindPendingSyncCheckpointIndex(EpicId);
+    if (!PendingSyncCheckpoints.IsValidIndex(PendingIndex)) return true;
+    return Launch->SyncEpicCheckpoint(PendingSyncCheckpoints[PendingIndex]);
 }
 
 bool UWMEpicRuntimeSubsystem::RecordEpicEvidence(

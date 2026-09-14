@@ -6,6 +6,7 @@ import {
   buildPlayerEpicReadModel,
   normalizeEpicProgressRecord,
   normalizePlayerProgress,
+  reconcileProfileEpicProgress,
   updateProfileEpicProgress,
 } from '../src/domain/epic-progress.mjs';
 
@@ -20,6 +21,16 @@ const gardenCheckpoint = {
     { objectiveGroupId: 'chemistry', completedUnits: 2, totalUnits: 2 },
     { objectiveGroupId: 'ecology', completedUnits: 0, totalUnits: 2 },
   ],
+  updatedAt: '2026-09-14T03:17:11.000Z',
+};
+
+const eclipseCheckpoint = {
+  epicId: 'epic.eclipse-engine',
+  chapterId: 'chapter.eclipse.power-core',
+  chapterIndex: 2,
+  chapterCount: 6,
+  state: 'in-progress',
+  objectiveSummary: [],
   updatedAt: '2026-09-14T03:17:11.000Z',
 };
 
@@ -64,6 +75,68 @@ test('M5.6D epic profile progress is monotonic and completed journeys cannot reg
   });
   assert.equal(complete.progress.currentEpicId, null);
   assert.throws(() => updateProfileEpicProgress(complete, gardenCheckpoint), /cannot regress/);
+});
+
+test('M5.6G completing a non-current epic preserves the current epic pointer', () => {
+  const profile = {
+    progress: normalizePlayerProgress({
+      currentEpicId: 'epic.eclipse-engine',
+      epics: [eclipseCheckpoint, gardenCheckpoint],
+    }),
+  };
+  const updated = updateProfileEpicProgress(profile, {
+    ...gardenCheckpoint,
+    chapterId: null,
+    chapterIndex: 4,
+    state: 'complete',
+    updatedAt: '2026-09-14T04:00:00.000Z',
+  });
+  assert.equal(updated.progress.currentEpicId, 'epic.eclipse-engine');
+});
+
+test('M5.6G native checkpoint retry is idempotent without a profile mutation', () => {
+  const profile = {
+    progress: normalizePlayerProgress({ currentEpicId: 'epic.garden-end-winter', epics: [gardenCheckpoint] }),
+  };
+  const result = reconcileProfileEpicProgress(profile, { ...gardenCheckpoint, updatedAt: '2026-09-14T05:00:00.000Z' });
+  assert.equal(result.changed, false);
+  assert.equal(result.disposition, 'idempotent');
+  assert.equal(result.authoritative.chapterIndex, 2);
+  assert.deepEqual(result.profile, profile);
+});
+
+test('M5.6G stale native retry accepts server-ahead progress without regression', () => {
+  const serverCheckpoint = {
+    ...gardenCheckpoint,
+    chapterId: 'chapter.garden.choose-shared-restoration',
+    chapterIndex: 3,
+    updatedAt: '2026-09-14T05:00:00.000Z',
+  };
+  const profile = {
+    progress: normalizePlayerProgress({ currentEpicId: 'epic.garden-end-winter', epics: [serverCheckpoint] }),
+  };
+  const result = reconcileProfileEpicProgress(profile, gardenCheckpoint);
+  assert.equal(result.changed, false);
+  assert.equal(result.disposition, 'server-ahead');
+  assert.equal(result.authoritative.chapterIndex, 3);
+  assert.deepEqual(result.profile, profile);
+});
+
+test('M5.6G newer native retry advances the server exactly once', () => {
+  const older = {
+    ...gardenCheckpoint,
+    chapterId: 'chapter.garden.repair-soil-water',
+    chapterIndex: 1,
+    updatedAt: '2026-09-14T02:00:00.000Z',
+  };
+  const profile = {
+    progress: normalizePlayerProgress({ currentEpicId: 'epic.garden-end-winter', epics: [older] }),
+  };
+  const result = reconcileProfileEpicProgress(profile, gardenCheckpoint);
+  assert.equal(result.changed, true);
+  assert.equal(result.disposition, 'advanced');
+  assert.equal(result.authoritative.chapterIndex, 2);
+  assert.equal(result.profile.progress.epics[0].chapterIndex, 2);
 });
 
 test('M5.6D child journey uses calm chapter language and no pressure-loop vocabulary', () => {

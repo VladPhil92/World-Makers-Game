@@ -83,6 +83,7 @@ void UWMLaunchBootstrapSubsystem::Deinitialize()
 {
     LaunchTicket.Reset();
     ProgressSyncToken.Reset();
+    ProgressSyncEpicId = NAME_None;
     SelectedModeId = NAME_None;
     SelectedWorldId = NAME_None;
     SelectedMissionId = NAME_None;
@@ -255,6 +256,7 @@ bool UWMLaunchBootstrapSubsystem::ConsumeRedemptionJson(const FString& Json)
     }
 
     ProgressSyncToken = MoveTemp(Token);
+    ProgressSyncEpicId = ParsedResume.IsSet() ? ParsedResume.EpicId : NAME_None;
     SelectedModeId = ParsedModeId;
     SelectedWorldId = FName(*WorldId);
     SelectedMissionId = ParsedMissionId;
@@ -270,6 +272,7 @@ void UWMLaunchBootstrapSubsystem::SetLaunchError(const FString& Error)
 {
     LaunchTicket.Reset();
     ProgressSyncToken.Reset();
+    ProgressSyncEpicId = NAME_None;
     bNativeLaunchReady = false;
     bNativeLaunchError = true;
     NativeLaunchError = Error;
@@ -297,6 +300,12 @@ bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
 {
     if (!bNativeLaunchRequested || !bNativeLaunchReady || bNativeLaunchError) return false;
     if (bEpicResumeApplied) return true;
+
+    UGameInstance* GameInstance = GetGameInstance();
+    UWorld* World = GameInstance ? GameInstance->GetWorld() : nullptr;
+    if (!World || !World->HasBegunPlay()) return false;
+    UWMEpicRuntimeSubsystem* Epic = World->GetSubsystem<UWMEpicRuntimeSubsystem>();
+
     if (!EpicResume.IsSet())
     {
         if (!StartSelectedContent())
@@ -308,11 +317,6 @@ bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
         return true;
     }
 
-    UGameInstance* GameInstance = GetGameInstance();
-    UWorld* World = GameInstance ? GameInstance->GetWorld() : nullptr;
-    if (!World || !World->HasBegunPlay()) return false;
-
-    UWMEpicRuntimeSubsystem* Epic = World->GetSubsystem<UWMEpicRuntimeSubsystem>();
     if (!Epic || !Epic->ApplyExternalResumeCheckpoint(
         EpicResume.EpicId,
         EpicResume.ChapterId,
@@ -345,6 +349,7 @@ bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
         return false;
     }
     bEpicResumeApplied = true;
+    Epic->FlushPendingEpicCheckpointSyncs(EpicResume.EpicId);
     return true;
 }
 
@@ -352,6 +357,7 @@ bool UWMLaunchBootstrapSubsystem::SyncEpicCheckpoint(const FWMEpicCheckpoint& Ch
 {
     if (!bNativeLaunchRequested || !bNativeLaunchReady || bNativeLaunchError || ProgressSyncToken.IsEmpty()) return false;
     if (Checkpoint.EpicId.IsNone() || Checkpoint.ChapterCount <= 0) return false;
+    if (!ProgressSyncEpicId.IsNone() && Checkpoint.EpicId != ProgressSyncEpicId) return false;
 
     const TSharedRef<FJsonObject> CheckpointJson = MakeShared<FJsonObject>();
     CheckpointJson->SetStringField(TEXT("epicId"), Checkpoint.EpicId.ToString());
@@ -369,6 +375,24 @@ bool UWMLaunchBootstrapSubsystem::SyncEpicCheckpoint(const FWMEpicCheckpoint& Ch
     Request->SetVerb(TEXT("POST"));
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
     Request->SetContentAsString(JsonString(Body));
-    // Network sync is intentionally best-effort. The local SaveGame already succeeded before this call.
-    return Request->ProcessRequest();
+
+    const TWeakObjectPtr<UWMLaunchBootstrapSubsystem> WeakThis(this);
+    Request->OnProcessRequestComplete().BindLambda(
+        [WeakThis, Checkpoint](FHttpRequestPtr HttpRequest, FHttpResponsePtr Response, bool bSucceeded)
+        {
+            if (!WeakThis.IsValid() || !bSucceeded || !Response.IsValid()) return;
+            const int32 StatusCode = Response->GetResponseCode();
+            if (StatusCode < 200 || StatusCode >= 300) return;
+
+            UWMLaunchBootstrapSubsystem* Self = WeakThis.Get();
+            UGameInstance* GameInstance = Self ? Self->GetGameInstance() : nullptr;
+            UWorld* World = GameInstance ? GameInstance->GetWorld() : nullptr;
+            UWMEpicRuntimeSubsystem* Epic = World ? World->GetSubsystem<UWMEpicRuntimeSubsystem>() : nullptr;
+            if (Epic) Epic->AcknowledgeEpicCheckpointSync(Checkpoint);
+        });
+
+    // Dispatch failure or any non-2xx response leaves the durable outbox untouched for the next launch/retry.
+    const bool bDispatched = Request->ProcessRequest();
+    if (bDispatched && ProgressSyncEpicId.IsNone()) ProgressSyncEpicId = Checkpoint.EpicId;
+    return bDispatched;
 }

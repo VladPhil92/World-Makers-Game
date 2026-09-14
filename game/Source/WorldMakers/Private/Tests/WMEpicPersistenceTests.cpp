@@ -104,6 +104,7 @@ bool FWMEpicNativeSaveGameRoundTripTest::RunTest(const FString& Parameters)
     Checkpoint.bCompleted = false;
     Save->FormatVersion = UWMEpicJourneySaveGame::CurrentFormatVersion;
     Save->Checkpoints.Add(Checkpoint);
+    Save->PendingSyncCheckpoints.Add(Checkpoint);
 
     TestTrue(TEXT("Native SaveGame write succeeds"), UGameplayStatics::SaveGameToSlot(Save, SlotName, UserIndex));
     TestTrue(TEXT("Native SaveGame slot exists after write"), UGameplayStatics::DoesSaveGameExist(SlotName, UserIndex));
@@ -119,6 +120,7 @@ bool FWMEpicNativeSaveGameRoundTripTest::RunTest(const FString& Parameters)
 
     TestEqual(TEXT("Save format round-trips"), Loaded->FormatVersion, UWMEpicJourneySaveGame::CurrentFormatVersion);
     TestEqual(TEXT("Exactly one checkpoint round-trips"), Loaded->Checkpoints.Num(), 1);
+    TestEqual(TEXT("Exactly one pending sync checkpoint round-trips"), Loaded->PendingSyncCheckpoints.Num(), 1);
     if (Loaded->Checkpoints.Num() == 1)
     {
         const FWMEpicCheckpoint& Restored = Loaded->Checkpoints[0];
@@ -127,6 +129,12 @@ bool FWMEpicNativeSaveGameRoundTripTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Chapter index round-trips"), Restored.ChapterIndex, Checkpoint.ChapterIndex);
         TestEqual(TEXT("Chapter count round-trips"), Restored.ChapterCount, Checkpoint.ChapterCount);
         TestEqual(TEXT("Completion state round-trips"), Restored.bCompleted, Checkpoint.bCompleted);
+    }
+    if (Loaded->PendingSyncCheckpoints.Num() == 1)
+    {
+        const FWMEpicCheckpoint& Pending = Loaded->PendingSyncCheckpoints[0];
+        TestEqual(TEXT("Outbox epic id round-trips"), Pending.EpicId, Checkpoint.EpicId);
+        TestEqual(TEXT("Outbox chapter index round-trips"), Pending.ChapterIndex, Checkpoint.ChapterIndex);
     }
 
     TestTrue(TEXT("Automation SaveGame slot is deleted"), UGameplayStatics::DeleteGameInSlot(SlotName, UserIndex));
