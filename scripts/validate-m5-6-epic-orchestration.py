@@ -187,6 +187,7 @@ def main() -> None:
         "WorldMakers.Epic.Catalog.CrossDisciplinaryBreadth",
         "WorldMakers.Epic.Runtime.WorldStateGate",
         "WorldMakers.Epic.Runtime.AttributionFailClosed",
+        "WorldMakers.Epic.Runtime.CatalogEndToEnd",
     ):
         if test_name not in tests:
             fail(f"Missing M5.6A automation test: {test_name}")
@@ -208,7 +209,7 @@ def main() -> None:
         if token not in docs:
             fail(f"M5.6A documentation missing contract token: {token}")
 
-    print("M5.6A epic orchestration passed: two epics, 4+ attributed streams each, exact mission/producers, world-state gates, privacy and authority boundaries are wired.")
+    print("M5.6A epic orchestration passed: two real epics traverse end-to-end with 4+ attributed streams, exact mission/producers, world-state gates, privacy and authority boundaries wired.")
 
 
 if __name__ == "__main__":
