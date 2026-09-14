@@ -1,0 +1,29 @@
+{
+  "schema": "worldmakers.g2-route-review.v1",
+  "status": "pending",
+  "mapPackagePath": "/Game/WorldMakers/Maps/WM_PrototypeCertification",
+  "repositoryCommit": null,
+  "reviewedAtUtc": null,
+  "reviewer": null,
+  "capabilities": {
+    "spawn-and-first-person-control": {"passed": false, "notes": ""},
+    "observe-and-scan": {"passed": false, "notes": ""},
+    "collect-resource": {"passed": false, "notes": ""},
+    "perform-science-interaction": {"passed": false, "notes": ""},
+    "craft-or-transform-material": {"passed": false, "notes": ""},
+    "build-or-place-intervention": {"passed": false, "notes": ""},
+    "trigger-visible-ecosystem-consequence": {"passed": false, "notes": ""},
+    "complete-mission-evidence": {"passed": false, "notes": ""},
+    "save-and-load-state": {"passed": false, "notes": ""}
+  },
+  "routeChecks": {
+    "playerSpawnStable": false,
+    "firstPersonCameraUsable": false,
+    "routeHasNoCriticalBlockers": false,
+    "scienceOutcomeComesFromRuntime": false,
+    "worldResponseIsVisibleAndCausal": false,
+    "persistentStateSurvivesReload": false
+  },
+  "criticalIssues": [],
+  "notes": "Copy this template to artifacts/g2-authored/g2-route-review.json only after a real Unreal Editor/PIE review. Set status=passed only when every capability and route check passes."
+}
