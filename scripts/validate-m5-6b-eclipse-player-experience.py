@@ -66,6 +66,8 @@ def main() -> None:
         ROOT / "game/Source/WorldMakers/Adventure/WMEclipseEngineInteractableActor.cpp",
         ROOT / "game/Source/WorldMakers/Adventure/WMEclipseOpticsRuntime.h",
         ROOT / "game/Source/WorldMakers/Adventure/WMEclipseOpticsRuntime.cpp",
+        ROOT / "game/Source/WorldMakers/Adventure/WMEclipseSystemsRuntime.h",
+        ROOT / "game/Source/WorldMakers/Adventure/WMEclipseSystemsRuntime.cpp",
         ROOT / "game/Source/WorldMakers/Private/Tests/WMEclipseEngineExperienceTests.cpp",
     ]
     missing = [str(path.relative_to(ROOT)) for path in required_files if not path.exists()]
@@ -151,32 +153,54 @@ def main() -> None:
 
     subsystem_h = read("game/Source/WorldMakers/Adventure/WMEclipseEngineExperienceSubsystem.h")
     subsystem_cpp = read("game/Source/WorldMakers/Adventure/WMEclipseEngineExperienceSubsystem.cpp")
+    interactable_h = read("game/Source/WorldMakers/Adventure/WMEclipseEngineInteractableActor.h")
     interactable_cpp = read("game/Source/WorldMakers/Adventure/WMEclipseEngineInteractableActor.cpp")
     optics_cpp = read("game/Source/WorldMakers/Adventure/WMEclipseOpticsRuntime.cpp")
+    systems_cpp = read("game/Source/WorldMakers/Adventure/WMEclipseSystemsRuntime.cpp")
     interaction_cpp = read("game/Source/WorldMakers/Environment/WMInteractionComponent.cpp")
+    thought_cpp = read("game/Source/WorldMakers/Thought/WMLanguageThoughtSubsystem.cpp")
     player_h = read("game/Source/WorldMakers/Player/WMPlayerCharacter.h")
+    game_ini = read("game/Config/DefaultGame.ini")
     tests = read("game/Source/WorldMakers/Private/Tests/WMEclipseEngineExperienceTests.cpp")
 
-    for token in ("BeginAction", "ResolveTrustedAction", "RequestHint", "GetCurrentFantasyGoalKey", "GetCurrentTensionKey"):
-        if token not in subsystem_h or token not in subsystem_cpp:
+    for token in (
+        "BeginAction", "ResolveTrustedAction", "ResolveValidatedEvidence", "RequestHint",
+        "GetCurrentFantasyGoalKey", "GetCurrentTensionKey", "RefreshPrototypeTargetAvailability", "OnWorldBeginPlay",
+    ):
+        if token not in subsystem_h and token not in subsystem_cpp:
             fail(f"M5.6B experience subsystem missing {token}")
     if "Mission->GetMissionState() != EWMMissionRuntimeState::Completed" not in subsystem_cpp:
         fail("Causal chapter completion must require the underlying mission result")
+    if "bStartEclipseEngineVerticalSlice" not in subsystem_cpp or "bStartEclipseEngineVerticalSlice=True" not in game_ini:
+        fail("Eclipse vertical slice must have a reversible config-driven automatic start path")
     if "Evidence-bearing puzzle affordances merely enter their interaction mode" not in interactable_cpp:
         fail("Interactable must document that click alone cannot award evidence")
+    if "ChapterId" not in interactable_h or "SetAvailable" not in interactable_h:
+        fail("Future Eclipse acts must remain hidden/non-interactive until their chapter becomes active")
+
     for token in ("IsSymmetrySolved", "IsReflectionSolved", "IsPathStable", "ResolveTrustedAction"):
         if token not in optics_cpp:
             fail(f"Executable mirror-lattice gameplay missing {token}")
+    for token in (
+        "InferArithmeticPattern", "IsEquivalentRatio", "IsOptimizedRoute", "IsForcePredictionConsistent",
+        "IsCircuitModelConsistent", "IsContextInferenceSupported", "ResolveTrustedAction",
+    ):
+        if token not in systems_cpp:
+            fail(f"Executable Eclipse systems gameplay missing {token}")
+
     if "TActorIterator<AWMEclipseEngineInteractableActor>" not in interaction_cpp:
         fail("Eclipse targets must participate in the normal world-focus loop")
     if "FirstPersonInteractionComponent" not in player_h:
         fail("Player character must expose the presentation-only first-person bridge")
+    if "ResolveValidatedEvidence" not in thought_cpp or "Never fall back directly to Mission Runtime while the epic is active" not in thought_cpp:
+        fail("Validated language/literature/philosophy outcomes must route through Eclipse epic authority without fallback bypass")
 
     for test_name in (
         "WorldMakers.Eclipse.PlayerExperience.WorldFirstContract",
         "WorldMakers.Eclipse.PlayerExperience.HiddenEvidenceParity",
         "WorldMakers.Eclipse.PlayerExperience.ProgressivePlayerRequestedHints",
         "WorldMakers.Eclipse.Gameplay.OpticsRequiresSpatialReasoning",
+        "WorldMakers.Eclipse.Gameplay.SystemsRequireModeling",
     ):
         if test_name not in tests:
             fail(f"Missing M5.6B automation test: {test_name}")
@@ -187,10 +211,13 @@ def main() -> None:
             fail(f"M5.6B game-design documentation missing principle: {idea}")
 
     workflow = read(".github/workflows/repo-quality.yml")
+    unreal_workflow = read(".github/workflows/unreal-ci.yml")
     if "python scripts/validate-m5-6b-eclipse-player-experience.py" not in workflow:
         fail("Repository Quality must execute the M5.6B game-first source gate")
+    if "python scripts/validate-m5-6b-eclipse-player-experience.py" not in unreal_workflow:
+        fail("Unreal project-validation must execute the M5.6B source gate")
 
-    print("M5.6B passed: Eclipse is a six-act world-first game loop with intrinsic rewards, reversible experimentation, hidden evidence parity, progressive hints and executable optics reasoning.")
+    print("M5.6B passed: Eclipse is a six-act world-first adventure with intrinsic rewards, reversible experimentation, exact hidden evidence parity, progressive hints and executable orbit/optics/power/thought mechanics.")
 
 
 if __name__ == "__main__":
