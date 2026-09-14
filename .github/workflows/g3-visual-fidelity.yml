@@ -1,0 +1,98 @@
+name: G3 Visual Fidelity
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/g3-*'
+      - 'content/visual/**'
+      - 'scripts/assess-g3-visual-fidelity.py'
+      - 'scripts/validate-g3-visual-fidelity.py'
+      - 'scripts/run-g3-visual-certification.ps1'
+      - 'scripts/unreal/inspect-g3-visual-map.py'
+      - 'scripts/unreal/collect-p5-native-inventory.py'
+      - 'docs/g3-visual-fidelity-presentation.md'
+      - 'WorldMakers-G3-Certify.cmd'
+      - '.github/workflows/g3-visual-fidelity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/g3-*'
+      - 'content/visual/**'
+      - 'scripts/assess-g3-visual-fidelity.py'
+      - 'scripts/validate-g3-visual-fidelity.py'
+      - 'scripts/run-g3-visual-certification.ps1'
+      - 'scripts/unreal/inspect-g3-visual-map.py'
+      - 'scripts/unreal/collect-p5-native-inventory.py'
+      - 'docs/g3-visual-fidelity-presentation.md'
+      - 'WorldMakers-G3-Certify.cmd'
+      - '.github/workflows/g3-visual-fidelity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-g3-source-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate G3 visual fidelity source contract
+        run: python scripts/validate-g3-visual-fidelity.py
+      - name: Compile G3 Python tooling
+        run: |
+          python -m py_compile scripts/assess-g3-visual-fidelity.py
+          python -m py_compile scripts/validate-g3-visual-fidelity.py
+          python -m py_compile scripts/unreal/inspect-g3-visual-map.py
+
+  g3-native-visual-inspection:
+    if: ${{ vars.G3_NATIVE_VISUAL_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate G3 source contract
+        shell: pwsh
+        run: python scripts/validate-g3-visual-fidelity.py
+      - name: Verify Unreal runner
+        shell: pwsh
+        run: |
+          if (-not $env:UNREAL_ENGINE_ROOT) { throw 'UNREAL_ENGINE_ROOT is required.' }
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          if (-not (Test-Path $editor)) { throw 'UnrealEditor-Cmd.exe not found.' }
+      - name: Generate verified P4 source bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\g3-visual | Out-Null
+          python scripts/generate-p4-authored-motion-vfx-presentation.py --output artifacts/g3-visual/p4-source-bundle.json --verify
+      - name: Collect native authored inventory
+        shell: pwsh
+        env:
+          WM_P4_SOURCE_BUNDLE: ${{ github.workspace }}\artifacts\g3-visual\p4-source-bundle.json
+          WM_P5_NATIVE_INVENTORY: ${{ github.workspace }}\artifacts\g3-visual\native-inventory.json
+          WM_BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecutePythonScript="$pwd\scripts\unreal\collect-p5-native-inventory.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Inspect G3 certification map
+        shell: pwsh
+        env:
+          WM_G3_MAP_INSPECTION: ${{ github.workspace }}\artifacts\g3-visual\g3-native-map-inspection.json
+          WM_BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          $editor = Join-Path $env:UNREAL_ENGINE_ROOT 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+          & $editor "$pwd\game\WorldMakers.uproject" -unattended -nop4 -nullrhi -ExecutePythonScript="$pwd\scripts\unreal\inspect-g3-visual-map.py" -log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: g3-native-visual-${{ github.sha }}
+          path: artifacts/g3-visual
+          if-no-files-found: error
