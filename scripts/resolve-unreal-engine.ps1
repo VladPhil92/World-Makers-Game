@@ -97,7 +97,7 @@ if (-not [string]::IsNullOrWhiteSpace($RequestedRoot)) {
     $ResolutionMode = 'explicit'
     Add-WMUnrealCandidate -Path $RequestedRoot -Source 'parameter'
 }
-elif (-not [string]::IsNullOrWhiteSpace($env:UNREAL_ENGINE_ROOT)) {
+elseif (-not [string]::IsNullOrWhiteSpace($env:UNREAL_ENGINE_ROOT)) {
     $ResolutionMode = 'environment'
     Add-WMUnrealCandidate -Path $env:UNREAL_ENGINE_ROOT -Source 'UNREAL_ENGINE_ROOT'
 }
@@ -165,7 +165,7 @@ if ($ExactMatches.Count -eq 1) {
     else {
         [pscustomobject]$Result
     }
-    exit 0
+    return
 }
 
 $CandidateSummary = if ($Candidates.Count -eq 0) {
