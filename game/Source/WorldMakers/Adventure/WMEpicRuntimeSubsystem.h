@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Adventure/WMEpicJourneySaveGame.h"
 #include "Adventure/WMEpicRuntime.h"
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
@@ -22,8 +23,26 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Epic")
     TArray<FName> GetEpicIds() const;
 
+    /** Starts an epic from chapter zero and replaces any prior checkpoint for it. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
     bool ActivateEpic(FName EpicId);
+
+    /** Restarts the saved current chapter from a clean authoritative state. */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
+    bool ResumeEpic(FName EpicId);
+
+    /** Resume when possible; otherwise start fresh. */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
+    bool ActivateOrResumeEpic(FName EpicId);
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Epic")
+    bool HasResumableEpicCheckpoint(FName EpicId) const;
+
+    UFUNCTION(BlueprintPure, Category = "World Makers|Epic")
+    FName GetEpicCheckpointChapterId(FName EpicId) const;
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
+    bool ClearEpicCheckpoint(FName EpicId);
 
     /** Trusted pedagogical evidence boundary. Objective + discipline + producer + primitive + event must all match. */
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
@@ -57,9 +76,19 @@ public:
     FWMEpicProgressReadModel GetEpicProgress() const { return Progress.BuildReadModel(); }
 
     const FWMEpicCatalog& GetCatalog() const { return Catalog; }
+    const TArray<FWMEpicCheckpoint>& GetCheckpointsForTests() const { return Checkpoints; }
 
 private:
+    bool LoadEpicCheckpoints();
+    bool SaveEpicCheckpoints() const;
+    bool SaveCurrentCheckpoint();
+    int32 FindCheckpointIndex(FName EpicId) const;
+    bool IsCheckpointValidForCatalog(const FWMEpicCheckpoint& Checkpoint) const;
+
     bool bCatalogLoaded = false;
     FWMEpicCatalog Catalog;
     FWMEpicProgressModel Progress;
+
+    UPROPERTY(Transient)
+    TArray<FWMEpicCheckpoint> Checkpoints;
 };

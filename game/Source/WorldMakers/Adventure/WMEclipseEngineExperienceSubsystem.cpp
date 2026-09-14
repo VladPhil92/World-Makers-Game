@@ -57,7 +57,7 @@ bool UWMEclipseEngineExperienceSubsystem::StartEclipseEngine()
 {
     if (!bCatalogLoaded || !GetWorld()) return false;
     UWMEpicRuntimeSubsystem* Epic = GetWorld()->GetSubsystem<UWMEpicRuntimeSubsystem>();
-    if (!Epic || !Epic->ActivateEpic(Catalog.EpicId)) return false;
+    if (!Epic || !Epic->ActivateOrResumeEpic(Catalog.EpicId)) return false;
     if (UWMEclipseSystemsSubsystem* Systems = GetWorld()->GetSubsystem<UWMEclipseSystemsSubsystem>())
     {
         Systems->ResetPrototypeState();

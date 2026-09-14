@@ -177,6 +177,21 @@ struct WORLDMAKERS_API FWMEpicProgressReadModel
 struct WORLDMAKERS_API FWMEpicProgressModel
 {
     bool Begin(const FWMEpicDefinition& InDefinition);
+
+    /**
+     * M5.6D chapter checkpoint restore. Partial evidence/world-state is intentionally dropped:
+     * a resumed journey restarts the saved chapter from a clean authoritative state.
+     */
+    bool ResumeAtChapter(const FWMEpicDefinition& InDefinition, const int32 InChapterIndex)
+    {
+        Reset();
+        if (!InDefinition.IsSane() || !InDefinition.Chapters.IsValidIndex(InChapterIndex)) return false;
+        Definition = InDefinition;
+        CurrentChapterIndex = InChapterIndex;
+        bActive = true;
+        return true;
+    }
+
     bool CanAcceptEvidence(FName ObjectiveId, FName DisciplineId, FName ProducerKind, FName ProducerRefId, FName PrimitiveId, FName EvidenceEventId) const;
     bool CommitEvidence(FName ObjectiveId, FName DisciplineId, FName ProducerKind, FName ProducerRefId, FName PrimitiveId, FName EvidenceEventId);
     bool CanAcceptWorldState(FName ProducerKind, FName ProducerRefId, FName WorldStateId) const;

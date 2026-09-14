@@ -23,6 +23,22 @@ export function createDemoPlayer() {
         worldId: 'world.rainforest',
         progressPercent: 38,
       },
+      currentEpicId: 'epic.garden-end-winter',
+      epics: [
+        {
+          epicId: 'epic.garden-end-winter',
+          chapterId: 'chapter.garden.restore-pollination',
+          chapterIndex: 2,
+          chapterCount: 4,
+          state: 'in-progress',
+          objectiveSummary: [
+            { objectiveGroupId: 'biology', completedUnits: 2, totalUnits: 2 },
+            { objectiveGroupId: 'chemistry', completedUnits: 2, totalUnits: 2 },
+            { objectiveGroupId: 'ecology', completedUnits: 0, totalUnits: 2 },
+          ],
+          updatedAt: '2026-09-14T03:17:11.000Z',
+        },
+      ],
     },
   };
 }

@@ -202,6 +202,17 @@ function renderStore() {
 }
 
 function renderProgress() {
+  const journey = state.dashboard.player.epicJourney?.current;
+  const footerLabel = $('.continue-footer span');
+  if (journey) {
+    $('#continue-title').textContent = journey.title;
+    $('#continue-meta').textContent = `${journey.chapterLabel} · Capítulo ${journey.chapterNumber} de ${journey.chapterCount}. ${journey.resumeCopy}`;
+    $('#continue-progress').style.width = `${journey.progressPercent}%`;
+    $('#continue-percent').textContent = `${journey.progressPercent}%`;
+    if (footerLabel) footerLabel.textContent = 'recorrido';
+    return;
+  }
+
   const progress = state.dashboard.player.progress.currentAdventure;
   const mission = progress ? state.dashboard.catalog.missions.find((item) => item.id === progress.missionId) : null;
   const world = progress ? state.dashboard.catalog.worlds.find((item) => item.id === progress.worldId) : null;
@@ -210,6 +221,7 @@ function renderProgress() {
   const percent = progress?.progressPercent ?? 0;
   $('#continue-progress').style.width = `${percent}%`;
   $('#continue-percent').textContent = `${percent}%`;
+  if (footerLabel) footerLabel.textContent = 'progreso';
 }
 
 function renderLaunch() {
@@ -341,11 +353,14 @@ async function launchGame() {
     const expiresAt = new Date(payload.context.expiresAt);
     const dialog = $('#launch-dialog');
     $('#launch-dialog-copy').textContent = `${currentMode().name} · ${currentWorld().name}. El navegador solicitará permiso para abrir el cliente instalado de World Makers.`;
-    $('#launch-context-preview').textContent = [
+    const preview = [
       `Perfil: r${payload.context.profileRevision}`,
       `Protocolo: ${payload.protocol}`,
-      `Sesión válida hasta: ${expiresAt.toLocaleTimeString('es-CO')}`,
-    ].join('\n');
+    ];
+    const journey = state.dashboard.player.epicJourney?.current;
+    if (payload.context.epicResume && journey) preview.push(`Continuar viaje: ${journey.chapterLabel}`);
+    preview.push(`Sesión válida hasta: ${expiresAt.toLocaleTimeString('es-CO')}`);
+    $('#launch-context-preview').textContent = preview.join('\n');
     dialog.showModal();
     window.setTimeout(() => openNativeGame(payload.launchUri), 120);
   } catch (error) {
