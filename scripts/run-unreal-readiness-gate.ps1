@@ -24,6 +24,9 @@ $ReadinessResult = Join-Path $EvidencePath 'readiness-result.json'
 $SourcePreflightLog = Join-Path $EvidencePath 'source-preflight.log'
 $RequestedEngineRoot = $EngineRoot
 
+# Contract ownership note: the isolated workstation doctor performs the
+# resolve-unreal-engine.ps1 and UnrealEditor-Cmd.exe dependency checks.
+
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 
 $Checks = [ordered]@{
@@ -254,9 +257,11 @@ try {
 
     if ($Blockers.Count -eq 0) {
         try {
-            $BuildArgs = @('-EngineRoot', $ResolvedEngineRoot, '-Configuration', 'Development', '-EvidenceDir', $EvidenceDir)
-            if ($StopBlockingProcesses) { $BuildArgs += '-StopBlockingProcesses' }
-            & $BuildScript @BuildArgs
+            & $BuildScript `
+                -EngineRoot $ResolvedEngineRoot `
+                -Configuration Development `
+                -EvidenceDir $EvidenceDir `
+                -StopBlockingProcesses:$StopBlockingProcesses
             $Checks.nativeBuild = $true
             $NativeBuildStatus = 'passed'
         }
@@ -268,9 +273,11 @@ try {
 
     if ($Blockers.Count -eq 0 -and $RunAutomation) {
         try {
-            $TestArgs = @('-EngineRoot', $ResolvedEngineRoot, '-TestFilter', $TestFilter, '-EvidenceDir', $EvidenceDir)
-            if ($StopBlockingProcesses) { $TestArgs += '-StopBlockingProcesses' }
-            & $TestScript @TestArgs
+            & $TestScript `
+                -EngineRoot $ResolvedEngineRoot `
+                -TestFilter $TestFilter `
+                -EvidenceDir $EvidenceDir `
+                -StopBlockingProcesses:$StopBlockingProcesses
             $Checks.nativeAutomation = $true
             $NativeAutomationStatus = 'passed'
         }
