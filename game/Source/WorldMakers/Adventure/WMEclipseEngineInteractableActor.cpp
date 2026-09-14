@@ -15,7 +15,7 @@ AWMEclipseEngineInteractableActor::AWMEclipseEngineInteractableActor()
 
     FocusVolume = CreateDefaultSubobject<USphereComponent>(TEXT("FocusVolume"));
     SetRootComponent(FocusVolume);
-    FocusVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    FocusVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     FocusVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
     FocusVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
     FocusVolume->SetGenerateOverlapEvents(false);
@@ -24,19 +24,22 @@ AWMEclipseEngineInteractableActor::AWMEclipseEngineInteractableActor()
     ProxyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProxyMesh"));
     ProxyMesh->SetupAttachment(FocusVolume);
     ProxyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ProxyMesh->SetVisibility(false, true);
     ProxyMesh->SetRelativeScale3D(FVector(0.65f, 0.65f, 1.20f));
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Mesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     if (Mesh.Succeeded()) ProxyMesh->SetStaticMesh(Mesh.Object);
 }
 
-void AWMEclipseEngineInteractableActor::Configure(const FWMEclipseActionDefinition& Definition)
+void AWMEclipseEngineInteractableActor::Configure(const FName InChapterId, const FWMEclipseActionDefinition& Definition)
 {
+    ChapterId = InChapterId;
     ActionId = Definition.ActionId;
     PromptKey = Definition.PromptKey;
     InteractionVerb = Definition.InteractionVerb;
     SetActorLocation(Definition.PrototypeLocationCm);
     bResolved = false;
+    bAvailable = false;
 
     if (ProxyMesh)
     {
@@ -47,11 +50,13 @@ void AWMEclipseEngineInteractableActor::Configure(const FWMEclipseActionDefiniti
         else
             ProxyMesh->SetRelativeScale3D(FVector(0.55f, 0.55f, 1.10f));
     }
+    SetAvailable(false);
 }
 
 bool AWMEclipseEngineInteractableActor::CanInteract(const AActor* Interactor) const
 {
-    if (!Interactor || bResolved || ActionId.IsNone() || FVector::DistSquared(Interactor->GetActorLocation(), GetActorLocation()) > FMath::Square(InteractionRadiusCm)) return false;
+    if (!Interactor || !bAvailable || bResolved || ActionId.IsNone() ||
+        FVector::DistSquared(Interactor->GetActorLocation(), GetActorLocation()) > FMath::Square(InteractionRadiusCm)) return false;
     const UWorld* World = GetWorld();
     const UWMEclipseEngineExperienceSubsystem* Experience = World ? World->GetSubsystem<UWMEclipseEngineExperienceSubsystem>() : nullptr;
     return Experience && Experience->CanBeginAction(ActionId);
@@ -69,9 +74,7 @@ bool AWMEclipseEngineInteractableActor::Interact(AActor* Interactor)
     // ResolveTrustedAction after validating the actual player result.
     if (Experience->IsWorldStateAction(ActionId))
     {
-        const bool bSucceeded = Experience->ResolveTrustedAction(ActionId);
-        if (bSucceeded) MarkResolved();
-        return bSucceeded;
+        return Experience->ResolveTrustedAction(ActionId);
     }
     return true;
 }
@@ -79,6 +82,13 @@ bool AWMEclipseEngineInteractableActor::Interact(AActor* Interactor)
 void AWMEclipseEngineInteractableActor::MarkResolved(const bool bInResolved)
 {
     bResolved = bInResolved;
-    if (ProxyMesh) ProxyMesh->SetVisibility(!bResolved, true);
-    if (FocusVolume) FocusVolume->SetCollisionEnabled(bResolved ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryOnly);
+    SetAvailable(bAvailable);
+}
+
+void AWMEclipseEngineInteractableActor::SetAvailable(const bool bInAvailable)
+{
+    bAvailable = bInAvailable;
+    const bool bVisibleAndInteractive = bAvailable && !bResolved;
+    if (ProxyMesh) ProxyMesh->SetVisibility(bVisibleAndInteractive, true);
+    if (FocusVolume) FocusVolume->SetCollisionEnabled(bVisibleAndInteractive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
