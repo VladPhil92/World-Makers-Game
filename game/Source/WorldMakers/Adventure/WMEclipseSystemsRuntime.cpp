@@ -3,6 +3,16 @@
 #include "Adventure/WMEclipseEngineExperienceSubsystem.h"
 #include "Science/WMScienceSimulationCore.h"
 
+namespace
+{
+    const FName ContextRequiredMeaning(TEXT("meaning.eclipse.archive-linked-symbols"));
+    const TSet<FName> ContextAllowedClues = {
+        TEXT("clue.eclipse.archive-neighbor-symbol"),
+        TEXT("clue.eclipse.archive-response-pattern"),
+        TEXT("clue.eclipse.archive-repeated-glyph")
+    };
+}
+
 bool FWMEclipseSystemsRuntime::InferArithmeticPattern(const TArray<int32>& ObservedValues, const int32 PredictedNextValue)
 {
     if (ObservedValues.Num() < 4 || ObservedValues.Num() > 12) return false;
@@ -93,17 +103,33 @@ bool FWMEclipseSystemsRuntime::IsCircuitModelConsistent(
 bool FWMEclipseSystemsRuntime::IsContextInferenceSupported(
     const FName SelectedMeaningId,
     const FName RequiredMeaningId,
-    const TArray<FName>& ObservedClueIds)
+    const TArray<FName>& ObservedClueIds,
+    const TSet<FName>& AllowedClueIds,
+    const int32 RequiredClueCount)
 {
     if (SelectedMeaningId.IsNone() || RequiredMeaningId.IsNone() || SelectedMeaningId != RequiredMeaningId ||
-        ObservedClueIds.Num() < 2 || ObservedClueIds.Num() > 8) return false;
+        RequiredClueCount < 1 || RequiredClueCount > 8 || AllowedClueIds.Num() < RequiredClueCount ||
+        ObservedClueIds.Num() < RequiredClueCount || ObservedClueIds.Num() > AllowedClueIds.Num()) return false;
+
     TSet<FName> Unique;
     for (const FName ClueId : ObservedClueIds)
     {
-        if (ClueId.IsNone()) return false;
+        if (ClueId.IsNone() || !AllowedClueIds.Contains(ClueId)) return false;
         Unique.Add(ClueId);
     }
-    return Unique.Num() >= 2;
+    return Unique.Num() >= RequiredClueCount;
+}
+
+void UWMEclipseSystemsSubsystem::ResetPrototypeState()
+{
+    ObservedContextClues.Reset();
+}
+
+bool UWMEclipseSystemsSubsystem::ObserveContextClue(const FName ClueId)
+{
+    if (!ContextAllowedClues.Contains(ClueId)) return false;
+    ObservedContextClues.Add(ClueId);
+    return true;
 }
 
 bool UWMEclipseSystemsSubsystem::SubmitOrbitPattern(const TArray<int32>& ObservedValues, const int32 PredictedNextValue)
@@ -152,12 +178,14 @@ bool UWMEclipseSystemsSubsystem::SubmitCircuitModel(
     return Experience && Experience->ResolveTrustedAction(TEXT("eclipse-route-core-current"));
 }
 
-bool UWMEclipseSystemsSubsystem::SubmitContextInference(
-    const FName SelectedMeaningId,
-    const FName RequiredMeaningId,
-    const TArray<FName>& ObservedClueIds)
+bool UWMEclipseSystemsSubsystem::SubmitContextInference(const FName SelectedMeaningId)
 {
-    if (!FWMEclipseSystemsRuntime::IsContextInferenceSupported(SelectedMeaningId, RequiredMeaningId, ObservedClueIds) || !GetWorld()) return false;
+    if (!GetWorld()) return false;
+    TArray<FName> Clues = ObservedContextClues.Array();
+    Clues.Sort([](const FName& A, const FName& B) { return A.ToString() < B.ToString(); });
+    if (!FWMEclipseSystemsRuntime::IsContextInferenceSupported(
+        SelectedMeaningId, ContextRequiredMeaning, Clues, ContextAllowedClues, 2)) return false;
+
     UWMEclipseEngineExperienceSubsystem* Experience = GetWorld()->GetSubsystem<UWMEclipseEngineExperienceSubsystem>();
     return Experience && Experience->ResolveTrustedAction(TEXT("eclipse-decode-context-fragment"));
 }

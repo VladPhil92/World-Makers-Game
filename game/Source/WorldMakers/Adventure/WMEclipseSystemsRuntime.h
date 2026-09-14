@@ -26,36 +26,43 @@ struct WORLDMAKERS_API FWMEclipseSystemsRuntime
         float PlayerPowerWatts,
         float RelativeTolerance = 0.05f);
 
-    static bool IsContextInferenceSupported(FName SelectedMeaningId, FName RequiredMeaningId, const TArray<FName>& ObservedClueIds);
+    /**
+     * Context inference is accepted only when the selected meaning matches the authoritative target
+     * and every observed clue belongs to the authoritative puzzle clue set. Caller-controlled clue IDs
+     * can therefore never create a tautological completion path.
+     */
+    static bool IsContextInferenceSupported(
+        FName SelectedMeaningId,
+        FName RequiredMeaningId,
+        const TArray<FName>& ObservedClueIds,
+        const TSet<FName>& AllowedClueIds,
+        int32 RequiredClueCount = 2);
 };
 
-/** Trusted adapters: only validated mechanic state is translated into hidden Eclipse evidence. */
+/** Trusted C++ adapters: only validated mechanic state is translated into hidden Eclipse evidence. */
 UCLASS()
 class WORLDMAKERS_API UWMEclipseSystemsSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Orbit")
+    void ResetPrototypeState();
+    bool ObserveContextClue(FName ClueId);
+
     bool SubmitOrbitPattern(const TArray<int32>& ObservedValues, int32 PredictedNextValue);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Orbit")
     bool SubmitOrbitRatio(int32 LeftA, int32 LeftB, int32 RightA, int32 RightB);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Orbit")
     bool SubmitOptimizedRoute(float CandidateLengthCm, const TArray<float>& AlternativeLengthsCm);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Power")
     bool SubmitForcePrediction(
         float MassKg,
         FVector ForceNewtons,
         float DeltaSeconds,
         FVector PredictedVelocityMetersPerSecond,
         FVector MeasuredVelocityMetersPerSecond);
-
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Power")
     bool SubmitCircuitModel(float VoltageVolts, float ResistanceOhms, float PlayerCurrentAmps, float PlayerPowerWatts);
 
-    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse|Archive")
-    bool SubmitContextInference(FName SelectedMeaningId, FName RequiredMeaningId, const TArray<FName>& ObservedClueIds);
+    /** The required meaning and valid clue IDs are derived internally from the active prototype puzzle. */
+    bool SubmitContextInference(FName SelectedMeaningId);
+
+private:
+    TSet<FName> ObservedContextClues;
 };

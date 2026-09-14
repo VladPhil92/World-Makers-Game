@@ -40,10 +40,16 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse")
     bool BeginAction(FName ActionId);
 
+    /**
+     * Source-proxy gameplay bridge. The interaction step is produced by a world actor, then converted
+     * into bounded mechanic state and validated by C++ systems. It is deliberately not Blueprint-callable.
+     */
+    bool AdvancePrototypeMechanic(FName ActionId, int32 InteractionStep);
+
     /** Trusted C++ completion boundary. Deliberately not Blueprint/UI-callable. */
     bool ResolveTrustedAction(FName ActionId, float NumericValue = 1.0f);
 
-    /** C++ bridge used by already-validated language/literature/thought runtimes. Not exposed as a player/UI completion API. */
+    /** C++ bridge used by already-validated language/literature/thought runtimes. */
     bool ResolveValidatedEvidence(
         FName ProducerRefId,
         FName PrimitiveId,

@@ -1,6 +1,8 @@
 #include "Adventure/WMEclipseEngineExperienceSubsystem.h"
 
 #include "Adventure/WMEclipseEngineInteractableActor.h"
+#include "Adventure/WMEclipseOpticsRuntime.h"
+#include "Adventure/WMEclipseSystemsRuntime.h"
 #include "Adventure/WMEpicRuntimeSubsystem.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
@@ -9,6 +11,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Player/WMPlayerCharacter.h"
+#include "Thought/WMLanguageThoughtSubsystem.h"
 #include "Visual/WMFirstPersonInteractionComponent.h"
 
 void UWMEclipseEngineExperienceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -55,6 +58,10 @@ bool UWMEclipseEngineExperienceSubsystem::StartEclipseEngine()
     if (!bCatalogLoaded || !GetWorld()) return false;
     UWMEpicRuntimeSubsystem* Epic = GetWorld()->GetSubsystem<UWMEpicRuntimeSubsystem>();
     if (!Epic || !Epic->ActivateEpic(Catalog.EpicId)) return false;
+    if (UWMEclipseSystemsSubsystem* Systems = GetWorld()->GetSubsystem<UWMEclipseSystemsSubsystem>())
+    {
+        Systems->ResetPrototypeState();
+    }
     HintRuntime.Reset();
     return EnsurePrototypeTargets();
 }
@@ -149,6 +156,122 @@ bool UWMEclipseEngineExperienceSubsystem::BeginAction(const FName ActionId)
     HintRuntime.RecordAttempt(ActionId);
     PulseFirstPerson(*Action);
     return true;
+}
+
+bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName ActionId, const int32 InteractionStep)
+{
+    if (!GetWorld() || InteractionStep < 1 || InteractionStep > 8) return false;
+    const FWMEclipseActionDefinition* Action = GetCurrentAction(ActionId);
+    if (!Action || !Action->bHasEvidenceRoute) return false;
+
+    UWMEclipseSystemsSubsystem* Systems = GetWorld()->GetSubsystem<UWMEclipseSystemsSubsystem>();
+    UWMEclipseOpticsSubsystem* Optics = GetWorld()->GetSubsystem<UWMEclipseOpticsSubsystem>();
+    UWMLanguageThoughtSubsystem* Thought = GetWorld()->GetSubsystem<UWMLanguageThoughtSubsystem>();
+
+    // Orbit chamber: repeated world interaction tunes bounded candidate states; only the modeled relation resolves.
+    if (ActionId == TEXT("eclipse.read-orbit-rhythm"))
+    {
+        if (!Systems) return false;
+        const int32 Candidate = InteractionStep == 1 ? 13 : 14;
+        return Systems->SubmitOrbitPattern({2, 5, 8, 11}, Candidate);
+    }
+    if (ActionId == TEXT("eclipse.balance-orbit-ratio"))
+    {
+        if (!Systems) return false;
+        return InteractionStep == 1 ? Systems->SubmitOrbitRatio(2, 3, 4, 5) : Systems->SubmitOrbitRatio(2, 3, 4, 6);
+    }
+    if (ActionId == TEXT("eclipse.build-orbit-route"))
+    {
+        if (!Systems) return false;
+        const float CandidateLength = InteractionStep == 1 ? 840.0f : 760.0f;
+        return Systems->SubmitOptimizedRoute(CandidateLength, {900.0f, 820.0f});
+    }
+
+    // Mirror lattice: physical/spatial state is tested, not a selected school answer.
+    if (ActionId == TEXT("eclipse.restore-mirror-symmetry"))
+    {
+        if (!Optics) return false;
+        return InteractionStep == 1 ? Optics->SubmitMirrorSymmetry(30.0f, 20.0f) : Optics->SubmitMirrorSymmetry(30.0f, -30.0f);
+    }
+    if (ActionId == TEXT("eclipse-angle-light-bridge"))
+    {
+        if (!Optics) return false;
+        return InteractionStep == 1 ? Optics->SubmitReflectionBridge(35.0f, 45.0f, 8.0f) : Optics->SubmitReflectionBridge(35.0f, 35.0f, 1.0f);
+    }
+    if (ActionId == TEXT("eclipse-prove-light-path"))
+    {
+        if (!Optics) return false;
+        return InteractionStep == 1 ? Optics->SubmitSpatialStability({-1.0f, 0.5f, 6.0f}) : Optics->SubmitSpatialStability({-1.2f, 0.6f, 1.5f, -0.4f});
+    }
+
+    // Moonforge: candidate predictions are checked against the deterministic M5.3 simulation.
+    if (ActionId == TEXT("eclipse-test-counterweight"))
+    {
+        if (!Systems) return false;
+        const FVector CandidateVelocity = InteractionStep == 1 ? FVector(1.0f, 0.0f, 0.0f) : FVector(2.0f, 0.0f, 0.0f);
+        return Systems->SubmitForcePrediction(2.0f, FVector(4.0f, 0.0f, 0.0f), 1.0f, CandidateVelocity, FVector(2.0f, 0.0f, 0.0f));
+    }
+    if (ActionId == TEXT("eclipse-route-core-current"))
+    {
+        if (!Systems) return false;
+        return InteractionStep == 1 ? Systems->SubmitCircuitModel(12.0f, 6.0f, 1.0f, 12.0f) : Systems->SubmitCircuitModel(12.0f, 6.0f, 2.0f, 24.0f);
+    }
+
+    // Archive language: M5.4 owns semantic validation; the world actor merely cycles diegetic command forms.
+    if (ActionId == TEXT("eclipse-restore-command"))
+    {
+        if (!Thought) return false;
+        const FName Choice = InteractionStep == 1 ? TEXT("choice.es.dragon-di-frase") : TEXT("choice.en.dragon-please-speak-phrase");
+        return Thought->EvaluateCommunicationAndRecord(TEXT("language.en.dragon-restore-command"), Choice);
+    }
+    if (ActionId == TEXT("eclipse-decode-context-fragment"))
+    {
+        if (!Systems) return false;
+        if (InteractionStep == 1)
+        {
+            Systems->ObserveContextClue(TEXT("clue.eclipse.archive-neighbor-symbol"));
+            return false;
+        }
+        if (InteractionStep == 2)
+        {
+            Systems->ObserveContextClue(TEXT("clue.eclipse.archive-response-pattern"));
+            return false;
+        }
+        const FName Candidate = InteractionStep == 3 ? TEXT("meaning.eclipse.archive-needs-more-power") : TEXT("meaning.eclipse.archive-linked-symbols");
+        return Systems->SubmitContextInference(Candidate);
+    }
+
+    // Story route: inference is validated by the provenance-aware narrative graph.
+    if (ActionId == TEXT("eclipse-follow-story-thread"))
+    {
+        if (!Thought || InteractionStep < 2) return false;
+        FName NextNode = NAME_None;
+        return Thought->TraverseNarrativeAndRecord(
+            TEXT("story.labyrinth-minotaur-prototype"), TEXT("node.labyrinth.gate"), TEXT("choice.follow-thread-clue"), NextNode);
+    }
+    if (ActionId == TEXT("eclipse-read-symbolic-perspective"))
+    {
+        if (!Thought || InteractionStep < 2) return false;
+        FName NextNode = NAME_None;
+        return Thought->TraverseNarrativeAndRecord(
+            TEXT("story.labyrinth-minotaur-prototype"), TEXT("node.labyrinth.thread"), TEXT("choice.interpret-thread-purpose"), NextNode);
+    }
+
+    // Final causal model: first contact exposes the counterexample; revision is required before evidence exists.
+    if (ActionId == TEXT("eclipse-revise-causal-model"))
+    {
+        if (!Thought) return false;
+        const int32 RevisionCount = InteractionStep >= 2 ? 1 : 0;
+        return Thought->EvaluatePhilosophicalArgumentAndRecord(
+            TEXT("philosophy.ship-theseus-prototype"),
+            TEXT("claim.same-ship-despite-replacement"),
+            {FName(TEXT("link.function-continuity-supports-same"))},
+            {FName(TEXT("assumption.identity-can-persist-through-change"))},
+            {FName(TEXT("counterexample.reassembled-original-parts"))},
+            RevisionCount);
+    }
+
+    return false;
 }
 
 bool UWMEclipseEngineExperienceSubsystem::ResolveTrustedAction(const FName ActionId, const float NumericValue)
