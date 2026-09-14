@@ -77,8 +77,8 @@ Current source progression:
 - M5.2 — composable Mission Runtime v2: source-complete with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
 - M5.3 — Science Simulation Core: source-complete with data-driven matter/reaction catalog, solubility/filtration, stoichiometry and conservation, mechanics/energy, ideal DC circuits, cellular systems, plant lifecycle and ecology coupling; native Unreal execution remains required for runtime certification.
 - M5.4 — Language, Literature and Thought Runtime: source-complete with bilingual contextual communication, provenance-aware narrative graphs, neutral ethical reasoning, philosophy argument revision, M5.2 evidence integration and privacy-minimized stable-ID inputs; native Unreal execution remains required for runtime certification.
-- M5.5 — First Fantastic Adventure Pack: next.
-- M5.6 — Cross-disciplinary epic adventures: pending.
+- M5.5 — First Fantastic Adventure Pack: source-complete in PR #48 with 11 adventures, 22 ordered beats and authenticated producer/evidence routing; final 3D production and native/device certification remain pending.
+- M5.6 — Cross-disciplinary epic adventures: next; begin with M5.6A epic schema and authoritative orchestration foundation.
 
 Core learning streams:
 
@@ -174,7 +174,9 @@ See `docs/m5-4-language-literature-thought-runtime.md`.
 
 ### M5.5 — First Fantastic Adventure Pack
 
-Initial production candidates:
+Source-complete in PR #48. The first pack contains one primary adventure for each of the 11 first-class learning streams, with 22 ordered beats and stable producer/evidence gates layered over the composable mission runtime.
+
+Implemented adventures:
 
 - The Vault of the Infinite Staircase — mathematics.
 - Architects of the Impossible City — geometry.
@@ -188,12 +190,22 @@ Initial production candidates:
 - The Bridge Between Two Villages — ethics.
 - The Ship That Was Never the Same — philosophy for children.
 
+Repository Quality must execute `scripts/validate-m5-5-fantastic-adventure-pack.py`. Source completeness does not claim final 3D environments, authored apparatus, final animation/cinematics, localization/audio or representative-device runtime certification.
+
+See `docs/m5-5-first-fantastic-adventure-pack.md`.
+
 ### M5.6 — Cross-disciplinary epic adventures
 
+Current target: **M5.6A — Epic schema and orchestration foundation**.
+
 - Missions combine multiple learning streams when the world problem naturally requires them.
-- Candidate: The Eclipse Engine — geometry + physics + mathematics + language/literature + philosophy.
-- Candidate: The Garden at the End of Winter — biology + chemistry + ecology + mathematics + ethics + mythology.
+- The orchestration layer must coordinate ordered chapters, explicit multi-objective attribution, trusted producer identity and deterministic world-state requirements.
+- Initial epic: The Eclipse Engine — geometry + physics + mathematics + language/literature + philosophy.
+- Initial epic: The Garden at the End of Winter — biology + chemistry + ecology + mathematics + ethics + mythology.
 - Evidence attribution remains explicit per objective even when one action supports several disciplines.
+- Epic progression must fail closed against future-chapter evidence, spoofed producers and client-supplied completion flags.
+
+See `docs/m5-6-cross-disciplinary-epic-adventures.md`.
 
 ### M5 exit condition
 
@@ -222,6 +234,7 @@ See `docs/reference-driven-visual-animation-polish.md` and `docs/first-person-in
 
 ## Suggested GitHub issue titles
 
-1. `M5.5: Build first fantastic multidisciplinary adventure pack`
-2. `M5.6: Build cross-disciplinary epic adventure framework`
-3. `M6: Implement parent-approved private multiplayer invitation flow`
+1. `M5.6A: Implement epic schema and cross-disciplinary orchestration foundation`
+2. `M5.6B: Build The Eclipse Engine vertical epic`
+3. `M5.6C: Build The Garden at the End of Winter vertical epic`
+4. `M6: Implement parent-approved private multiplayer invitation flow`
