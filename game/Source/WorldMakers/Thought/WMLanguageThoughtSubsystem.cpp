@@ -42,8 +42,8 @@ bool UWMLanguageThoughtSubsystem::SubmitEvidenceToActiveMission(const FWMThought
         return false;
     }
 
-    // Epic authority wins over the generic Mission Runtime. This prevents a validated thought result
-    // from satisfying a chapter outside its active world route.
+    // Never fall back directly to Mission Runtime while the epic is active.
+    // Epic authority wins over the generic Mission Runtime so validated thought cannot satisfy another world route.
     if (UWMEpicRuntimeSubsystem* EpicSubsystem = GetWorld()->GetSubsystem<UWMEpicRuntimeSubsystem>())
     {
         if (EpicSubsystem->GetActiveEpicId() == TEXT("epic.eclipse-engine"))
