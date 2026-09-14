@@ -20,6 +20,7 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/m5-6*.md'
       - 'docs/c*.md'
       - 'docs/first-person-*.md'
       - 'scripts/build-unreal.ps1'
@@ -45,6 +46,7 @@ on:
       - 'scripts/validate-m3-6-child-journey-ux.py'
       - 'scripts/validate-m3-7-tablet-performance.py'
       - 'scripts/validate-m3-8-vertical-slice-certification.py'
+      - 'scripts/validate-m5-6*.py'
       - 'scripts/validate-c*.py'
       - 'scripts/*first-person*.py'
       - '.github/workflows/unreal-ci.yml'
@@ -71,6 +73,7 @@ on:
       - 'docs/m3-6-child-journey-ux.md'
       - 'docs/m3-7-tablet-performance.md'
       - 'docs/m3-8-vertical-slice-certification.md'
+      - 'docs/m5-6*.md'
       - 'docs/c*.md'
       - 'docs/first-person-*.md'
       - 'scripts/**'
@@ -126,6 +129,10 @@ jobs:
         run: python scripts/validate-m3-7-tablet-performance.py
       - name: Validate M3.8 Vertical Slice Certification
         run: python scripts/validate-m3-8-vertical-slice-certification.py
+      - name: Validate M5.6A Epic Orchestration
+        run: python scripts/validate-m5-6-epic-orchestration.py
+      - name: Validate M5.6B Eclipse Player Experience
+        run: python scripts/validate-m5-6b-eclipse-player-experience.py
       - name: Validate C1 XXII Century Citizenship
         run: python scripts/validate-c1-xxii-century-citizenship.py
       - name: Validate C2 Planetary Commons Living World
