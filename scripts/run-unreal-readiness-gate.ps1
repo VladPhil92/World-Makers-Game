@@ -1,5 +1,4 @@
 param(
-    [Parameter(Mandatory = $true)]
     [string]$EngineRoot,
     [string]$EvidenceDir = 'artifacts\unreal-readiness',
     [switch]$RequireAuthoredMap,
@@ -14,13 +13,14 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $EvidencePath = Join-Path $RepoRoot $EvidenceDir
 $ExpectedVersionFile = Join-Path $RepoRoot 'game\UNREAL_ENGINE_VERSION'
-$BuildVersionFile = Join-Path $EngineRoot 'Engine\Build\Build.version'
+$EngineResolver = Join-Path $RepoRoot 'scripts\resolve-unreal-engine.ps1'
 $PreflightScript = Join-Path $RepoRoot 'scripts\validate-unreal-source-preflight.py'
 $BuildScript = Join-Path $RepoRoot 'scripts\build-unreal.ps1'
 $TestScript = Join-Path $RepoRoot 'scripts\test-unreal.ps1'
 $IntermediateBuild = Join-Path $RepoRoot 'game\Intermediate\Build'
 $ReadinessResult = Join-Path $EvidencePath 'readiness-result.json'
 $SourcePreflightLog = Join-Path $EvidencePath 'source-preflight.log'
+$RequestedEngineRoot = $EngineRoot
 
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 
@@ -32,7 +32,11 @@ $Checks = [ordered]@{
     originMainCurrent = $false
     worktreeClean = $false
     engineVersionFile = $false
+    engineResolver = $false
+    engineRootResolved = $false
     engineVersionMatches = $false
+    engineBuildTool = $false
+    editorCommand = $false
     sourcePreflight = $false
     nativeBuild = $false
     nativeAutomation = if ($RunAutomation) { $false } else { $null }
@@ -43,6 +47,10 @@ $BranchName = $null
 $OriginMainSha = $null
 $ExpectedVersion = $null
 $ActualVersion = $null
+$ResolvedEngineRoot = $null
+$EngineResolutionSource = $null
+$EngineResolutionMode = $null
+$EngineCandidateCount = $null
 $SourcePreflightStatus = 'not-run'
 $NativeBuildStatus = 'not-run'
 $NativeAutomationStatus = if ($RunAutomation) { 'not-run' } else { 'not-requested' }
@@ -63,6 +71,11 @@ function Write-ReadinessReport {
         repositoryCommit = $CommitSha
         branch = $BranchName
         originMainCommit = $OriginMainSha
+        requestedEngineRoot = $RequestedEngineRoot
+        engineRoot = $ResolvedEngineRoot
+        engineResolutionSource = $EngineResolutionSource
+        engineResolutionMode = $EngineResolutionMode
+        engineCandidateCount = $EngineCandidateCount
         expectedUnrealVersion = $ExpectedVersion
         actualUnrealVersion = $ActualVersion
         requireAuthoredMap = [bool]$RequireAuthoredMap
@@ -140,20 +153,58 @@ try {
         }
     }
 
-    if (-not (Test-Path $BuildVersionFile)) {
-        Add-Blocker "Engine Build.version not found under '$EngineRoot'."
+    $Checks.engineResolver = Test-Path $EngineResolver -PathType Leaf
+    if (-not $Checks.engineResolver) {
+        Add-Blocker 'Missing scripts/resolve-unreal-engine.ps1.'
     }
-    else {
+    elseif ($ExpectedVersion) {
         try {
-            $BuildVersion = Get-Content $BuildVersionFile -Raw | ConvertFrom-Json
-            $ActualVersion = "$($BuildVersion.MajorVersion).$($BuildVersion.MinorVersion).$($BuildVersion.PatchVersion)"
-            $Checks.engineVersionMatches = ($ExpectedVersion -and $ActualVersion -eq $ExpectedVersion)
-            if (-not $Checks.engineVersionMatches) {
-                Add-Blocker "Unreal version mismatch. Expected $ExpectedVersion but workstation has $ActualVersion."
+            $Resolution = & $EngineResolver -RequestedRoot $RequestedEngineRoot -ExpectedVersion $ExpectedVersion
+            if ($null -eq $Resolution -or [string]::IsNullOrWhiteSpace([string]$Resolution.path)) {
+                throw 'Engine resolver returned no path.'
             }
+            $ResolvedEngineRoot = [string]$Resolution.path
+            $EngineResolutionSource = [string]$Resolution.source
+            $EngineResolutionMode = [string]$Resolution.resolutionMode
+            $EngineCandidateCount = $Resolution.candidateCount
+            $Checks.engineRootResolved = $true
+            Write-Host "Resolved Unreal Engine $ExpectedVersion: $ResolvedEngineRoot ($EngineResolutionSource)"
         }
         catch {
-            Add-Blocker "Unable to parse Unreal Build.version: $($_.Exception.Message)"
+            Add-Blocker "Unable to resolve exact Unreal Engine $ExpectedVersion: $($_.Exception.Message)"
+        }
+    }
+
+    if ($Checks.engineRootResolved) {
+        $BuildVersionFile = Join-Path $ResolvedEngineRoot 'Engine\Build\Build.version'
+        $BuildBat = Join-Path $ResolvedEngineRoot 'Engine\Build\BatchFiles\Build.bat'
+        $EditorCmd = Join-Path $ResolvedEngineRoot 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+
+        if (-not (Test-Path $BuildVersionFile -PathType Leaf)) {
+            Add-Blocker "Engine Build.version not found under '$ResolvedEngineRoot'."
+        }
+        else {
+            try {
+                $BuildVersion = Get-Content $BuildVersionFile -Raw | ConvertFrom-Json
+                $ActualVersion = "$($BuildVersion.MajorVersion).$($BuildVersion.MinorVersion).$($BuildVersion.PatchVersion)"
+                $Checks.engineVersionMatches = ($ExpectedVersion -and $ActualVersion -eq $ExpectedVersion)
+                if (-not $Checks.engineVersionMatches) {
+                    Add-Blocker "Unreal version mismatch. Expected $ExpectedVersion but workstation has $ActualVersion."
+                }
+            }
+            catch {
+                Add-Blocker "Unable to parse Unreal Build.version: $($_.Exception.Message)"
+            }
+        }
+
+        $Checks.engineBuildTool = Test-Path $BuildBat -PathType Leaf
+        if (-not $Checks.engineBuildTool) {
+            Add-Blocker "Unreal Build.bat is missing under '$ResolvedEngineRoot'."
+        }
+
+        $Checks.editorCommand = Test-Path $EditorCmd -PathType Leaf
+        if (-not $Checks.editorCommand) {
+            Add-Blocker "UnrealEditor-Cmd.exe is missing under '$ResolvedEngineRoot'."
         }
     }
 
@@ -184,7 +235,7 @@ try {
 
     if ($Blockers.Count -eq 0) {
         try {
-            & $BuildScript -EngineRoot $EngineRoot -Configuration Development -EvidenceDir $EvidenceDir
+            & $BuildScript -EngineRoot $ResolvedEngineRoot -Configuration Development -EvidenceDir $EvidenceDir
             $Checks.nativeBuild = $true
             $NativeBuildStatus = 'passed'
         }
@@ -196,7 +247,7 @@ try {
 
     if ($Blockers.Count -eq 0 -and $RunAutomation) {
         try {
-            & $TestScript -EngineRoot $EngineRoot -TestFilter $TestFilter -EvidenceDir $EvidenceDir
+            & $TestScript -EngineRoot $ResolvedEngineRoot -TestFilter $TestFilter -EvidenceDir $EvidenceDir
             $Checks.nativeAutomation = $true
             $NativeAutomationStatus = 'passed'
         }
