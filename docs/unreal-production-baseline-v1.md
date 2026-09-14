@@ -51,6 +51,7 @@ This separation is mandatory because high-fidelity production will replace proxi
 
 ### 4.2 Data-driven production
 
+Reusable content must be representable through stable definitions rather than hard-coded per-object branches where practical. Examples include items/resources, science substances/reactions, mission requirements, world-state consequences, buildable interventions, biome metadata, animation action IDs, authored asset slots and VFX/audio presentation mappings.
 Reusable content must be representable through stable definitions rather than hard-coded per-object branches where practical. Examples include:
 
 - items and resources;
@@ -71,6 +72,9 @@ Human-reviewable canonical data stays outside binary Unreal assets where it impr
 
 Production readiness is locked to Unreal Engine **5.8.2** until an Architecture Decision Record explicitly changes the baseline.
 
+The required project is `game/WorldMakers.uproject`.
+
+The first certification level remains `/Game/WorldMakers/Maps/WM_PrototypeCertification`.
 The required project is:
 
 `game/WorldMakers.uproject`
@@ -83,6 +87,11 @@ A hosted source check is not proof of native Unreal readiness. Native evidence r
 
 ### 5.2 C++ / Blueprint / authored-content rule
 
+Use C++ for authoritative simulation/progression, performance-sensitive reusable systems, stable runtime interfaces, save contracts, validation-critical gameplay state and reusable interaction semantics.
+
+Use Blueprint for level composition, authored actor assembly, presentation orchestration, safe designer-tunable behavior, animation/UI bindings and visual sequencing that does not redefine simulation truth.
+
+Use authored Unreal assets for maps, materials, meshes, skeletal rigs, animation sequences/blueprints, Niagara systems, sound/MetaSounds where adopted, UMG assets and PCG graphs.
 Use C++ for:
 
 - authoritative simulation and progression;
@@ -117,6 +126,17 @@ Use authored Unreal assets for:
 
 The visual target is **premium stylized high fidelity**, not photorealism and not voxel-like abstraction.
 
+Required characteristics include strong silhouette hierarchy, rich but readable environments, physically coherent stylized materials, high-quality desktop lighting, intentional constrained-device fallbacks, environmental storytelling without clutter and gameplay-readable feedback.
+
+### 6.1 Rendering strategy
+
+Desktop reference may use, when measured and appropriate: Nanite, Lumen, Virtual Shadow Maps, high-quality volumetrics, budgeted Niagara and high-fidelity post-processing.
+
+These technologies are capabilities, not universal requirements. Every production family using a high-tier path must define a lower-cost fallback where the target device matrix requires it. Tablet tiers remain performance-governed.
+
+### 6.2 Material strategy
+
+World Makers continues with a reusable stylized-PBR material grammar rather than one expensive bespoke shader per asset. Production materials should support controlled wetness, dirt/mud, age, ecological state, damage where appropriate, emissive/scientific feedback and biome macro variation. Gameplay state must not depend on color alone.
 Required characteristics:
 
 - strong silhouette hierarchy;
@@ -165,6 +185,7 @@ Animation quality is a first-class production system rather than final polish.
 
 ### 7.1 First-person production stack
 
+The primary runtime view must progress from source proxies to authored assets using authored skeletal arms/hands, authored tools and science/building devices, Animation Blueprint control, IK Rig, Control Rig, contextual interaction alignment, Motion Warping where appropriate and Reduced Motion alternatives.
 The primary runtime view must progress from source proxies to authored assets using:
 
 - authored skeletal arms/hands;
@@ -180,6 +201,7 @@ Animation must communicate weight, intent and state. Tool use may not look like 
 
 ### 7.2 Full-body and NPC high-fidelity direction
 
+For visible full-body characters and advanced NPC locomotion, production may evaluate Motion Matching, Full Body IK, terrain adaptation, contextual interaction alignment, authored transitions, expressive idles/gestures and animation LOD/scalability.
 For visible full-body characters and advanced NPC locomotion, the production path may evaluate:
 
 - Motion Matching;
@@ -194,6 +216,9 @@ Motion Matching is a quality target to evaluate after native stability; it is no
 
 ## 8. World production strategy
 
+World Makers should use a hybrid authored/procedural world strategy: World Partition when world size justifies streaming, PCG-assisted distribution for vegetation/rocks/biome dressing, handcrafted points of interest and deterministic authored certification routes.
+
+The governing rule is **procedural macro-distribution + handcrafted meaningful spaces**. A fully procedural world without authored composition is not the visual target.
 World Makers should use a hybrid authored/procedural world strategy.
 
 Target architecture:
@@ -215,6 +240,10 @@ The environment must react visibly to player action. The vertical slice must dem
 
 `observe condition -> diagnose system -> perform science/building intervention -> world state changes -> environment visibly responds -> mission evidence records the outcome`
 
+This is a core differentiator between an educational overlay and a playable systems world.
+
+## 10. Performance baseline
+
 This is the core differentiator between an educational overlay and a playable systems world.
 
 ## 10. Performance baseline
@@ -228,6 +257,7 @@ Performance is a design constraint from the beginning.
 | Tablet High | 60 FPS | 16.67 ms | 100% |
 | Desktop Reference | 60 FPS | 16.67 ms | 100% |
 
+Every production art handoff must identify intended tier, geometry/LOD or Nanite strategy, texture/memory intent, material slots/shader complexity, collision policy, skeletal/animation cost where relevant, VFX cost, fallback behavior and profiling status.
 Every production art handoff must identify at minimum:
 
 - intended tier;
@@ -256,6 +286,7 @@ The certification route must prove all of the following in one coherent playable
 8. Record valid mission/learning evidence.
 9. Save and reload relevant persistent state.
 
+The visual route must also establish authored certification geometry, production-path asset naming, stable camera comfort, an authored first-person animation foundation, stylized material/lighting language, budgeted VFX, spatial/ambient audio foundation and measured performance evidence.
 The visual route must also establish:
 
 - authored certification geometry rather than primitives alone;
@@ -271,6 +302,31 @@ The visual route must also establish:
 
 ### G0 — Source and architecture readiness
 
+Pass only when hosted source CI is green, the production-baseline validator is green, Unreal source preflight is green, Git LFS policy is clean and current engine/project identity is coherent.
+
+### G1 — Native Unreal readiness
+
+Pass only when `WorldMakersEditor Win64 Development` builds successfully on the locked UE environment, required `WorldMakers.*` automation passes and no known fatal compiler defects remain.
+
+### G2 — Authored vertical slice
+
+Pass only when `WM_PrototypeCertification.umap` exists at the required stable path through LFS, the first-person route is playable and authored assets resolve through stable production paths.
+
+### G3 — Visual and animation target
+
+Pass only when placeholder proxies are absent from the certified route except explicit fallback/debug paths, lighting/materials/animation/VFX pass review, camera comfort and Reduced Motion pass review and gameplay affordances remain readable.
+
+### G4 — Performance certification
+
+Pass only when desktop reference budget passes, representative iPadOS evidence exists, representative Android evidence exists and certification remains fail-closed for missing or incoherent evidence.
+
+## 13. Change control
+
+An ADR is required before changing the Unreal engine family, certification patch, authoritative gameplay boundary, primary runtime view, performance targets or child-safety/commerce trust boundary.
+
+## 14. Phase 0 exit condition
+
+This production-baseline phase is complete when the machine-readable contract exists, this baseline is referenced from project documentation, Repository Quality validates it, and engine version, project path, LFS policy, certification map path, performance budgets and production gates are mutually consistent.
 Pass only when:
 
 - hosted source CI is green;
