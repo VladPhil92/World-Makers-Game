@@ -18,6 +18,14 @@ $LaunchResult = Join-Path $EvidencePath 'editor-launch-result.json'
 
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 
+# Evidence from an earlier attempt must never be presented as the current
+# readiness failure. The active readiness/build run will recreate these files.
+foreach ($StaleEvidence in @($FailureSummary, $LaunchResult)) {
+    if (Test-Path $StaleEvidence -PathType Leaf) {
+        Remove-Item $StaleEvidence -Force
+    }
+}
+
 if (-not (Test-Path $Project -PathType Leaf)) {
     throw "World Makers project file not found: $Project"
 }
@@ -58,16 +66,36 @@ $ReadinessExitCode = $LASTEXITCODE
 if ($ReadinessExitCode -ne 0) {
     Write-Host ''
     Write-Host 'UNREAL EDITOR NOT OPENED: native readiness is blocked.' -ForegroundColor Red
-    if (Test-Path $FailureSummary -PathType Leaf) {
+
+    $CurrentReadiness = $null
+    if (Test-Path $ReadinessResult -PathType Leaf) {
+        try {
+            $CurrentReadiness = Get-Content $ReadinessResult -Raw | ConvertFrom-Json
+        }
+        catch {
+            Write-Host "Readiness evidence exists but could not be parsed: $ReadinessResult" -ForegroundColor Yellow
+        }
+    }
+
+    # A native failure summary is relevant only when this readiness attempt
+    # actually reached and failed the native build stage.
+    if ($null -ne $CurrentReadiness -and [string]$CurrentReadiness.nativeBuildStatus -eq 'failed' -and (Test-Path $FailureSummary -PathType Leaf)) {
         try {
             $Summary = Get-Content $FailureSummary -Raw | ConvertFrom-Json
             Write-Host "Primary native failure: $($Summary.primaryCategory)" -ForegroundColor Yellow
             Write-Host "Action: $($Summary.remediation)" -ForegroundColor Yellow
         }
         catch {
-            Write-Host "Failure summary exists but could not be parsed: $FailureSummary" -ForegroundColor Yellow
+            Write-Host "Current native failure summary could not be parsed: $FailureSummary" -ForegroundColor Yellow
         }
     }
+    elseif ($null -ne $CurrentReadiness -and @($CurrentReadiness.blockers).Count -gt 0) {
+        Write-Host 'Current readiness blockers:' -ForegroundColor Yellow
+        foreach ($Blocker in @($CurrentReadiness.blockers)) {
+            Write-Host "  - $Blocker" -ForegroundColor Yellow
+        }
+    }
+
     Write-Host "Readiness evidence: $ReadinessResult"
     Write-Host "Workstation evidence: $DoctorResult"
     exit $ReadinessExitCode
