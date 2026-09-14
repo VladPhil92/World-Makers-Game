@@ -142,12 +142,12 @@ export function reconcileProfileEpicProgress(profile, input) {
   const existing = normalizedProgress.epics.find((item) => item.epicId === incoming.epicId) ?? null;
 
   if (existing) {
+    if (existing.chapterIndex === incoming.chapterIndex && existing.state === incoming.state) {
+      return { profile: clone(profile), disposition: 'idempotent', authoritative: clone(existing), changed: false };
+    }
     const serverAhead = existing.state === STATE_COMPLETE || existing.chapterIndex > incoming.chapterIndex;
     if (serverAhead) {
       return { profile: clone(profile), disposition: 'server-ahead', authoritative: clone(existing), changed: false };
-    }
-    if (existing.chapterIndex === incoming.chapterIndex && existing.state === incoming.state) {
-      return { profile: clone(profile), disposition: 'idempotent', authoritative: clone(existing), changed: false };
     }
   }
 
