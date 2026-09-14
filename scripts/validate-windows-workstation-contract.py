@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Hosted regression checks for the Windows Unreal workstation bootstrap contract.
 
-This validator is intentionally static: GitHub-hosted Linux runners cannot prove
-native UE readiness, but they can prevent regressions that reintroduce automatic
-installers, opaque Live Coding failures, or PowerShell-7-only syntax.
+GitHub-hosted Linux runners cannot prove native UE readiness, but they can prevent
+regressions that reintroduce automatic installers, opaque native failures,
+unsafe editor launch behavior, or PowerShell-7-only syntax.
 """
 
 from __future__ import annotations
@@ -18,8 +18,13 @@ FILES = {
     "readiness": ROOT / "scripts" / "run-unreal-readiness-gate.ps1",
     "build": ROOT / "scripts" / "build-unreal.ps1",
     "test": ROOT / "scripts" / "test-unreal.ps1",
+    "classifier": ROOT / "scripts" / "classify-unreal-build-log.py",
+    "classifier_test": ROOT / "scripts" / "test-unreal-build-classifier.py",
+    "editor_launcher": ROOT / "scripts" / "open-unreal-project.ps1",
     "doctor_launcher": ROOT / "WorldMakers-Doctor.cmd",
     "readiness_launcher": ROOT / "WorldMakers-Readiness.cmd",
+    "open_editor_launcher": ROOT / "WorldMakers-OpenEditor.cmd",
+    "failure_launcher": ROOT / "WorldMakers-DiagnoseLastFailure.cmd",
     "doc": ROOT / "docs" / "native-unreal-readiness-gate.md",
 }
 
@@ -47,8 +52,13 @@ def main() -> None:
     readiness = read("readiness")
     build = read("build")
     test = read("test")
+    classifier = read("classifier")
+    classifier_test = read("classifier_test")
+    editor_launcher = read("editor_launcher")
     doctor_launcher = read("doctor_launcher")
     readiness_launcher = read("readiness_launcher")
+    open_editor_launcher = read("open_editor_launcher")
+    failure_launcher = read("failure_launcher")
     doc = read("doc")
 
     require(
@@ -69,26 +79,72 @@ def main() -> None:
 
     require(
         resolver,
-        (
-            "ExpectedVersion",
-            "Build.version",
-            "UNREAL_ENGINE_ROOT",
-            "EpicGamesLauncher",
-        ),
+        ("ExpectedVersion", "Build.version", "UNREAL_ENGINE_ROOT", "EpicGamesLauncher"),
         "scripts/resolve-unreal-engine.ps1",
     )
 
-    for name, text in (("build", build), ("test", test)):
-        require(
-            text,
-            (
-                "resolve-unreal-engine.ps1",
-                "LiveCodingConsole",
-                "blocking-unreal-process",
-                "StopBlockingProcesses",
-            ),
-            f"scripts/{'build-unreal.ps1' if name == 'build' else 'test-unreal.ps1'}",
-        )
+    require(
+        build,
+        (
+            "resolve-unreal-engine.ps1",
+            "LiveCodingConsole",
+            "blocking-unreal-process",
+            "StopBlockingProcesses",
+            "classify-unreal-build-log.py",
+            "native-failure-summary.json",
+            "primaryFailureCategory",
+            "schemaVersion = 3",
+        ),
+        "scripts/build-unreal.ps1",
+    )
+
+    require(
+        test,
+        (
+            "resolve-unreal-engine.ps1",
+            "LiveCodingConsole",
+            "blocking-unreal-process",
+            "StopBlockingProcesses",
+        ),
+        "scripts/test-unreal.ps1",
+    )
+
+    require(
+        classifier,
+        (
+            "live-coding-active",
+            "visual-studio-toolchain-missing",
+            "windows-sdk-missing",
+            "include-file-missing",
+            "unreal-header-tool-error",
+            "compiler-error",
+            "linker-error",
+            "plugin-or-module-error",
+            "file-lock-or-access-denied",
+            "out-of-memory",
+            "git-lfs-or-binary-pointer-error",
+            "unknown-native-build-failure",
+            "absoluteRepositoryPathRedacted",
+            "homePathRedacted",
+            "uploadsData",
+        ),
+        "scripts/classify-unreal-build-log.py",
+    )
+    require(
+        classifier_test,
+        (
+            "classify_text",
+            "live-coding-active",
+            "include-file-missing",
+            "unreal-header-tool-error",
+            "compiler-error",
+            "linker-error",
+            "unknown-native-build-failure",
+            "JuanPablo",
+            "<user>",
+        ),
+        "scripts/test-unreal-build-classifier.py",
+    )
 
     require(
         readiness,
@@ -104,22 +160,40 @@ def main() -> None:
     )
 
     require(
-        doctor_launcher,
+        editor_launcher,
         (
-            "diagnose-unreal-workstation.ps1",
-            "ExecutionPolicy Bypass",
+            "run-unreal-readiness-gate.ps1",
+            "readiness-result.json",
             "workstation-doctor.json",
+            "native-failure-summary.json",
+            "UNREAL EDITOR NOT OPENED",
+            "UnrealEditor.exe",
+            "Start-Process",
+            "editor-launch-result.json",
+            "manual-only-no-auto-install",
         ),
+        "scripts/open-unreal-project.ps1",
+    )
+
+    require(
+        doctor_launcher,
+        ("diagnose-unreal-workstation.ps1", "ExecutionPolicy Bypass", "workstation-doctor.json"),
         "WorldMakers-Doctor.cmd",
     )
     require(
         readiness_launcher,
-        (
-            "run-unreal-readiness-gate.ps1",
-            "-CleanIntermediate",
-            "Do not reinstall Unreal Engine",
-        ),
+        ("run-unreal-readiness-gate.ps1", "-CleanIntermediate", "Do not reinstall Unreal Engine"),
         "WorldMakers-Readiness.cmd",
+    )
+    require(
+        open_editor_launcher,
+        ("open-unreal-project.ps1", "ExecutionPolicy Bypass", "native-failure-summary.json"),
+        "WorldMakers-OpenEditor.cmd",
+    )
+    require(
+        failure_launcher,
+        ("classify-unreal-build-log.py", "native-failure-summary.json", "--print"),
+        "WorldMakers-DiagnoseLastFailure.cmd",
     )
 
     require(
@@ -127,7 +201,10 @@ def main() -> None:
         (
             "WorldMakers-Doctor.cmd",
             "WorldMakers-Readiness.cmd",
+            "WorldMakers-OpenEditor.cmd",
+            "WorldMakers-DiagnoseLastFailure.cmd",
             "workstation-doctor.json",
+            "native-failure-summary.json",
             "blocking-unreal-process",
             "Live Coding",
             "Do not reinstall",
@@ -142,6 +219,7 @@ def main() -> None:
         "readiness": readiness,
         "build": build,
         "test": test,
+        "editor_launcher": editor_launcher,
     }
     forbidden_ps7_tokens = ("??", "?.", "&&", "||", "ForEach-Object -Parallel")
     for name, text in powershell_files.items():
@@ -157,14 +235,19 @@ def main() -> None:
         "Invoke-WebRequest http",
         "Invoke-RestMethod http",
     )
-    mutable_scripts = doctor + readiness + build + test
+    mutable_scripts = doctor + readiness + build + test + editor_launcher
     found_installers = [token for token in automatic_install_tokens if token.lower() in mutable_scripts.lower()]
     if found_installers:
         fail(f"Windows workstation flow must remain diagnostic/manual-only; automatic installer token found: {found_installers}")
 
+    if "Start-Process -FilePath $EditorExe" not in editor_launcher:
+        fail("Editor launcher must open the exact resolved UnrealEditor.exe rather than an arbitrary file association.")
+    if "if ($ReadinessExitCode -ne 0)" not in editor_launcher:
+        fail("Editor launcher must fail closed when native readiness fails.")
+
     print(
-        "World Makers Windows workstation contract passed: "
-        "diagnostic-first, no-auto-install, engine auto-resolution, Live Coding blocker classification, "
+        "World Makers Windows workstation contract passed: diagnostic-first, no-auto-install, "
+        "native failure classification, guarded editor launch, engine auto-resolution, Live Coding blocker classification, "
         "Visual Studio/SDK verification, Windows PowerShell 5.1 compatibility, CMD launchers present."
     )
 
