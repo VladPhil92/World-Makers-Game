@@ -5,8 +5,14 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/validate-windows-workstation-contract.py'
       - 'scripts/resolve-unreal-engine.ps1'
+      - 'scripts/diagnose-unreal-workstation.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'WorldMakers-Doctor.cmd'
+      - 'WorldMakers-Readiness.cmd'
       - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
@@ -16,8 +22,14 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/validate-windows-workstation-contract.py'
       - 'scripts/resolve-unreal-engine.ps1'
+      - 'scripts/diagnose-unreal-workstation.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'WorldMakers-Doctor.cmd'
+      - 'WorldMakers-Readiness.cmd'
       - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
@@ -38,3 +50,5 @@ jobs:
           python-version: '3.12'
       - name: Validate UE 5.8 source readiness
         run: python scripts/validate-unreal-source-preflight.py
+      - name: Validate Windows workstation bootstrap contract
+        run: python scripts/validate-windows-workstation-contract.py
