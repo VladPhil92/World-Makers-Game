@@ -35,6 +35,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
     bool ActivateOrResumeEpic(FName EpicId);
 
+    /**
+     * Imports a server-authoritative resumable chapter without allowing local regression.
+     * Completed or equally/newer local progress wins; no partial evidence is imported.
+     */
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Epic")
+    bool ApplyExternalResumeCheckpoint(FName EpicId, FName ChapterId, int32 ChapterIndex, int32 ChapterCount);
+
     UFUNCTION(BlueprintPure, Category = "World Makers|Epic")
     bool HasResumableEpicCheckpoint(FName EpicId) const;
 

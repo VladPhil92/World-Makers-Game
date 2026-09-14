@@ -1,6 +1,8 @@
 #include "Adventure/WMEpicRuntimeSubsystem.h"
 
+#include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "Launch/WMLaunchBootstrapSubsystem.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -110,10 +112,28 @@ bool UWMEpicRuntimeSubsystem::SaveCurrentCheckpoint()
     Checkpoint.bCompleted = ReadModel.bCompleted;
     if (!IsCheckpointValidForCatalog(Checkpoint)) return false;
 
+    const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
     const int32 ExistingIndex = FindCheckpointIndex(Checkpoint.EpicId);
     if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Checkpoint);
     else Checkpoints[ExistingIndex] = Checkpoint;
-    return SaveEpicCheckpoints();
+
+    if (!SaveEpicCheckpoints())
+    {
+        Checkpoints = PreviousCheckpoints;
+        return false;
+    }
+
+    if (GetWorld())
+    {
+        if (UGameInstance* GameInstance = GetWorld()->GetGameInstance())
+        {
+            if (UWMLaunchBootstrapSubsystem* Launch = GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>())
+            {
+                Launch->SyncEpicCheckpoint(Checkpoint);
+            }
+        }
+    }
+    return true;
 }
 
 bool UWMEpicRuntimeSubsystem::ActivateEpic(const FName EpicId)
@@ -126,6 +146,38 @@ bool UWMEpicRuntimeSubsystem::ActivateEpic(const FName EpicId)
     if (!MissionSubsystem || !MissionSubsystem->ActivateMission(Epic->Chapters[0].MissionId)) return false;
     if (!Progress.Begin(*Epic)) return false;
     return SaveCurrentCheckpoint();
+}
+
+bool UWMEpicRuntimeSubsystem::ApplyExternalResumeCheckpoint(
+    const FName EpicId,
+    const FName ChapterId,
+    const int32 ChapterIndex,
+    const int32 ChapterCount)
+{
+    if (!bCatalogLoaded || EpicId.IsNone() || ChapterId.IsNone()) return false;
+
+    FWMEpicCheckpoint Incoming;
+    Incoming.EpicId = EpicId;
+    Incoming.ChapterId = ChapterId;
+    Incoming.ChapterIndex = ChapterIndex;
+    Incoming.ChapterCount = ChapterCount;
+    Incoming.bCompleted = false;
+    if (!IsCheckpointValidForCatalog(Incoming)) return false;
+
+    const int32 ExistingIndex = FindCheckpointIndex(EpicId);
+    if (Checkpoints.IsValidIndex(ExistingIndex))
+    {
+        const FWMEpicCheckpoint& Existing = Checkpoints[ExistingIndex];
+        // Local completion or an equal/newer local chapter is never regressed by server bootstrap state.
+        if (Existing.bCompleted || Existing.ChapterIndex >= Incoming.ChapterIndex) return true;
+    }
+
+    const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
+    if (ExistingIndex == INDEX_NONE) Checkpoints.Add(Incoming);
+    else Checkpoints[ExistingIndex] = Incoming;
+    if (SaveEpicCheckpoints()) return true;
+    Checkpoints = PreviousCheckpoints;
+    return false;
 }
 
 bool UWMEpicRuntimeSubsystem::HasResumableEpicCheckpoint(const FName EpicId) const
@@ -165,8 +217,11 @@ bool UWMEpicRuntimeSubsystem::ClearEpicCheckpoint(const FName EpicId)
 {
     const int32 Index = FindCheckpointIndex(EpicId);
     if (Index == INDEX_NONE) return true;
+    const TArray<FWMEpicCheckpoint> PreviousCheckpoints = Checkpoints;
     Checkpoints.RemoveAt(Index);
-    return SaveEpicCheckpoints();
+    if (SaveEpicCheckpoints()) return true;
+    Checkpoints = PreviousCheckpoints;
+    return false;
 }
 
 bool UWMEpicRuntimeSubsystem::RecordEpicEvidence(

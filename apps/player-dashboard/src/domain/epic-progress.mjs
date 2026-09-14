@@ -66,8 +66,9 @@ export function normalizeEpicProgressRecord(input) {
   const epicId = String(input.epicId ?? '');
   const definition = EPIC_DEFINITIONS[epicId];
   if (!definition) throw new TypeError('epicId is invalid.');
+  if (input.state !== STATE_IN_PROGRESS && input.state !== STATE_COMPLETE) throw new TypeError('state is invalid.');
 
-  const state = input.state === STATE_COMPLETE ? STATE_COMPLETE : STATE_IN_PROGRESS;
+  const state = input.state;
   const chapterCount = definition.chapters.length;
   let chapterIndex;
   let chapterId;

@@ -3,8 +3,10 @@
 #include "Adventure/WMGardenEndWinterInteractableActor.h"
 #include "Adventure/WMGardenSystemsRuntime.h"
 #include "Adventure/WMEpicRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Launch/WMLaunchBootstrapSubsystem.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
@@ -23,6 +25,16 @@ void UWMGardenEndWinterExperienceSubsystem::Initialize(FSubsystemCollectionBase&
 void UWMGardenEndWinterExperienceSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
+    if (UGameInstance* GameInstance = InWorld.GetGameInstance())
+    {
+        if (UWMLaunchBootstrapSubsystem* Launch = GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>(); Launch && Launch->IsNativeLaunchRequested())
+        {
+            if (Launch->IsNativeLaunchReady()) Launch->TryApplyEpicResume();
+            // Native v2 launches are fail-closed: config-driven auto-start must never race ticket redemption.
+            return;
+        }
+    }
+
     bool bAutoStart = false;
     if (GConfig)
     {

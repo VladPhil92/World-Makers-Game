@@ -4,8 +4,10 @@
 #include "Adventure/WMEclipseOpticsRuntime.h"
 #include "Adventure/WMEclipseSystemsRuntime.h"
 #include "Adventure/WMEpicRuntimeSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Launch/WMLaunchBootstrapSubsystem.h"
 #include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
@@ -23,6 +25,16 @@ void UWMEclipseEngineExperienceSubsystem::Initialize(FSubsystemCollectionBase& C
 void UWMEclipseEngineExperienceSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
+    if (UGameInstance* GameInstance = InWorld.GetGameInstance())
+    {
+        if (UWMLaunchBootstrapSubsystem* Launch = GameInstance->GetSubsystem<UWMLaunchBootstrapSubsystem>(); Launch && Launch->IsNativeLaunchRequested())
+        {
+            if (Launch->IsNativeLaunchReady()) Launch->TryApplyEpicResume();
+            // Native v2 launches are fail-closed: config-driven auto-start must never race ticket redemption.
+            return;
+        }
+    }
+
     bool bAutoStart = false;
     if (GConfig)
     {
@@ -168,7 +180,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
     UWMEclipseOpticsSubsystem* Optics = GetWorld()->GetSubsystem<UWMEclipseOpticsSubsystem>();
     UWMLanguageThoughtSubsystem* Thought = GetWorld()->GetSubsystem<UWMLanguageThoughtSubsystem>();
 
-    // Orbit chamber: repeated world interaction tunes bounded candidate states; only the modeled relation resolves.
     if (ActionId == TEXT("eclipse.read-orbit-rhythm"))
     {
         if (!Systems) return false;
@@ -186,8 +197,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
         const float CandidateLength = InteractionStep == 1 ? 840.0f : 760.0f;
         return Systems->SubmitOptimizedRoute(CandidateLength, {900.0f, 820.0f});
     }
-
-    // Mirror lattice: physical/spatial state is tested, not a selected school answer.
     if (ActionId == TEXT("eclipse.restore-mirror-symmetry"))
     {
         if (!Optics) return false;
@@ -203,8 +212,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
         if (!Optics) return false;
         return InteractionStep == 1 ? Optics->SubmitSpatialStability({-1.0f, 0.5f, 6.0f}) : Optics->SubmitSpatialStability({-1.2f, 0.6f, 1.5f, -0.4f});
     }
-
-    // Moonforge: candidate predictions are checked against the deterministic M5.3 simulation.
     if (ActionId == TEXT("eclipse-test-counterweight"))
     {
         if (!Systems) return false;
@@ -216,8 +223,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
         if (!Systems) return false;
         return InteractionStep == 1 ? Systems->SubmitCircuitModel(12.0f, 6.0f, 1.0f, 12.0f) : Systems->SubmitCircuitModel(12.0f, 6.0f, 2.0f, 24.0f);
     }
-
-    // Archive language: M5.4 owns semantic validation; the world actor merely cycles diegetic command forms.
     if (ActionId == TEXT("eclipse-restore-command"))
     {
         if (!Thought) return false;
@@ -240,8 +245,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
         const FName Candidate = InteractionStep == 3 ? TEXT("meaning.eclipse.archive-needs-more-power") : TEXT("meaning.eclipse.archive-linked-symbols");
         return Systems->SubmitContextInference(Candidate);
     }
-
-    // Story route: inference is validated by the provenance-aware narrative graph.
     if (ActionId == TEXT("eclipse-follow-story-thread"))
     {
         if (!Thought || InteractionStep < 2) return false;
@@ -256,8 +259,6 @@ bool UWMEclipseEngineExperienceSubsystem::AdvancePrototypeMechanic(const FName A
         return Thought->TraverseNarrativeAndRecord(
             TEXT("story.labyrinth-minotaur-prototype"), TEXT("node.labyrinth.thread"), TEXT("choice.interpret-thread-purpose"), NextNode);
     }
-
-    // Final causal model: first contact exposes the counterexample; revision is required before evidence exists.
     if (ActionId == TEXT("eclipse-revise-causal-model"))
     {
         if (!Thought) return false;

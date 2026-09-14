@@ -4,12 +4,21 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dashboardCatalog } from './domain/catalog.mjs';
-import { createLaunchContext } from './domain/launch.mjs';
-import { createNativeLaunchUri } from './domain/native-handoff.mjs';
+import { createLaunchContext, verifyLaunchContext } from './domain/launch.mjs';
+import { createNativeLaunchTicketUri } from './domain/native-handoff.mjs';
+import { NativeLaunchSessionStore } from './domain/native-launch-session.mjs';
 import { verifyIdentityAssertion, deriveIdentityLinkId } from './domain/identity.mjs';
 import { JsonFileProfileStore, ProfileConflictError } from './domain/profile-store.mjs';
 import { SupabaseProfileStore } from './domain/supabase-profile-store.mjs';
-import { appendStoreRequest, createPlayerProfile, profilePlayerReadModel, updateProfileLoadout, updateProfilePreferences, updateProfileSelection } from './domain/profile.mjs';
+import {
+  appendStoreRequest,
+  createPlayerProfile,
+  profilePlayerReadModel,
+  updateProfileEpicCheckpoint,
+  updateProfileLoadout,
+  updateProfilePreferences,
+  updateProfileSelection,
+} from './domain/profile.mjs';
 import { createDemoPlayer } from './data/demo-player.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,6 +38,7 @@ const defaultProfileStore = supabaseUrl && supabaseAnonKey
   : defaultProfileStorePath ? new JsonFileProfileStore(defaultProfileStorePath) : null;
 const cookieName = 'wm_player_session';
 const sessions = new Map();
+const nativeCheckpointFields = new Set(['epicId', 'chapterId', 'chapterIndex', 'state']);
 
 const staticFiles = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -142,7 +152,8 @@ function dashboardReadModel(session, profile) {
     launch: {
       ready: launchSigningSecret.length >= 32,
       ttlSeconds: 120,
-      protocol: 'worldmakers-launch-v1',
+      protocol: 'worldmakers-launch-v2',
+      contextProtocol: 'worldmakers-launch-v1',
       nativeScheme: 'worldmakers',
     },
   };
@@ -206,7 +217,24 @@ function createStoreRequest(itemId) {
   };
 }
 
-async function handleApi(req, res, url, store) {
+function nativeCheckpointCandidate(profile, checkpoint) {
+  if (!checkpoint || typeof checkpoint !== 'object' || Array.isArray(checkpoint)) throw new TypeError('Epic checkpoint is required.');
+  if (Object.keys(checkpoint).some((key) => !nativeCheckpointFields.has(key))) throw new TypeError('Epic checkpoint contains unsupported fields.');
+  const epicId = String(checkpoint.epicId ?? '');
+  const existing = Array.isArray(profile.progress?.epics)
+    ? profile.progress.epics.find((item) => item.epicId === epicId)
+    : null;
+  return {
+    epicId,
+    chapterId: checkpoint.chapterId == null ? null : String(checkpoint.chapterId),
+    chapterIndex: checkpoint.chapterIndex,
+    state: checkpoint.state,
+    objectiveSummary: existing?.objectiveSummary ?? [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+async function handleApi(req, res, url, store, nativeLaunchStore) {
   if (req.method === 'GET' && url.pathname === '/api/health') {
     return json(res, 200, {
       status: 'ok',
@@ -214,6 +242,38 @@ async function handleApi(req, res, url, store) {
       identityAssertionConfigured: identityAssertionSecret.length >= 32,
       profileStoreConfigured: Boolean(store),
       launchSigningConfigured: launchSigningSecret.length >= 32,
+      nativeLaunchProtocol: 'worldmakers-launch-v2',
+    });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/native/launch/redeem') {
+    if (launchSigningSecret.length < 32) return json(res, 503, { code: 'launch_signing_not_configured' });
+    const body = await readJson(req);
+    const redeemed = nativeLaunchStore.redeem(body.ticket);
+    if (!verifyLaunchContext(redeemed.context, launchSigningSecret)) throw new TypeError('Redeemed launch context failed server verification.');
+    return json(res, 200, {
+      protocol: 'worldmakers-launch-v2',
+      contextProtocol: 'worldmakers-launch-v1',
+      context: redeemed.context,
+      progressSync: redeemed.progressSync,
+    });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/native/epic-checkpoint') {
+    const body = await readJson(req);
+    const auth = nativeLaunchStore.authorizeProgressSync(body.progressSyncToken, body.checkpoint?.epicId);
+    const profileStore = requireProfileStore(store);
+    const profile = await profileStore.get(auth.playerId);
+    if (!profile) throw new AuthenticationError('Player profile not available.');
+    const candidate = nativeCheckpointCandidate(profile, body.checkpoint);
+    const changed = updateProfileEpicCheckpoint(profile, candidate);
+    const saved = await profileStore.put(changed, { expectedRevision: profile.revision });
+    const player = profilePlayerReadModel(saved);
+    return json(res, 200, {
+      accepted: true,
+      epicJourney: player.epicJourney,
+      profileRevision: saved.revision,
+      profileUpdatedAt: saved.updatedAt,
     });
   }
 
@@ -305,10 +365,13 @@ async function handleApi(req, res, url, store) {
     if (launchSigningSecret.length < 32) return json(res, 503, { code: 'launch_signing_not_configured' });
     const player = profilePlayerReadModel(profile);
     const context = { ...createLaunchContext({ player, selection: profile.selection, secret: launchSigningSecret }), profileRevision: profile.revision };
+    const issued = nativeLaunchStore.issue({ context, profileRevision: profile.revision });
     return json(res, 201, {
-      protocol: 'worldmakers-launch-v1',
+      protocol: 'worldmakers-launch-v2',
+      contextProtocol: 'worldmakers-launch-v1',
       context,
-      launchUri: createNativeLaunchUri(context),
+      launchTicketExpiresAt: issued.expiresAt,
+      launchUri: createNativeLaunchTicketUri(issued.ticket),
       next: 'open-native-client',
     });
   }
@@ -316,12 +379,15 @@ async function handleApi(req, res, url, store) {
   return false;
 }
 
-export function createPlayerDashboardServer({ profileStore = defaultProfileStore } = {}) {
+export function createPlayerDashboardServer({
+  profileStore = defaultProfileStore,
+  nativeLaunchStore = new NativeLaunchSessionStore(),
+} = {}) {
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
       if (url.pathname.startsWith('/api/')) {
-        const handled = await handleApi(req, res, url, profileStore);
+        const handled = await handleApi(req, res, url, profileStore, nativeLaunchStore);
         if (handled !== false) return;
         return json(res, 404, { code: 'not_found' });
       }
@@ -342,9 +408,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const host = process.env.HOST ?? '0.0.0.0';
   createPlayerDashboardServer().listen(port, host, () => {
     console.log(`World Makers Player Dashboard listening on http://${host}:${port}`);
-    if (!defaultProfileStore) console.log('Persistent profile store is not configured; authenticated APIs fail closed.');
-    if (identityAssertionSecret.length < 32) console.log('CTG One identity assertion verification is not configured.');
-    if (!demoAuthEnabled) console.log('Demo identity is disabled.');
-    if (launchSigningSecret.length < 32) console.log('Launch signing is not configured; PLAY remains fail-closed.');
   });
 }
