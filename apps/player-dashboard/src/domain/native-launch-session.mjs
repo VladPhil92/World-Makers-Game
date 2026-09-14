@@ -32,7 +32,17 @@ export class NativeLaunchSessionStore {
     this.#syncTtlMs = syncTtlMs;
   }
 
+  #sweepExpired(now) {
+    for (const [key, session] of this.#launchTickets) {
+      if (session.expiresAtMs <= now) this.#launchTickets.delete(key);
+    }
+    for (const [key, session] of this.#syncTokens) {
+      if (session.expiresAtMs <= now) this.#syncTokens.delete(key);
+    }
+  }
+
   issue({ context, profileRevision, now = Date.now() }) {
+    this.#sweepExpired(now);
     if (!context || typeof context !== 'object' || Array.isArray(context) || typeof context.playerId !== 'string') {
       throw new TypeError('Signed launch context is required.');
     }
@@ -50,9 +60,10 @@ export class NativeLaunchSessionStore {
   }
 
   redeem(ticket, { now = Date.now() } = {}) {
+    this.#sweepExpired(now);
     const key = tokenKey(ticket);
     const session = this.#launchTickets.get(key);
-    // Launch tickets are strictly single use even when the stored record has expired.
+    // Launch tickets are strictly single use even when a caller races redemption.
     this.#launchTickets.delete(key);
     if (!session || session.expiresAtMs <= now) throw new TypeError('Native launch ticket is invalid or expired.');
 
@@ -76,12 +87,10 @@ export class NativeLaunchSessionStore {
   }
 
   authorizeProgressSync(token, epicId, { now = Date.now() } = {}) {
+    this.#sweepExpired(now);
     const key = tokenKey(token);
     const session = this.#syncTokens.get(key);
-    if (!session || session.expiresAtMs <= now) {
-      if (session) this.#syncTokens.delete(key);
-      throw new TypeError('Progress sync token is invalid or expired.');
-    }
+    if (!session || session.expiresAtMs <= now) throw new TypeError('Progress sync token is invalid or expired.');
     const normalizedEpicId = String(epicId ?? '');
     if (!normalizedEpicId) throw new TypeError('epicId is required.');
     if (session.epicId !== null && session.epicId !== normalizedEpicId) throw new TypeError('Progress sync token is bound to another epic.');
@@ -89,7 +98,8 @@ export class NativeLaunchSessionStore {
     return clone(session);
   }
 
-  revokeProgressSync(token) {
+  revokeProgressSync(token, { now = Date.now() } = {}) {
+    this.#sweepExpired(now);
     return this.#syncTokens.delete(tokenKey(token));
   }
 }
