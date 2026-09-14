@@ -77,8 +77,9 @@ Current source progression:
 - M5.2 — composable Mission Runtime v2: source-complete with schema, generic evidence API, multidisciplinary fixture, Unreal automation tests and Repository Quality gate; native Unreal execution remains required for runtime certification.
 - M5.3 — Science Simulation Core: source-complete with data-driven matter/reaction catalog, solubility/filtration, stoichiometry and conservation, mechanics/energy, ideal DC circuits, cellular systems, plant lifecycle and ecology coupling; native Unreal execution remains required for runtime certification.
 - M5.4 — Language, Literature and Thought Runtime: source-complete with bilingual contextual communication, provenance-aware narrative graphs, neutral ethical reasoning, philosophy argument revision, M5.2 evidence integration and privacy-minimized stable-ID inputs; native Unreal execution remains required for runtime certification.
-- M5.5 — First Fantastic Adventure Pack: next.
-- M5.6 — Cross-disciplinary epic adventures: pending.
+- M5.5 — First Fantastic Adventure Pack: source-complete in PR #48 with 11 adventures, 22 ordered beats and authenticated producer/evidence routing; final 3D production and native/device certification remain pending.
+- M5.6A — Epic schema and authoritative cross-disciplinary orchestration: source-complete in PR #91 with two real epic contracts, exact objective/discipline/producer attribution, trusted world-state gates, end-to-end deterministic catalog tests and Repository Quality validation; native UE certification remains blocked by Issue #9.
+- M5.6B — The Eclipse Engine vertical epic: next.
 
 Core learning streams:
 
@@ -174,7 +175,9 @@ See `docs/m5-4-language-literature-thought-runtime.md`.
 
 ### M5.5 — First Fantastic Adventure Pack
 
-Initial production candidates:
+Source-complete in PR #48. The first pack contains one primary adventure for each of the 11 first-class learning streams, with 22 ordered beats and stable producer/evidence gates layered over the composable mission runtime.
+
+Implemented adventures:
 
 - The Vault of the Infinite Staircase — mathematics.
 - Architects of the Impossible City — geometry.
@@ -188,12 +191,62 @@ Initial production candidates:
 - The Bridge Between Two Villages — ethics.
 - The Ship That Was Never the Same — philosophy for children.
 
+Repository Quality executes `scripts/validate-m5-5-fantastic-adventure-pack.py`. Source completeness does not claim final 3D environments, authored apparatus, final animation/cinematics, localization/audio or representative-device runtime certification.
+
+See `docs/m5-5-first-fantastic-adventure-pack.md`.
+
 ### M5.6 — Cross-disciplinary epic adventures
 
-- Missions combine multiple learning streams when the world problem naturally requires them.
-- Candidate: The Eclipse Engine — geometry + physics + mathematics + language/literature + philosophy.
-- Candidate: The Garden at the End of Winter — biology + chemistry + ecology + mathematics + ethics + mythology.
-- Evidence attribution remains explicit per objective even when one action supports several disciplines.
+#### M5.6A — Epic schema and orchestration foundation — source-complete
+
+Implemented in PR #91:
+
+- versioned `epic-catalog.cross-disciplinary-v1` with canonical + packaged parity;
+- authoritative ordered chapter state machine;
+- exact objective, discipline, primitive, event and producer attribution;
+- trusted causal `worldStateRequirements` in addition to learning evidence;
+- `UWMEpicRuntimeSubsystem` integration with the existing Mission Runtime;
+- fail-closed rejection of future evidence, spoofed producers, wrong attribution and premature advancement;
+- deterministic end-to-end automation traversal of The Eclipse Engine and The Garden at the End of Winter catalogs;
+- source validator wired into Repository Quality;
+- Adventures and Epics staged for packaged builds.
+
+This status is source-complete only. Native Unreal build/test and representative-device evidence still require the external runner and authored-runtime evidence tracked by Issue #9.
+
+#### M5.6B — The Eclipse Engine vertical epic — next
+
+The next phase converts the orchestration contract into a coherent playable world route:
+
+- authored/proxy Eclipse world interactions and causal state producers;
+- explicit geometry mirror/alignment gameplay;
+- integrated mathematics, physics, building, language/literature and philosophy interactions;
+- chapter transition UX and world consequences;
+- end-to-end integration coverage using the real runtime producers;
+- first-person interaction compatibility and asset-slot fallbacks.
+
+#### M5.6C — The Garden at the End of Winter vertical epic — pending
+
+- biology/chemistry/ecology simulation coupling;
+- mathematical resource/building constraints;
+- ethics/philosophy reasoning and provenance-aware cultural narrative;
+- deterministic causal ecosystem-recovery route.
+
+#### M5.6D — Epic UX and persistence — pending
+
+- chapter resume/continue persistence;
+- player-dashboard epic state;
+- calm child-facing progress language;
+- parent-facing summarized objective progress.
+
+#### M5.6E — Epic certification — pending external/native evidence
+
+- native Unreal execution;
+- authored world/map integration;
+- pedagogical and cultural/provenance review;
+- representative-device performance capture;
+- fail-closed certification distinct from source completeness.
+
+See `docs/m5-6-cross-disciplinary-epic-adventures.md`.
 
 ### M5 exit condition
 
@@ -222,6 +275,7 @@ See `docs/reference-driven-visual-animation-polish.md` and `docs/first-person-in
 
 ## Suggested GitHub issue titles
 
-1. `M5.5: Build first fantastic multidisciplinary adventure pack`
-2. `M5.6: Build cross-disciplinary epic adventure framework`
-3. `M6: Implement parent-approved private multiplayer invitation flow`
+1. `M5.6B: Build The Eclipse Engine vertical epic`
+2. `M5.6C: Build The Garden at the End of Winter vertical epic`
+3. `M5.6D: Persist epic progress and expose calm player/parent UX`
+4. `M6: Implement parent-approved private multiplayer invitation flow`

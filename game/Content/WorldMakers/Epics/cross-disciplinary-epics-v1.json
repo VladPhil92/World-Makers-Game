@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "epic-catalog.cross-disciplinary-v1",
+  "prototypeOnly": true,
+  "designPrinciple": "learning-is-structurally-necessary-to-play",
+  "progressionModel": "ordered-chapters-world-state-gated",
+  "privacyModel": "stable-ids-no-child-free-text",
+  "epics": [
+    {
+      "epicId": "epic.eclipse-engine",
+      "titleKey": "epic.eclipse-engine.title",
+      "premiseKey": "epic.eclipse-engine.premise",
+      "ageBand": "9-10",
+      "disciplines": ["mathematics", "geometry", "physics", "english-language", "literature", "philosophy-for-children", "ethics"],
+      "chapters": [
+        {
+          "chapterId": "chapter.eclipse.decode-orbit",
+          "missionId": "mission.fantastic.vault-infinite-staircase-01",
+          "titleKey": "epic.eclipse-engine.decode-orbit.title",
+          "promptKey": "epic.eclipse-engine.decode-orbit.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.pattern","objectiveId":"math.pattern.infer-rule","disciplineId":"mathematics","primitiveId":"sequence-and-infer","evidenceEventId":"fantastic.vault.pattern-rule-inferred","producerKind":"world","producerRefId":"world.vault.pattern-table","requiredCount":1},
+            {"requirementId":"req.eclipse.ratios","objectiveId":"math.ratio.apply-equivalence","disciplineId":"mathematics","primitiveId":"model-system","evidenceEventId":"fantastic.vault.ratio-equivalence-applied","producerKind":"world","producerRefId":"world.vault.ratio-lock","requiredCount":1},
+            {"requirementId":"req.eclipse.route","objectiveId":"math.optimization.compare-solutions","disciplineId":"mathematics","primitiveId":"construct-to-constraint","evidenceEventId":"fantastic.vault.route-optimized","producerKind":"building","producerRefId":"building.vault.staircase-route","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.orbit-path-stable","producerKind":"world","producerRefId":"world.eclipse.orbit-mechanism"}
+          ]
+        },
+        {
+          "chapterId": "chapter.eclipse.power-core",
+          "missionId": "mission.fantastic.moonforge-01",
+          "titleKey": "epic.eclipse-engine.power-core.title",
+          "promptKey": "epic.eclipse-engine.power-core.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.force","objectiveId":"physics.force.predict-motion","disciplineId":"physics","primitiveId":"predict-test-revise","evidenceEventId":"science.physics.force-motion-demonstrated","producerKind":"science","producerRefId":"science.physics.moonforge-force","requiredCount":1},
+            {"requirementId":"req.eclipse.circuit","objectiveId":"physics.circuit.solve-relationship","disciplineId":"physics","primitiveId":"model-system","evidenceEventId":"science.physics.ohms-law-demonstrated","producerKind":"science","producerRefId":"science.circuit.moonforge","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.power-core-stable","producerKind":"science","producerRefId":"science.eclipse.power-core"}
+          ]
+        },
+        {
+          "chapterId": "chapter.eclipse.recover-language",
+          "missionId": "mission.fantastic.dragon-lost-words-01",
+          "titleKey": "epic.eclipse-engine.recover-language.title",
+          "promptKey": "epic.eclipse-engine.recover-language.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.command","objectiveId":"english.context.communicate-intent","disciplineId":"english-language","primitiveId":"communicate-in-language","evidenceEventId":"language.english.dragon-contextual-command-demonstrated","producerKind":"thought","producerRefId":"language.en.dragon-restore-command","requiredCount":1},
+            {"requirementId":"req.eclipse.inference","objectiveId":"english.inference.use-context","disciplineId":"english-language","primitiveId":"sequence-and-infer","evidenceEventId":"fantastic.dragon.context-inference-demonstrated","producerKind":"world","producerRefId":"world.dragon.context-clue","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.operating-knowledge-restored","producerKind":"world","producerRefId":"world.eclipse.archive"}
+          ]
+        },
+        {
+          "chapterId": "chapter.eclipse.revise-explanation",
+          "missionId": "mission.fantastic.ship-never-same-01",
+          "titleKey": "epic.eclipse-engine.revise-explanation.title",
+          "promptKey": "epic.eclipse-engine.revise-explanation.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.revision","objectiveId":"philosophy.identity.construct-revisable-argument","disciplineId":"philosophy-for-children","primitiveId":"argue-and-revise","evidenceEventId":"philosophy.argument-revised-after-counterexample","producerKind":"thought","producerRefId":"philosophy.ship-theseus-prototype","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.engine-synchronized","producerKind":"world","producerRefId":"world.eclipse.engine"}
+          ]
+        }
+      ]
+    },
+    {
+      "epicId": "epic.garden-end-winter",
+      "titleKey": "epic.garden-end-winter.title",
+      "premiseKey": "epic.garden-end-winter.premise",
+      "ageBand": "9-10",
+      "disciplines": ["biology", "chemistry", "ecology", "mathematics", "ethics", "philosophy-for-children"],
+      "chapters": [
+        {
+          "chapterId": "chapter.garden.restore-cellular-balance",
+          "missionId": "mission.fantastic.city-inside-cell-01",
+          "titleKey": "epic.garden-end-winter.restore-cellular-balance.title",
+          "promptKey": "epic.garden-end-winter.restore-cellular-balance.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.garden.cell-balance","objectiveId":"biology.cell.explain-system-interdependence","disciplineId":"biology","primitiveId":"model-system","evidenceEventId":"science.biology.cell-system-balance-demonstrated","producerKind":"science","producerRefId":"science.cell.metabolism-balance","requiredCount":1},
+            {"requirementId":"req.garden.transport","objectiveId":"biology.cell.model-transport-homeostasis","disciplineId":"biology","primitiveId":"model-system","evidenceEventId":"science.biology.transport-model-demonstrated","producerKind":"world","producerRefId":"world.cell.transport-network","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.garden.organisms-responsive","producerKind":"world","producerRefId":"world.garden.organism-network"}
+          ]
+        },
+        {
+          "chapterId": "chapter.garden.repair-soil-water",
+          "missionId": "mission.fantastic.alchemists-archipelago-01",
+          "titleKey": "epic.garden-end-winter.repair-soil-water.title",
+          "promptKey": "epic.garden-end-winter.repair-soil-water.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.garden.solution","objectiveId":"chemistry.solution.reason-about-solubility","disciplineId":"chemistry","primitiveId":"predict-test-revise","evidenceEventId":"science.chemistry.solution-saturation-demonstrated","producerKind":"science","producerRefId":"science.solution.sodium-chloride","requiredCount":1},
+            {"requirementId":"req.garden.conservation","objectiveId":"chemistry.reaction.apply-conservation","disciplineId":"chemistry","primitiveId":"model-system","evidenceEventId":"science.chemistry.mass-conservation-demonstrated","producerKind":"science","producerRefId":"reaction.iron-oxidation","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.garden.soil-water-stable","producerKind":"science","producerRefId":"science.garden.soil-water"}
+          ]
+        },
+        {
+          "chapterId": "chapter.garden.restore-pollination",
+          "missionId": "mission.fantastic.forest-thousand-voices-01",
+          "titleKey": "epic.garden-end-winter.restore-pollination.title",
+          "promptKey": "epic.garden-end-winter.restore-pollination.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.garden.limiting-factor","objectiveId":"ecology.plant.identify-limiting-factor","disciplineId":"ecology","primitiveId":"predict-test-revise","evidenceEventId":"science.botany.growth-limiting-factor-demonstrated","producerKind":"science","producerRefId":"plant.rainforest-learning-prototype","requiredCount":1},
+            {"requirementId":"req.garden.pollination","objectiveId":"ecology.pollination.explain-interdependence","disciplineId":"ecology","primitiveId":"model-system","evidenceEventId":"science.botany.pollination-fruiting-link-demonstrated","producerKind":"science","producerRefId":"plant.rainforest-learning-prototype","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.garden.pollination-network-active","producerKind":"world","producerRefId":"world.garden.pollination-network"}
+          ]
+        },
+        {
+          "chapterId": "chapter.garden.choose-shared-restoration",
+          "missionId": "mission.fantastic.bridge-two-villages-01",
+          "titleKey": "epic.garden-end-winter.choose-shared-restoration.title",
+          "promptKey": "epic.garden-end-winter.choose-shared-restoration.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.garden.ethics","objectiveId":"ethics.reason.from-multiple-perspectives","disciplineId":"ethics","primitiveId":"reason-through-dilemma","evidenceEventId":"ethics.multi-perspective-reasoning-demonstrated","producerKind":"thought","producerRefId":"ethics.bridge-two-villages-prototype","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.garden.seasonal-transition-restored","producerKind":"world","producerRefId":"world.garden.seasonal-system"}
+          ]
+        }
+      ]
+    }
+  ]
+}
