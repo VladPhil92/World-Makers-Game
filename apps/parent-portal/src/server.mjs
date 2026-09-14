@@ -8,7 +8,7 @@ import { createParentDashboardReadModel } from './domain/dashboard.mjs';
 import { buildPrivacyRequest, validateLinkCode } from './domain/privacy.mjs';
 import { demoFamily } from './data/demo-family.mjs';
 import { createSupabaseClient, SupabaseAuthError, SupabaseQueryError } from './domain/supabase-client.mjs';
-import { ensureFamilyForParent, fetchFamilyReadModel, createChildProfile, exportChildData, deleteChildProfile, derivePlayerProfileId } from './domain/family-store.mjs';
+import { ensureFamilyForParent, fetchFamilyReadModel, createChildProfile, exportChildData, deleteChildProfile, derivePlayerProfileId, createFamilyInvite, redeemFamilyInvite } from './domain/family-store.mjs';
 import { createIdentityAssertion } from './domain/identity-issuer.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -300,6 +300,35 @@ async function handleApi(req, res, url) {
     await deleteChildProfile(supabase, accessToken, request.childProfileId);
     const updatedFamily = await loadFamilyForSession(session);
     return json(res, 200, { ...request, requestId, status: 'completed', session: buildSessionReadModel(updatedFamily, session.parentId) });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/family/invites') {
+    assertSameOrigin(req);
+    const session = requireSession(req);
+    if (session.demo) return json(res, 503, { code: 'not_available_in_demo' });
+    const accessToken = await ensureFreshAccessToken(session);
+    const invite = await createFamilyInvite(supabase, accessToken, session.familyId);
+    return json(res, 201, invite);
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/family/invites/redeem') {
+    assertSameOrigin(req);
+    const session = requireSession(req);
+    if (session.demo) return json(res, 503, { code: 'not_available_in_demo' });
+    const body = await readJson(req);
+    const accessToken = await ensureFreshAccessToken(session);
+    try {
+      const { familyId } = await redeemFamilyInvite(supabase, accessToken, body.inviteCode);
+      session.familyId = familyId;
+      const family = await fetchFamilyReadModel(supabase, accessToken, familyId);
+      return json(res, 200, { session: buildSessionReadModel(family, session.parentId) });
+    } catch (error) {
+      const knownReasons = new Set(['invite_not_found', 'invite_already_used', 'invite_expired', 'already_member', 'family_not_empty']);
+      if (error instanceof SupabaseQueryError && knownReasons.has(error.message)) {
+        return json(res, 409, { code: 'invite_redeem_failed', reason: error.message });
+      }
+      throw error;
+    }
   }
 
   if (req.method === 'POST' && url.pathname === '/api/link-requests') {

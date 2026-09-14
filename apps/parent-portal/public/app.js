@@ -302,6 +302,50 @@ $('#link-form').addEventListener('submit', async (event) => {
   }
 });
 
+$('#invite-generate').addEventListener('click', async () => {
+  const button = $('#invite-generate');
+  const output = $('#invite-generate-result');
+  button.disabled = true;
+  output.textContent = 'Generating invite code…';
+  try {
+    const result = await api('/api/family/invites', { method: 'POST', body: '{}' });
+    const expires = new Date(result.expiresAt);
+    output.textContent = `Code: ${result.inviteCode} — share it with your co-guardian. Expires ${expires.toLocaleString()}.`;
+  } catch {
+    output.textContent = 'Could not generate an invite code right now.';
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('#invite-redeem-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const output = $('#invite-redeem-result');
+  output.textContent = 'Joining family…';
+  try {
+    const result = await api('/api/family/invites/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode: $('#invite-redeem-code').value }),
+    });
+    session = result.session;
+    renderChildren(session.children);
+    activeDashboard = null;
+    event.currentTarget.reset();
+    output.textContent = 'You have joined the family.';
+    if (session.children.length) await loadDashboard(session.children[0].childProfileId);
+    else setStatus('No linked profiles yet.');
+  } catch (error) {
+    const reasons = {
+      invite_not_found: 'That code was not recognized.',
+      invite_already_used: 'That code has already been used.',
+      invite_expired: 'That code has expired. Ask for a new one.',
+      already_member: 'You are already part of that family.',
+      family_not_empty: 'You already have a child profile, so you cannot join another family.',
+    };
+    output.textContent = reasons[error.payload?.reason] ?? 'That code could not be redeemed.';
+  }
+});
+
 for (const button of document.querySelectorAll('.privacy-action')) {
   button.addEventListener('click', async () => {
     const output = $('#privacy-result');

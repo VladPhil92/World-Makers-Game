@@ -21,6 +21,10 @@ Saved/
 .DS_Store
 Thumbs.db
 
+# Python
+__pycache__/
+*.pyc
+
 # Node / web
 node_modules/
 .next/
