@@ -68,11 +68,12 @@ def anonymous_namespace_blocks(text: str) -> list[str]:
 
 
 def find_duplicate_unity_helpers() -> dict[str, list[str]]:
-    """Find anonymous-namespace helper definitions duplicated across .cpp files.
+    """Return anonymous helper names duplicated across .cpp files.
 
-    Unreal unity builds may combine multiple .cpp files into one translation unit.
-    Anonymous namespace declarations then share the same translation unit, so
-    same-named helper definitions can become C2084/C2264 build failures.
+    These names are valid with normal C++ translation units but may collide when
+    Unreal unity aggregation combines multiple implementation files. The module
+    is intentionally compiled with bUseUnity=false; this scanner makes any future
+    attempt to re-enable unity compilation fail with actionable diagnostics.
     """
 
     helper_pattern = re.compile(
@@ -117,6 +118,18 @@ def main() -> None:
     if '"ProceduralMeshComponent"' not in build_rules:
         fail("WorldMakers must declare the ProceduralMeshComponent module dependency")
 
+    if "bUseUnity = false;" not in build_rules:
+        duplicate_helpers = find_duplicate_unity_helpers()
+        details = "; ".join(
+            f"{name}: {', '.join(paths)}"
+            for name, paths in sorted(duplicate_helpers.items())
+        )
+        suffix = f" Existing collisions: {details}" if details else ""
+        fail(
+            "WorldMakers.Build.cs must keep bUseUnity = false for deterministic independent translation units."
+            + suffix
+        )
+
     bad_procedural_include = scan_sources(re.compile(r'#include\s+"Components/ProceduralMeshComponent\.h"'))
     if bad_procedural_include:
         fail(
@@ -131,17 +144,6 @@ def main() -> None:
         fail(
             "Local UMG variable named Slot shadows UWidget::Slot under the locked compiler: "
             + ", ".join(slot_shadowing)
-        )
-
-    duplicate_helpers = find_duplicate_unity_helpers()
-    if duplicate_helpers:
-        details = "; ".join(
-            f"{name}: {', '.join(paths)}"
-            for name, paths in sorted(duplicate_helpers.items())
-        )
-        fail(
-            "Anonymous-namespace helper names collide across .cpp files and may fail Unreal unity builds: "
-            + details
         )
 
     game_ini = require_file(GAME / "Config" / "DefaultGame.ini")
@@ -206,7 +208,7 @@ def main() -> None:
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
-        "native_readiness_orchestrator=present, unity_helper_collisions=none. "
+        "native_readiness_orchestrator=present, unity_mode=disabled. "
         "Native UE build/test certification remains a separate gate."
     )
 
