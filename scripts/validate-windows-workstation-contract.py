@@ -94,6 +94,8 @@ def main() -> None:
             "native-failure-summary.json",
             "primaryFailureCategory",
             "schemaVersion = 3",
+            "$ClassifierOutput = @(& $Python.Source",
+            "$ClassifierExitCode = $LASTEXITCODE",
         ),
         "scripts/build-unreal.ps1",
     )
@@ -130,6 +132,12 @@ def main() -> None:
         ),
         "scripts/classify-unreal-build-log.py",
     )
+    executable_classifier = "\n".join(
+        line for line in classifier.splitlines() if not line.lstrip().startswith("#")
+    )
+    if "OtherCompilationError" in executable_classifier:
+        fail("Generic OtherCompilationError must not be used as an UnrealHeaderTool classifier signature.")
+
     require(
         classifier_test,
         (
@@ -140,6 +148,7 @@ def main() -> None:
             "compiler-error",
             "linker-error",
             "unknown-native-build-failure",
+            "OtherCompilationError (5)",
             "JuanPablo",
             "<user>",
         ),
@@ -171,6 +180,8 @@ def main() -> None:
             "Start-Process",
             "editor-launch-result.json",
             "manual-only-no-auto-install",
+            "Remove-Item $StaleEvidence -Force",
+            "nativeBuildStatus",
         ),
         "scripts/open-unreal-project.ps1",
     )
@@ -222,8 +233,8 @@ def main() -> None:
         "editor_launcher": editor_launcher,
     }
     forbidden_ps7_tokens = ("??", "?.", "&&", "||", "ForEach-Object -Parallel")
-    for name, text in powershell_files.items():
-        found = [token for token in forbidden_ps7_tokens if token in text]
+    for name, source in powershell_files.items():
+        found = [token for token in forbidden_ps7_tokens if token in source]
         if found:
             fail(f"{name} uses PowerShell-7-only syntax incompatible with Windows PowerShell 5.1: {found}")
 
@@ -247,8 +258,9 @@ def main() -> None:
 
     print(
         "World Makers Windows workstation contract passed: diagnostic-first, no-auto-install, "
-        "native failure classification, guarded editor launch, engine auto-resolution, Live Coding blocker classification, "
-        "Visual Studio/SDK verification, Windows PowerShell 5.1 compatibility, CMD launchers present."
+        "native failure classification, scalar classifier output, current-run evidence only, guarded editor launch, "
+        "engine auto-resolution, Live Coding blocker classification, Visual Studio/SDK verification, "
+        "Windows PowerShell 5.1 compatibility, CMD launchers present."
     )
 
 

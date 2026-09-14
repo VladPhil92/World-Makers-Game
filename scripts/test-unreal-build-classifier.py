@@ -57,7 +57,14 @@ def main() -> None:
         actionable=True,
     )
     expect(
-        "WorldMakers.obj : error LNK2019: unresolved external symbol Example referenced in function Main\nResult: Failed",
+        "D:\\repo\\game\\Source\\WorldMakers\\Foo.cpp(42): error C2664: cannot convert argument 2\n"
+        "OtherCompilationError (5)\nResult: Failed",
+        "compiler-error",
+        actionable=True,
+    )
+    expect(
+        "WorldMakers.obj : error LNK2019: unresolved external symbol Example referenced in function Main\n"
+        "OtherCompilationError (5)\nResult: Failed",
         "linker-error",
         actionable=True,
     )
