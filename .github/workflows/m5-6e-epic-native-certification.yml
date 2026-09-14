@@ -1,0 +1,94 @@
+name: M5.6E Native Epic Continuity Certification
+
+on:
+  pull_request:
+    paths:
+      - 'game/Source/WorldMakers/Adventure/WMEpicJourneySaveGame.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntime.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntime.cpp'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp'
+      - 'game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp'
+      - 'game/UNREAL_ENGINE_VERSION'
+      - 'game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'scripts/preflight-unreal-runner.ps1'
+      - 'scripts/collect-m5-6e-epic-evidence.ps1'
+      - 'scripts/assess-m5-6e-epic-certification.py'
+      - 'scripts/validate-m5-6e-native-epic-certification.py'
+      - 'docs/m5-6e-native-epic-continuity-certification.md'
+      - '.github/workflows/m5-6e-epic-native-certification.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'game/Source/WorldMakers/Adventure/WMEpicJourneySaveGame.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntime.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntime.cpp'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.h'
+      - 'game/Source/WorldMakers/Adventure/WMEpicRuntimeSubsystem.cpp'
+      - 'game/Source/WorldMakers/Private/Tests/WMEpicPersistenceTests.cpp'
+      - 'game/UNREAL_ENGINE_VERSION'
+      - 'game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap'
+      - 'scripts/build-unreal.ps1'
+      - 'scripts/test-unreal.ps1'
+      - 'scripts/preflight-unreal-runner.ps1'
+      - 'scripts/collect-m5-6e-epic-evidence.ps1'
+      - 'scripts/assess-m5-6e-epic-certification.py'
+      - 'scripts/validate-m5-6e-native-epic-certification.py'
+      - 'docs/m5-6e-native-epic-continuity-certification.md'
+      - '.github/workflows/m5-6e-epic-native-certification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate M5.6E native epic certification contract
+        run: python scripts/validate-m5-6e-native-epic-certification.py
+
+  native-epic-continuity:
+    if: ${{ vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+      - unreal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Preflight locked Unreal runner and authored map
+        shell: powershell
+        run: ./scripts/preflight-unreal-runner.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\m5-6e-epic' -RequireAuthoredMap
+      - name: Build WorldMakers Editor on locked UE version
+        shell: powershell
+        run: ./scripts/build-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\m5-6e-epic'
+      - name: Run native epic persistence automation only
+        shell: powershell
+        run: ./scripts/test-unreal.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -TestFilter 'WorldMakers.Epic.Persistence.' -EvidenceDir 'artifacts\m5-6e-epic'
+      - name: Collect M5.6E native epic evidence
+        if: always()
+        shell: powershell
+        run: ./scripts/collect-m5-6e-epic-evidence.ps1 -EngineRoot '${{ vars.UNREAL_ENGINE_ROOT }}' -EvidenceDir 'artifacts\m5-6e-epic'
+      - name: Assess M5.6E evidence fail closed
+        if: always()
+        run: python scripts/assess-m5-6e-epic-certification.py --evidence-dir artifacts/m5-6e-epic --expected-commit '${{ github.sha }}' --require-pass
+      - name: Upload M5.6E native epic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5-6e-epic-continuity-${{ github.sha }}
+          path: artifacts/m5-6e-epic/**
+          if-no-files-found: error
+          retention-days: 30
