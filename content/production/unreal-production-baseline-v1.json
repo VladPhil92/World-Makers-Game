@@ -1,0 +1,139 @@
+{
+  "schema": "worldmakers.unreal-production-baseline.v1",
+  "version": 1,
+  "status": "locked-for-production-readiness",
+  "engine": {
+    "family": "5.8",
+    "certificationPatch": "5.8.2",
+    "projectPath": "game/WorldMakers.uproject",
+    "certificationMap": "/Game/WorldMakers/Maps/WM_PrototypeCertification"
+  },
+  "product": {
+    "genre": "premium-stylized-3d-open-world-learning-sandbox",
+    "primaryAudience": "children-4-10",
+    "initialBiome": "caribbean-rainforest",
+    "primaryRuntimeView": "first-person",
+    "designRule": "learning-is-structural-to-play"
+  },
+  "architecture": {
+    "authoritativeGameplay": "cpp-and-data-driven-runtime",
+    "blueprintRole": "composition-presentation-and-safe-extension",
+    "contentRole": "reviewable-canonical-source-plus-authored-unreal-assets",
+    "prohibitedPattern": "blueprint-only-authoritative-gameplay",
+    "requiredBoundaries": [
+      "gameplay-rules-independent-from-rendering",
+      "science-simulation-independent-from-vfx",
+      "mission-evidence-independent-from-presentation",
+      "child-runtime-independent-from-payment-sdk"
+    ]
+  },
+  "rendering": {
+    "visualTarget": "premium-stylized-high-fidelity",
+    "desktopReference": {
+      "targetFps": 60,
+      "maxP95FrameMs": 16.67,
+      "nanite": "allowed-and-preferred-where-profiled",
+      "lumen": "allowed",
+      "virtualShadowMaps": "allowed",
+      "niagara": "budgeted",
+      "screenPercentage": 100
+    },
+    "tabletLow": {
+      "targetFps": 30,
+      "maxP95FrameMs": 33.34,
+      "nanite": "optional-with-fallback",
+      "lumen": "not-required",
+      "niagara": "strict-budget",
+      "screenPercentage": 70
+    },
+    "tabletMedium": {
+      "targetFps": 30,
+      "maxP95FrameMs": 33.34,
+      "nanite": "optional-with-fallback",
+      "lumen": "not-required",
+      "niagara": "budgeted",
+      "screenPercentage": 85
+    },
+    "tabletHigh": {
+      "targetFps": 60,
+      "maxP95FrameMs": 16.67,
+      "nanite": "profiled-only",
+      "lumen": "profiled-only",
+      "niagara": "budgeted",
+      "screenPercentage": 100
+    },
+    "materialRules": [
+      "stylized-pbr-master-materials",
+      "macro-variation-over-noisy-microdetail",
+      "two-or-fewer-material-slots-for-current-environment-target",
+      "explicit-mobile-fallbacks",
+      "wetness-damage-age-and-biome-state-through-parameterized-variation"
+    ]
+  },
+  "animation": {
+    "firstPerson": [
+      "authored-skeletal-arms",
+      "authored-tools",
+      "animation-blueprint",
+      "ik-rig",
+      "control-rig",
+      "motion-warping-where-contextual",
+      "reduced-motion-support"
+    ],
+    "fullBodyHighFidelity": [
+      "motion-matching-evaluation",
+      "full-body-ik",
+      "terrain-adaptation",
+      "contextual-interaction-alignment",
+      "expressive-idle-and-tool-use"
+    ],
+    "rule": "animation-must-communicate-weight-intent-and-gameplay-state"
+  },
+  "world": {
+    "streaming": "world-partition-target",
+    "proceduralGeneration": "pcg-assisted-not-fully-procedural",
+    "authorshipRule": "procedural-macro-distribution-plus-handcrafted-points-of-interest",
+    "ecosystemRule": "player-actions-must-produce-visible-causal-world-response"
+  },
+  "verticalSlice": {
+    "name": "Caribbean Rainforest Prototype Certification",
+    "requiredCapabilities": [
+      "spawn-and-first-person-control",
+      "observe-and-scan",
+      "collect-resource",
+      "perform-science-interaction",
+      "craft-or-transform-material",
+      "build-or-place-intervention",
+      "trigger-visible-ecosystem-consequence",
+      "complete-mission-evidence",
+      "save-and-load-state"
+    ],
+    "qualityBar": [
+      "authored-certification-map",
+      "production-path-asset-naming",
+      "stable-camera-comfort",
+      "advanced-animation-foundation",
+      "stylized-lighting-and-material-language",
+      "budgeted-vfx",
+      "spatial-audio-foundation",
+      "measured-performance-evidence"
+    ]
+  },
+  "productionGates": [
+    {"id": "G0", "name": "Source and architecture readiness", "requires": ["hosted-source-ci-green", "production-baseline-validator-green", "lfs-policy-clean", "ue-source-preflight-green"]},
+    {"id": "G1", "name": "Native Unreal readiness", "requires": ["worldmakerseditor-win64-development-build-green", "worldmakers-automation-green", "no-known-fatal-compiler-errors"]},
+    {"id": "G2", "name": "Authored vertical slice", "requires": ["certification-map-committed-via-lfs", "first-person-route-playable", "authored-assets-resolve-at-stable-paths"]},
+    {"id": "G3", "name": "Visual and animation target", "requires": ["lighting-material-animation-vfx-quality-review", "reduced-motion-review", "no-placeholder-proxies-in-certified-route"]},
+    {"id": "G4", "name": "Performance certification", "requires": ["desktop-reference-budget-pass", "representative-ipados-evidence", "representative-android-evidence", "fail-closed-certification-result"]}
+  ],
+  "changeControl": {
+    "requiresAdrFor": [
+      "engine-family-change",
+      "certification-patch-change",
+      "authoritative-gameplay-boundary-change",
+      "primary-runtime-view-change",
+      "performance-target-change",
+      "child-safety-or-commerce-boundary-change"
+    ]
+  }
+}
