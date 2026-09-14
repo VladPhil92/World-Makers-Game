@@ -26,21 +26,9 @@ def expect(log: str, category: str, *, actionable: bool | None = None) -> None:
 
 
 def main() -> None:
-    expect(
-        "Unable to build while Live Coding is active. Exit the editor or press Ctrl+Alt+F11.\nResult: Failed",
-        "live-coding-active",
-        actionable=False,
-    )
-    expect(
-        "ERROR: No Visual C++ installation was found.\nResult: Failed",
-        "visual-studio-toolchain-missing",
-        actionable=False,
-    )
-    expect(
-        "Windows SDK must be installed in order to build this target.\nResult: Failed",
-        "windows-sdk-missing",
-        actionable=False,
-    )
+    expect("Unable to build while Live Coding is active. Exit the editor or press Ctrl+Alt+F11.\nResult: Failed", "live-coding-active", actionable=False)
+    expect("ERROR: No Visual C++ installation was found.\nResult: Failed", "visual-studio-toolchain-missing", actionable=False)
+    expect("Windows SDK must be installed in order to build this target.\nResult: Failed", "windows-sdk-missing", actionable=False)
     expect(
         "C:\\Users\\Builder\\World-Makers-Game\\game\\Source\\WorldMakers\\Foo.cpp(17): fatal error C1083: Cannot open include file: 'Missing.h': No such file or directory\nResult: Failed",
         "include-file-missing",
@@ -57,30 +45,19 @@ def main() -> None:
         actionable=True,
     )
     expect(
-        "WorldMakers.obj : error LNK2019: unresolved external symbol Example referenced in function Main\nResult: Failed",
+        "D:\\repo\\game\\Source\\WorldMakers\\Foo.cpp(42): error C2664: cannot convert argument 2\nOtherCompilationError (5)\nResult: Failed",
+        "compiler-error",
+        actionable=True,
+    )
+    expect(
+        "WorldMakers.obj : error LNK2019: unresolved external symbol Example referenced in function Main\nOtherCompilationError (5)\nResult: Failed",
         "linker-error",
         actionable=True,
     )
-    expect(
-        "Plugin 'ProceduralThing' failed to load because module ProceduralThing could not be found.\nResult: Failed",
-        "plugin-or-module-error",
-        actionable=True,
-    )
-    expect(
-        "LINK : fatal error LNK1104: cannot open file 'WorldMakersEditor.dll' because it is being used by another process\nResult: Failed",
-        "file-lock-or-access-denied",
-        actionable=False,
-    )
-    expect(
-        "fatal error C1060: compiler is out of heap space\nResult: Failed",
-        "out-of-memory",
-        actionable=False,
-    )
-    expect(
-        "Asset payload begins with version https://git-lfs.github.com/spec/v1 and is not a valid Unreal package.\nResult: Failed",
-        "git-lfs-or-binary-pointer-error",
-        actionable=False,
-    )
+    expect("Plugin 'ProceduralThing' failed to load because module ProceduralThing could not be found.\nResult: Failed", "plugin-or-module-error", actionable=True)
+    expect("LINK : fatal error LNK1104: cannot open file 'WorldMakersEditor.dll' because it is being used by another process\nResult: Failed", "file-lock-or-access-denied", actionable=False)
+    expect("fatal error C1060: compiler is out of heap space\nResult: Failed", "out-of-memory", actionable=False)
+    expect("Asset payload begins with version https://git-lfs.github.com/spec/v1 and is not a valid Unreal package.\nResult: Failed", "git-lfs-or-binary-pointer-error", actionable=False)
     expect("Total time in Parallel executor: 1.24 seconds\nResult: Succeeded", "none", actionable=False)
     expect("AutomationTool exiting with ExitCode=6 (6)\nResult: Failed", "unknown-native-build-failure", actionable=True)
 
