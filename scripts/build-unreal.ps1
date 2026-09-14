@@ -67,8 +67,11 @@ function Invoke-FailureClassifier {
     }
 
     try {
-        & $Python.Source $FailureClassifier --log $LogPath --output $FailureSummaryPath --repo-root $RepoRoot
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $FailureSummaryPath -PathType Leaf)) {
+        # Capture native stdout/stderr locally so this PowerShell function emits
+        # only the scalar category on its success stream.
+        $ClassifierOutput = @(& $Python.Source $FailureClassifier --log $LogPath --output $FailureSummaryPath --repo-root $RepoRoot 2>&1)
+        $ClassifierExitCode = $LASTEXITCODE
+        if ($ClassifierExitCode -ne 0 -or -not (Test-Path $FailureSummaryPath -PathType Leaf)) {
             return 'classifier-failed'
         }
         $Summary = Get-Content $FailureSummaryPath -Raw | ConvertFrom-Json
