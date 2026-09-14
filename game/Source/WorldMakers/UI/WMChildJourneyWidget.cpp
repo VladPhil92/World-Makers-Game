@@ -43,7 +43,7 @@ void UWMChildJourneyWidget::NativeOnInitialized()
     Subtitle->SetText(LOCTEXT("CalmChoice", "Choose what you want to explore. You can stop whenever you like."));
     Subtitle->SetAutoWrapText(true);
     Subtitle->SetJustification(ETextJustify::Center);
-    if (UVerticalBoxSlot* Slot = Stack->AddChildToVerticalBox(Subtitle)) Slot->SetPadding(FMargin(4.0f, 8.0f, 4.0f, 12.0f));
+    if (UVerticalBoxSlot* LayoutSlot = Stack->AddChildToVerticalBox(Subtitle)) LayoutSlot->SetPadding(FMargin(4.0f, 8.0f, 4.0f, 12.0f));
 
     LocationText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("AdventureLocation"));
     LocationText->SetJustification(ETextJustify::Center);
@@ -52,20 +52,20 @@ void UWMChildJourneyWidget::NativeOnInitialized()
     EcosystemText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("AdventureEcosystem"));
     EcosystemText->SetJustification(ETextJustify::Center);
     EcosystemText->SetAutoWrapText(true);
-    if (UVerticalBoxSlot* Slot = Stack->AddChildToVerticalBox(EcosystemText)) Slot->SetPadding(FMargin(4.0f, 4.0f, 4.0f, 12.0f));
+    if (UVerticalBoxSlot* LayoutSlot = Stack->AddChildToVerticalBox(EcosystemText)) LayoutSlot->SetPadding(FMargin(4.0f, 4.0f, 4.0f, 12.0f));
 
     CardList = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("AdventureCardList"));
-    if (UVerticalBoxSlot* Slot = Stack->AddChildToVerticalBox(CardList))
+    if (UVerticalBoxSlot* LayoutSlot = Stack->AddChildToVerticalBox(CardList))
     {
-        Slot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-        Slot->SetPadding(FMargin(0.0f, 4.0f));
+        LayoutSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        LayoutSlot->SetPadding(FMargin(0.0f, 4.0f));
     }
 
     UHorizontalBox* Footer = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("MyAdventuresFooter"));
-    if (UVerticalBoxSlot* Slot = Stack->AddChildToVerticalBox(Footer))
+    if (UVerticalBoxSlot* LayoutSlot = Stack->AddChildToVerticalBox(Footer))
     {
-        Slot->SetHorizontalAlignment(HAlign_Center);
-        Slot->SetPadding(FMargin(0.0f, 12.0f, 0.0f, 0.0f));
+        LayoutSlot->SetHorizontalAlignment(HAlign_Center);
+        LayoutSlot->SetPadding(FMargin(0.0f, 12.0f, 0.0f, 0.0f));
     }
 
     ContinueButton = CreateFooterButton(Footer, TEXT("ContinueAdventureButton"), LOCTEXT("ContinueAdventure", "Continue Adventure"));
@@ -104,10 +104,10 @@ UButton* UWMChildJourneyWidget::CreateFooterButton(UHorizontalBox* Row, const FN
     Button->AddChild(Text);
     Target->AddChild(Button);
 
-    if (UHorizontalBoxSlot* Slot = Row->AddChildToHorizontalBox(Target))
+    if (UHorizontalBoxSlot* LayoutSlot = Row->AddChildToHorizontalBox(Target))
     {
-        Slot->SetPadding(FMargin(4.0f));
-        Slot->SetVerticalAlignment(VAlign_Center);
+        LayoutSlot->SetPadding(FMargin(4.0f));
+        LayoutSlot->SetVerticalAlignment(VAlign_Center);
     }
     return Button;
 }
