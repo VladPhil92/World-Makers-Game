@@ -19,7 +19,6 @@ ENGINE_VERSION_PATH = ROOT / "game" / "UNREAL_ENGINE_VERSION"
 UPROJECT_PATH = ROOT / "game" / "WorldMakers.uproject"
 GITATTRIBUTES_PATH = ROOT / ".gitattributes"
 README_PATH = ROOT / "README.md"
-ROADMAP_PATH = ROOT / "docs" / "roadmap.md"
 
 EXPECTED_SCHEMA = "worldmakers.unreal-production-baseline.v1"
 EXPECTED_ENGINE = "5.8.2"
@@ -130,9 +129,7 @@ def main() -> int:
 
     readme = load_text(README_PATH)
     require("docs/unreal-production-baseline-v1.md" in readme, "README must reference the production baseline")
-
-    roadmap = load_text(ROADMAP_PATH)
-    require("Unreal Production Baseline v1" in roadmap, "roadmap must reference Unreal Production Baseline v1")
+    require("content/production/unreal-production-baseline-v1.json" in readme, "README must reference the machine-readable baseline")
 
     print("World Makers Unreal Production Baseline v1: PASS")
     print(f"  Engine: {EXPECTED_ENGINE}")
