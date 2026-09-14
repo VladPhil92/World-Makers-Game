@@ -42,6 +42,12 @@ require(engine["certificationMap"] == "/Game/WorldMakers/Maps/WM_PrototypeCertif
 require(text(ENGINE).strip() == "5.8.2", "UNREAL_ENGINE_VERSION mismatch")
 require(UPROJECT.is_file(), "WorldMakers.uproject missing")
 
+require(baseline["product"]["primaryRuntimeView"] == "first-person", "runtime view drift")
+require(baseline["product"]["initialBiome"] == "caribbean-rainforest", "initial biome drift")
+require(baseline["architecture"]["authoritativeGameplay"] == "cpp-and-data-driven-runtime", "gameplay authority drift")
+require(baseline["architecture"]["blueprintRole"] == "composition-presentation-and-safe-extension", "Blueprint role drift")
+require(baseline["rendering"]["visualTarget"] == "premium-stylized-high-fidelity", "visual target drift")
+
 product = baseline["product"]
 require(product["primaryRuntimeView"] == "first-person", "runtime view drift")
 require(product["initialBiome"] == "caribbean-rainforest", "initial biome drift")
@@ -59,6 +65,9 @@ for tier, fps, p95 in (
     ("tabletHigh", 60, 16.67),
     ("desktopReference", 60, 16.67),
 ):
+    value = baseline["rendering"][tier]
+    require(value["targetFps"] == fps, f"{tier} FPS drift")
+    require(abs(float(value["maxP95FrameMs"]) - p95) < 0.01, f"{tier} p95 drift")
     require(rendering[tier]["targetFps"] == fps, f"{tier} FPS drift")
     require(abs(float(rendering[tier]["maxP95FrameMs"]) - p95) < 0.01, f"{tier} p95 drift")
 
@@ -66,6 +75,7 @@ first_person = set(baseline["animation"]["firstPerson"])
 for token in ("authored-skeletal-arms", "animation-blueprint", "ik-rig", "control-rig", "reduced-motion-support"):
     require(token in first_person, f"animation contract missing {token}")
 
+required = {
 required_capabilities = {
 import sys
 
@@ -94,6 +104,7 @@ REQUIRED_CAPABILITIES = {
     "complete-mission-evidence",
     "save-and-load-state",
 }
+require(required <= set(baseline["verticalSlice"]["requiredCapabilities"]), "vertical-slice capability drift")
 require(required_capabilities <= set(baseline["verticalSlice"]["requiredCapabilities"]), "vertical-slice capability drift")
 require({g["id"] for g in baseline["productionGates"]} == {"G0", "G1", "G2", "G3", "G4"}, "production gate drift")
 
@@ -114,6 +125,9 @@ for token in (
 ):
     require(token in doc, f"baseline document missing {token}")
 
+print("World Makers Unreal Production Baseline v1: PASS")
+print("Engine 5.8.2 | first-person | premium-stylized-high-fidelity | G0 -> G4")
+print("Source governance only; native Unreal certification remains separate.")
 readme = text(README)
 require("docs/unreal-production-baseline-v1.md" in readme, "README baseline link missing")
 require("content/production/unreal-production-baseline-v1.json" in readme, "README machine baseline link missing")

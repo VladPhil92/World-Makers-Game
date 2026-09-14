@@ -1,0 +1,40 @@
+name: Unreal Production Baseline
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/unreal-production-baseline-v1.json'
+      - 'docs/unreal-production-baseline-v1.md'
+      - 'scripts/validate-unreal-production-baseline.py'
+      - 'game/UNREAL_ENGINE_VERSION'
+      - 'game/WorldMakers.uproject'
+      - '.gitattributes'
+      - '.github/workflows/unreal-production-baseline.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'content/production/unreal-production-baseline-v1.json'
+      - 'docs/unreal-production-baseline-v1.md'
+      - 'scripts/validate-unreal-production-baseline.py'
+      - 'game/UNREAL_ENGINE_VERSION'
+      - 'game/WorldMakers.uproject'
+      - '.gitattributes'
+      - '.github/workflows/unreal-production-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-production-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate locked Unreal production baseline
+        run: python scripts/validate-unreal-production-baseline.py
