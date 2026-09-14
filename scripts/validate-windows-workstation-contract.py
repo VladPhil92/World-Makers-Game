@@ -132,7 +132,10 @@ def main() -> None:
         ),
         "scripts/classify-unreal-build-log.py",
     )
-    if "OtherCompilationError" in classifier:
+    executable_classifier = "\n".join(
+        line for line in classifier.splitlines() if not line.lstrip().startswith("#")
+    )
+    if "OtherCompilationError" in executable_classifier:
         fail("Generic OtherCompilationError must not be used as an UnrealHeaderTool classifier signature.")
 
     require(
