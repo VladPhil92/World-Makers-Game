@@ -10,6 +10,8 @@ import traceback
 
 import unreal
 
+MAP_PACKAGE = "/Game/WorldMakers/Maps/WM_PrototypeCertification"
+EXPECTED_GAME_MODE = "/Script/WorldMakers.WMGameMode"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = REPO_ROOT / "content" / "production" / "g2-authored-vertical-slice-v1.json"
 REGISTRY_PATH = REPO_ROOT / "content" / "visual" / "authored" / "authored-assets-p1.json"
@@ -53,24 +55,33 @@ def main() -> None:
     blockers: list[str] = []
 
     map_path = contract["map"]["packagePath"]
-    if not unreal.EditorAssetLibrary.does_asset_exist(map_path):
-        blockers.append(f"Authored map is missing: {map_path}")
+    if map_path != MAP_PACKAGE:
+        blockers.append(f"Contract map drift: expected {MAP_PACKAGE}, found {map_path}")
+    expected_game_mode = contract["worldSettings"]["gameModeClass"]
+    if expected_game_mode != EXPECTED_GAME_MODE:
+        blockers.append(f"Contract GameMode drift: expected {EXPECTED_GAME_MODE}, found {expected_game_mode}")
+
+    if blockers:
         write_report("blocked", blockers, mapPackagePath=map_path)
+        raise RuntimeError(" | ".join(blockers))
+
+    if not unreal.EditorAssetLibrary.does_asset_exist(MAP_PACKAGE):
+        blockers.append(f"Authored map is missing: {MAP_PACKAGE}")
+        write_report("blocked", blockers, mapPackagePath=MAP_PACKAGE)
         raise RuntimeError(blockers[0])
 
-    if not unreal.EditorLevelLibrary.load_level(map_path):
-        blockers.append(f"Unable to load authored map: {map_path}")
-        write_report("blocked", blockers, mapPackagePath=map_path)
+    if not unreal.EditorLevelLibrary.load_level(MAP_PACKAGE):
+        blockers.append(f"Unable to load authored map: {MAP_PACKAGE}")
+        write_report("blocked", blockers, mapPackagePath=MAP_PACKAGE)
         raise RuntimeError(blockers[0])
 
     world = unreal.EditorLevelLibrary.get_editor_world()
     world_settings = world.get_world_settings() if world else None
     configured_game_mode = world_settings.get_editor_property("default_game_mode") if world_settings else None
     configured_game_mode_path = class_path(configured_game_mode)
-    expected_game_mode = contract["worldSettings"]["gameModeClass"]
-    if configured_game_mode_path != expected_game_mode:
+    if configured_game_mode_path != EXPECTED_GAME_MODE:
         blockers.append(
-            f"WorldSettings default GameMode mismatch: expected {expected_game_mode}, found {configured_game_mode_path or '<none>'}"
+            f"WorldSettings default GameMode mismatch: expected {EXPECTED_GAME_MODE}, found {configured_game_mode_path or '<none>'}"
         )
 
     all_actors = unreal.EditorLevelLibrary.get_all_level_actors()
@@ -119,7 +130,7 @@ def main() -> None:
     write_report(
         status,
         blockers,
-        mapPackagePath=map_path,
+        mapPackagePath=MAP_PACKAGE,
         gameModeClass=configured_game_mode_path,
         actors=actor_records,
         environmentAssets=asset_records,
