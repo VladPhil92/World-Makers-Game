@@ -11,7 +11,7 @@
       "titleKey": "epic.eclipse-engine.title",
       "premiseKey": "epic.eclipse-engine.premise",
       "ageBand": "9-10",
-      "disciplines": ["mathematics", "geometry", "physics", "english-language", "literature", "philosophy-for-children", "ethics"],
+      "disciplines": ["mathematics", "geometry", "physics", "english-language", "literature", "philosophy-for-children"],
       "chapters": [
         {
           "chapterId": "chapter.eclipse.decode-orbit",
@@ -25,6 +25,20 @@
           ],
           "worldStateRequirements": [
             {"worldStateId":"world-state.eclipse.orbit-path-stable","producerKind":"world","producerRefId":"world.eclipse.orbit-mechanism"}
+          ]
+        },
+        {
+          "chapterId": "chapter.eclipse.align-mirror-lattice",
+          "missionId": "mission.fantastic.architects-impossible-city-01",
+          "titleKey": "epic.eclipse-engine.align-mirror-lattice.title",
+          "promptKey": "epic.eclipse-engine.align-mirror-lattice.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.symmetry","objectiveId":"geometry.transform.apply-symmetry","disciplineId":"geometry","primitiveId":"solve-spatial-system","evidenceEventId":"fantastic.city.symmetry-restored","producerKind":"building","producerRefId":"building.impossible-city.symmetry-plaza","requiredCount":1},
+            {"requirementId":"req.eclipse.angle","objectiveId":"geometry.angle.solve-constraint","disciplineId":"geometry","primitiveId":"construct-to-constraint","evidenceEventId":"fantastic.city.angle-scale-constraint-solved","producerKind":"building","producerRefId":"building.impossible-city.angle-bridge","requiredCount":1},
+            {"requirementId":"req.eclipse.spatial-proof","objectiveId":"geometry.reason.spatial-proof","disciplineId":"geometry","primitiveId":"model-system","evidenceEventId":"fantastic.city.spatial-proof-demonstrated","producerKind":"world","producerRefId":"world.impossible-city.spatial-proof","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.optical-path-stable","producerKind":"world","producerRefId":"world.eclipse.mirror-array"}
           ]
         },
         {
@@ -51,6 +65,19 @@
           ],
           "worldStateRequirements": [
             {"worldStateId":"world-state.eclipse.operating-knowledge-restored","producerKind":"world","producerRefId":"world.eclipse.archive"}
+          ]
+        },
+        {
+          "chapterId": "chapter.eclipse.decode-archive-myth",
+          "missionId": "mission.fantastic.labyrinth-stories-01",
+          "titleKey": "epic.eclipse-engine.decode-archive-myth.title",
+          "promptKey": "epic.eclipse-engine.decode-archive-myth.prompt",
+          "evidenceRequirements": [
+            {"requirementId":"req.eclipse.story-inference","objectiveId":"literature.infer-from-context","disciplineId":"literature","primitiveId":"interpret-text-world","evidenceEventId":"literature.inference.context-clue-used","producerKind":"thought","producerRefId":"story.labyrinth-minotaur-prototype","requiredCount":1},
+            {"requirementId":"req.eclipse.symbolism","objectiveId":"literature.interpret-point-of-view-symbolism","disciplineId":"literature","primitiveId":"interpret-text-world","evidenceEventId":"literature.point-of-view-and-symbolism-interpreted","producerKind":"thought","producerRefId":"story.labyrinth-minotaur-prototype","requiredCount":1}
+          ],
+          "worldStateRequirements": [
+            {"worldStateId":"world-state.eclipse.archive-route-understood","producerKind":"world","producerRefId":"world.eclipse.archive-map"}
           ]
         },
         {
