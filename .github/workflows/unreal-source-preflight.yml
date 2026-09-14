@@ -5,6 +5,8 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
   push:
@@ -13,6 +15,8 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
   workflow_dispatch:
