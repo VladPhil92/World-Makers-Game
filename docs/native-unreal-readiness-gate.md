@@ -15,11 +15,34 @@ These states do not imply representative-device certification.
 
 ## One-command entry point
 
-From the repository root on Windows PowerShell:
+From the repository root on Windows PowerShell, the normal path is now zero-config:
 
 ```powershell
-$UE = "C:\Program Files\Epic Games\UE_5.8"
-.\scripts\run-unreal-readiness-gate.ps1 -EngineRoot $UE -CleanIntermediate
+.\scripts\run-unreal-readiness-gate.ps1 -CleanIntermediate
+```
+
+The readiness gate delegates engine resolution to `scripts/resolve-unreal-engine.ps1`. Auto-discovery is deterministic and fail-closed: it accepts exactly one UE 5.8.2 installation discovered from Epic Launcher manifests or the normal Epic Games installation root. It does not silently select among multiple matching engines.
+
+Resolution precedence is:
+
+1. explicit `-EngineRoot` on the readiness gate;
+2. `UNREAL_ENGINE_ROOT` environment variable;
+3. Epic Launcher manifest auto-discovery;
+4. standard `C:\Program Files\Epic Games\UE_*` discovery.
+
+An explicit path remains supported when a workstation uses a non-standard install location:
+
+```powershell
+.\scripts\run-unreal-readiness-gate.ps1 `
+  -EngineRoot "D:\Epic\UE_5.8" `
+  -CleanIntermediate
+```
+
+For a persistent workstation configuration:
+
+```powershell
+$env:UNREAL_ENGINE_ROOT = "D:\Epic\UE_5.8"
+.\scripts\run-unreal-readiness-gate.ps1 -CleanIntermediate
 ```
 
 The default mode is deliberately strict:
@@ -30,7 +53,8 @@ The default mode is deliberately strict:
 - Git and Git LFS must be available;
 - `git lfs pull` must succeed;
 - repository baseline must remain UE 5.8.2;
-- the installed engine must report UE 5.8.2;
+- exactly one engine root must resolve to UE 5.8.2;
+- `Build.bat` and `UnrealEditor-Cmd.exe` must exist under the resolved engine root;
 - `validate-unreal-source-preflight.py` must pass;
 - `WorldMakersEditor Win64 Development` must compile successfully.
 
@@ -41,9 +65,7 @@ Temporary diagnostic exceptions exist through `-AllowNonMain` and `-AllowDirtyWo
 After the first Unreal-authored certification map has been created and committed through Git LFS:
 
 ```powershell
-$UE = "C:\Program Files\Epic Games\UE_5.8"
 .\scripts\run-unreal-readiness-gate.ps1 `
-  -EngineRoot $UE `
   -RequireAuthoredMap `
   -RunAutomation `
   -CleanIntermediate
@@ -65,6 +87,8 @@ The primary record is `readiness-result.json`. It contains only engineering stat
 
 - repository commit and branch;
 - fetched `origin/main` commit;
+- requested and resolved engine roots;
+- engine resolution source/mode and candidate count;
 - expected and actual Unreal versions;
 - source-preflight state;
 - native build state;
@@ -83,6 +107,8 @@ The gate blocks rather than guessing when any of the following cannot be establi
 - clean working state;
 - LFS integrity;
 - exact engine version;
+- a single unambiguous UE 5.8.2 engine root;
+- required Unreal command-line/build binaries;
 - source preflight;
 - native compilation;
 - authored-map presence when requested;
@@ -126,6 +152,7 @@ Only after this route and `WorldMakers.*` automation are clean should broad auth
 ## Relationship to repository gates
 
 - `Unreal Source Preflight`: hosted static regression gate; no engine execution.
+- `resolve-unreal-engine.ps1`: deterministic workstation engine resolution; no build/test claim.
 - `run-unreal-readiness-gate.ps1`: local/runner orchestration of source freshness + native compile and optional automation.
 - `Unreal CI / unreal-build-and-test`: continuous native evidence once the self-hosted UE 5.8.2 runner is provisioned.
 - M3/M5 certification assessors: higher-level route/device evidence, not substitutes for compilation.
