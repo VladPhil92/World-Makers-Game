@@ -1,0 +1,58 @@
+{
+  "schema": "worldmakers.g1-native-certification.v1",
+  "version": 1,
+  "engine": {
+    "expectedVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject",
+    "target": "WorldMakersEditor",
+    "platform": "Win64",
+    "configuration": "Development"
+  },
+  "automation": {
+    "required": true,
+    "testFilter": "WorldMakers."
+  },
+  "runner": {
+    "requiredLabels": ["self-hosted", "Windows", "X64", "unreal"],
+    "repositoryVariable": "UNREAL_SELF_HOSTED_ENABLED",
+    "engineRootVariable": "UNREAL_ENGINE_ROOT"
+  },
+  "canonicalResult": "artifacts/g1-native/g1-native-readiness.json",
+  "requiredEvidence": [
+    "workstation-doctor.json",
+    "source-preflight.log",
+    "readiness-result.json",
+    "build-result.json",
+    "build.log",
+    "automation-result.json",
+    "automation.log"
+  ],
+  "passCriteria": {
+    "readinessStatus": "ready",
+    "workstationDoctorStatus": "ready",
+    "sourcePreflightStatus": "passed",
+    "nativeBuildStatus": "passed",
+    "nativeAutomationStatus": "passed",
+    "expectedUnrealVersion": "5.8.2",
+    "actualUnrealVersion": "5.8.2",
+    "requireAuthoredMap": false,
+    "runAutomation": true,
+    "testFilter": "WorldMakers.",
+    "certificationBranch": "main",
+    "requiresOriginMainCommitMatch": true,
+    "requiresCleanWorktree": true
+  },
+  "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"],
+  "separationOfGates": {
+    "authoredCertificationMapRequiredAtG1": false,
+    "authoredCertificationMapFirstRequiredAt": "G2",
+    "manualSmokeRequiredAtG1": false,
+    "representativeDeviceEvidenceRequiredAtG1": false
+  },
+  "safety": {
+    "autoInstallDependencies": false,
+    "reinstallOnBuildFailure": false,
+    "diagnosticFirst": true,
+    "staleEvidenceMayCertify": false
+  }
+}
