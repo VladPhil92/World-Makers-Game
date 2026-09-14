@@ -1,0 +1,100 @@
+{
+  "schema": "worldmakers.g3-visual-fidelity.v1",
+  "version": 1,
+  "status": "source-ready-native-visual-review-required",
+  "engine": {
+    "expectedVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject"
+  },
+  "dependencies": {
+    "g2Contract": "content/production/g2-authored-vertical-slice-v1.json",
+    "p1Registry": "content/visual/authored/authored-assets-p1.json",
+    "p4Manifest": "content/visual/authored/p4-motion-vfx-presentation.json",
+    "p5PolishContract": "content/visual/authored/p5-art-polish-certification.json",
+    "p5NativeInventoryCollector": "scripts/unreal/collect-p5-native-inventory.py"
+  },
+  "certificationMap": "/Game/WorldMakers/Maps/WM_PrototypeCertification",
+  "qualityBar": {
+    "materialsLighting": {
+      "masterSurfaceRequired": true,
+      "waterMaterialRequired": true,
+      "manualBoundedExposureRequired": true,
+      "singlePrimaryDirectionalSunRequired": true,
+      "skyAtmosphereRequired": true,
+      "skyLightRequired": true,
+      "heightFogRequired": true,
+      "criticalShadowArtifactsAllowed": false
+    },
+    "environment": {
+      "authoredRainforestTakeoverRequired": true,
+      "lodTransitionsApprovedRequired": true,
+      "hlodAndCullingApprovedRequired": true,
+      "foliageOverdrawApprovedRequired": true,
+      "textureStreamingApprovedRequired": true,
+      "maxTexturePoolOverBudgetMB": 0,
+      "criticalVisibleMipPopInAllowed": false,
+      "placeholderGeometryAllowed": false
+    },
+    "characterAnimation": {
+      "authoredCharacterRequired": true,
+      "requiredAnimationClipCount": 17,
+      "animationBlueprintRequired": true,
+      "ikRigRequired": true,
+      "physicsAssetRequired": true,
+      "maxObservedFootSlideCm": 3.0,
+      "criticalDeformationCountAllowed": 0,
+      "criticalCosmeticClippingCountAllowed": 0
+    },
+    "vfx": {
+      "requiredEffectCount": 17,
+      "semanticParityRequired": true,
+      "reducedMotionRequired": true,
+      "criticalOverdrawArtifactsAllowed": false
+    },
+    "presentation": {
+      "cameraDataAssetRequired": true,
+      "requiredLevelSequenceCount": 2,
+      "uiMotionStyleRequired": true,
+      "maxRevealDurationSeconds": 2.5,
+      "cameraComfortRequired": true,
+      "uiLegibilityRequired": true,
+      "safeAreaRequired": true,
+      "reducedMotionRequired": true,
+      "inputLockAllowed": false,
+      "forcedViewTargetAllowed": false,
+      "globalTimeScaleChangeAllowed": false
+    }
+  },
+  "requiredEvidenceKinds": [
+    "visual-contact-sheet",
+    "animation-review",
+    "vfx-overdraw",
+    "camera-ui-review"
+  ],
+  "certification": {
+    "requiresG2CertifiedSameCommit": true,
+    "requiresNativeInventory": true,
+    "requiresNativeMapInspection": true,
+    "requiresHumanVisualReview": true,
+    "requiresEvidenceHashes": true,
+    "canonicalResult": "artifacts/g3-visual/g3-visual-fidelity.json",
+    "nativeInventory": "artifacts/g3-visual/native-inventory.json",
+    "nativeMapInspection": "artifacts/g3-visual/g3-native-map-inspection.json",
+    "reviewFile": "artifacts/g3-visual/g3-review.json",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "gateBoundary": {
+    "g3Owns": [
+      "final-lighting-and-material-quality",
+      "authored-character-animation-quality",
+      "semantic-vfx-quality",
+      "camera-comfort-and-ui-motion",
+      "placeholder-elimination-on-certification-route"
+    ],
+    "g4Owns": [
+      "android-and-ipados-performance-certification",
+      "thermal-stability",
+      "frame-time-and-memory-device-budgets"
+    ]
+  }
+}
