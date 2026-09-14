@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Classify World Makers Unreal native build failures into actionable categories.
 
-The classifier is deliberately local and privacy-minimized: it only emits a bounded
-set of diagnostic excerpts, normalizes repository/home paths, and never uploads
-anything. It is intended to turn an opaque UnrealBuildTool failure into a stable
-machine-readable category that can be fixed in source or workstation configuration.
+The classifier is local and privacy-minimized. It emits a bounded set of
+sanitized diagnostics and never uploads build data.
 """
 
 from __future__ import annotations
@@ -96,12 +94,14 @@ RULES: tuple[Rule, ...] = (
         "high",
         True,
         "Inspect the reported UCLASS/USTRUCT/UFUNCTION/UPROPERTY header diagnostic and fix Unreal reflection syntax or generated-header ordering in source.",
+        # Keep this rule tied to explicit UHT/reflection evidence. UnrealBuildTool's
+        # generic `OtherCompilationError (5)` is intentionally NOT a UHT signal.
         rx(
             r"unrealheadertool.*failed",
+            r"unreal header tool.*failed",
             r"error:.*GENERATED_BODY",
             r"unrecognized type .* - type must be a UCLASS, USTRUCT or UENUM",
             r"Expected an include at the top of the header:.*generated\.h",
-            r"OtherCompilationError \(5\)",
         ),
     ),
     Rule(
@@ -191,7 +191,7 @@ def extract_diagnostics(text: str, repo_root: Path, limit: int = 24) -> list[dic
     diagnostics: list[dict[str, object]] = []
     seen: set[str] = set()
 
-    for line_number, raw_line in iter_lines(text):
+    for log_line, raw_line in iter_lines(text):
         if len(diagnostics) >= limit:
             break
         line = sanitize_text(raw_line, repo_root)
@@ -206,7 +206,7 @@ def extract_diagnostics(text: str, repo_root: Path, limit: int = 24) -> list[dic
             seen.add(key)
             diagnostics.append(
                 {
-                    "logLine": line_number,
+                    "logLine": log_line,
                     "kind": match.group("kind").lower(),
                     "code": match.group("code") or None,
                     "source": match.group("path").strip(),
@@ -225,7 +225,7 @@ def extract_diagnostics(text: str, repo_root: Path, limit: int = 24) -> list[dic
             seen.add(key)
             diagnostics.append(
                 {
-                    "logLine": line_number,
+                    "logLine": log_line,
                     "kind": generic.group("kind").lower(),
                     "code": None,
                     "source": None,
@@ -240,11 +240,11 @@ def extract_diagnostics(text: str, repo_root: Path, limit: int = 24) -> list[dic
 
 def classify_text(text: str, repo_root: Path = ROOT) -> dict[str, object]:
     matches: list[tuple[Rule, list[str]]] = []
-    sanitized_lines = [(line_no, sanitize_text(line, repo_root)) for line_no, line in iter_lines(text)]
+    sanitized_lines = [sanitize_text(line, repo_root) for _, line in iter_lines(text)]
 
     for rule in RULES:
         excerpts: list[str] = []
-        for _, line in sanitized_lines:
+        for line in sanitized_lines:
             if any(pattern.search(line) for pattern in rule.patterns):
                 if line not in excerpts:
                     excerpts.append(line)
@@ -254,7 +254,6 @@ def classify_text(text: str, repo_root: Path = ROOT) -> dict[str, object]:
             matches.append((rule, excerpts))
 
     matches.sort(key=lambda item: item[0].priority, reverse=True)
-
     success_marker = bool(re.search(r"\bResult:\s*Succeeded\b", text, re.IGNORECASE))
     failed_marker = bool(re.search(r"\bResult:\s*Failed\b", text, re.IGNORECASE))
     diagnostics = extract_diagnostics(text, repo_root)
