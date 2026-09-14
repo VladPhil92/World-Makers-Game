@@ -15,7 +15,7 @@ function Get-WMUnrealCandidate {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        return $null
+        return
     }
 
     try {
@@ -64,8 +64,8 @@ function Get-WMUnrealCandidate {
     }
 }
 
-$Candidates = New-Object System.Collections.Generic.List[object]
-$Seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+$script:Candidates = @()
+$script:SeenCandidates = @{}
 
 function Add-WMUnrealCandidate {
     param(
@@ -84,11 +84,15 @@ function Add-WMUnrealCandidate {
         $Key = $Path.Trim()
     }
 
-    if ($Seen.Add($Key)) {
-        $Candidate = Get-WMUnrealCandidate -Path $Path -Source $Source
-        if ($null -ne $Candidate) {
-            $Candidates.Add($Candidate)
-        }
+    $Key = $Key.ToLowerInvariant()
+    if ($script:SeenCandidates.ContainsKey($Key)) {
+        return
+    }
+
+    $script:SeenCandidates[$Key] = $true
+    $Candidate = Get-WMUnrealCandidate -Path $Path -Source $Source
+    if ($null -ne $Candidate) {
+        $script:Candidates += $Candidate
     }
 }
 
@@ -123,17 +127,20 @@ else {
         }
     }
 
-    $EpicRoots = New-Object System.Collections.Generic.List[string]
+    $EpicRoots = @()
     if ($env:ProgramFiles) {
-        $EpicRoots.Add((Join-Path $env:ProgramFiles 'Epic Games'))
+        $EpicRoots += Join-Path $env:ProgramFiles 'Epic Games'
     }
-    $EpicRoots.Add('C:\Program Files\Epic Games')
+    $EpicRoots += 'C:\Program Files\Epic Games'
 
-    $SeenEpicRoots = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+    $SeenEpicRoots = @{}
     foreach ($EpicRoot in $EpicRoots) {
-        if (-not $SeenEpicRoots.Add($EpicRoot)) {
+        $EpicRootKey = $EpicRoot.ToLowerInvariant()
+        if ($SeenEpicRoots.ContainsKey($EpicRootKey)) {
             continue
         }
+        $SeenEpicRoots[$EpicRootKey] = $true
+
         if (-not (Test-Path $EpicRoot -PathType Container)) {
             continue
         }
@@ -143,7 +150,7 @@ else {
     }
 }
 
-$ExactMatches = @($Candidates | Where-Object { $_.valid -and $_.version -eq $ExpectedVersion })
+$ExactMatches = @($script:Candidates | Where-Object { $_.valid -and $_.version -eq $ExpectedVersion })
 
 if ($ExactMatches.Count -eq 1) {
     $Selected = $ExactMatches[0]
@@ -155,8 +162,8 @@ if ($ExactMatches.Count -eq 1) {
         path = $Selected.path
         version = $Selected.version
         source = $Selected.source
-        candidateCount = $Candidates.Count
-        candidates = @($Candidates)
+        candidateCount = $script:Candidates.Count
+        candidates = @($script:Candidates)
     }
 
     if ($AsJson) {
@@ -168,11 +175,11 @@ if ($ExactMatches.Count -eq 1) {
     return
 }
 
-$CandidateSummary = if ($Candidates.Count -eq 0) {
+$CandidateSummary = if ($script:Candidates.Count -eq 0) {
     'no Unreal Engine installations were discovered'
 }
 else {
-    (@($Candidates | ForEach-Object {
+    (@($script:Candidates | ForEach-Object {
         $VersionText = if ($_.version) { $_.version } else { $_.reason }
         "$($_.path) [$VersionText; source=$($_.source)]"
     }) -join '; ')
