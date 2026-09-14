@@ -1,6 +1,7 @@
 const nativeScheme = 'worldmakers';
 const nativeHost = 'launch';
 const defaultProtocol = 'worldmakers-launch-v1';
+const ticketProtocol = 'worldmakers-launch-v2';
 
 export function createNativeLaunchUri(context, protocol = defaultProtocol) {
   if (!context || typeof context !== 'object' || Array.isArray(context)) throw new TypeError('Launch context is required.');
@@ -18,4 +19,24 @@ export function decodeNativeLaunchUri(uri) {
   if (!protocol || !payload) throw new TypeError('Incomplete World Makers launch URI.');
   const context = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
   return { protocol, context };
+}
+
+export function createNativeLaunchTicketUri(ticket) {
+  if (typeof ticket !== 'string' || ticket.length < 32 || ticket.length > 256 || !/^[A-Za-z0-9_-]+$/.test(ticket)) {
+    throw new TypeError('Native launch ticket is invalid.');
+  }
+  const params = new URLSearchParams({ protocol: ticketProtocol, ticket });
+  return `${nativeScheme}://${nativeHost}?${params.toString()}`;
+}
+
+export function decodeNativeLaunchTicketUri(uri) {
+  const parsed = new URL(uri);
+  if (parsed.protocol !== `${nativeScheme}:` || parsed.hostname !== nativeHost) throw new TypeError('Unsupported World Makers launch URI.');
+  const protocol = parsed.searchParams.get('protocol');
+  const ticket = parsed.searchParams.get('ticket');
+  if (protocol !== ticketProtocol || !ticket || ticket.length < 32 || ticket.length > 256 || !/^[A-Za-z0-9_-]+$/.test(ticket)) {
+    throw new TypeError('Incomplete World Makers launch ticket URI.');
+  }
+  if (parsed.searchParams.has('payload')) throw new TypeError('Ticket launch URI must not embed player context.');
+  return { protocol, ticket };
 }
