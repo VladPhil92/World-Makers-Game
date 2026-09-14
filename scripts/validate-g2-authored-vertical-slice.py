@@ -180,7 +180,7 @@ def main() -> int:
 
     require_tokens(AUTHOR_SCRIPT, (EXPECTED_MAP_PACKAGE, "WM_G2_PlayerStart", "WM_G2_Rainforest", "WM_G2_MissionGeometry", "new_level", "save_current_level"))
     require_tokens(INSPECT_SCRIPT, (EXPECTED_MAP_PACKAGE, EXPECTED_GAME_MODE, "authoredPresent", "g2-native-map-inspection"))
-    require_tokens(ORCHESTRATOR, ("-AuthorMap", "run-g1-native-certification.ps1", "--require-authored-map", "CERTIFIED", "NON_CERTIFYING_PASS", "BLOCKED"))
+    require_tokens(ORCHESTRATOR, ("[switch]$AuthorMap", "run-g1-native-certification.ps1", "--require-authored-map", "CERTIFIED", "NON_CERTIFYING_PASS", "BLOCKED"))
     require_tokens(AUTHOR_LAUNCHER, ("run-g2-authored-certification.ps1", "-AuthorMap"))
     require_tokens(CERTIFY_LAUNCHER, ("run-g2-authored-certification.ps1",))
     require_tokens(DOC_PATH, ("G2", EXPECTED_MAP_PACKAGE, "WorldMakers-G2-Author.cmd", "WorldMakers-G2-Certify.cmd", "G3"))
