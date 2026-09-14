@@ -18,7 +18,7 @@ class WORLDMAKERS_API AWMEclipseEngineInteractableActor : public AActor, public 
 public:
     AWMEclipseEngineInteractableActor();
 
-    void Configure(const FWMEclipseActionDefinition& Definition);
+    void Configure(FName InChapterId, const FWMEclipseActionDefinition& Definition);
 
     virtual FName GetInteractionPointId() const override { return ActionId; }
     virtual FName GetInteractionPromptKey() const override { return PromptKey; }
@@ -33,14 +33,23 @@ public:
     UFUNCTION(BlueprintPure, Category = "World Makers|Eclipse")
     bool IsResolved() const { return bResolved; }
 
+    UFUNCTION(BlueprintPure, Category = "World Makers|Eclipse")
+    bool IsAvailable() const { return bAvailable; }
+
     UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse")
     void MarkResolved(bool bInResolved = true);
+
+    UFUNCTION(BlueprintCallable, Category = "World Makers|Eclipse")
+    void SetAvailable(bool bInAvailable);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Eclipse")
     TObjectPtr<USphereComponent> FocusVolume;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Eclipse")
     TObjectPtr<UStaticMeshComponent> ProxyMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Eclipse")
+    FName ChapterId;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World Makers|Eclipse")
     FName ActionId;
@@ -58,4 +67,5 @@ public:
 
 private:
     bool bResolved = false;
+    bool bAvailable = false;
 };

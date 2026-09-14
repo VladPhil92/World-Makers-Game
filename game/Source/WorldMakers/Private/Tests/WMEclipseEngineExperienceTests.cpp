@@ -2,6 +2,7 @@
 
 #include "Adventure/WMEclipseEngineExperience.h"
 #include "Adventure/WMEclipseOpticsRuntime.h"
+#include "Adventure/WMEclipseSystemsRuntime.h"
 #include "Adventure/WMEpicRuntime.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
@@ -151,6 +152,37 @@ bool FWMEclipseOpticsPuzzleTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Single lucky sample cannot prove stability"), FWMEclipseOpticsRuntime::IsPathStable({1.0f}));
     TestFalse(TEXT("One unstable perturbation rejects the model"), FWMEclipseOpticsRuntime::IsPathStable({-1.2f, 0.6f, 6.2f}));
     TestTrue(TEXT("Several bounded perturbations support stable spatial model"), FWMEclipseOpticsRuntime::IsPathStable({-1.2f, 0.6f, 1.5f, -0.4f}));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FWMEclipseSystemsPuzzleTest,
+    "WorldMakers.Eclipse.Gameplay.SystemsRequireModeling",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FWMEclipseSystemsPuzzleTest::RunTest(const FString& Parameters)
+{
+    TestFalse(TEXT("Guessing the next orbit pulse fails"), FWMEclipseSystemsRuntime::InferArithmeticPattern({3, 7, 11, 15}, 18));
+    TestTrue(TEXT("Inferring the orbit rule predicts the next pulse"), FWMEclipseSystemsRuntime::InferArithmeticPattern({3, 7, 11, 15}, 19));
+
+    TestFalse(TEXT("Identical ratio pair is not evidence of equivalence transfer"), FWMEclipseSystemsRuntime::IsEquivalentRatio(2, 3, 2, 3));
+    TestTrue(TEXT("Scaled ratios are equivalent"), FWMEclipseSystemsRuntime::IsEquivalentRatio(2, 3, 6, 9));
+
+    TestFalse(TEXT("Merely shortest-looking route without improvement fails"), FWMEclipseSystemsRuntime::IsOptimizedRoute(960.0f, {1000.0f, 1010.0f}));
+    TestTrue(TEXT("Measured improved route solves optimization"), FWMEclipseSystemsRuntime::IsOptimizedRoute(900.0f, {1000.0f, 1120.0f}));
+
+    TestFalse(TEXT("Incorrect force prediction fails despite plausible measurement"), FWMEclipseSystemsRuntime::IsForcePredictionConsistent(
+        2.0f, FVector(4.0f, 0.0f, 0.0f), 1.0f, FVector(3.0f, 0.0f, 0.0f), FVector(2.0f, 0.0f, 0.0f)));
+    TestTrue(TEXT("Prediction and observed motion agreeing with simulation solve force model"), FWMEclipseSystemsRuntime::IsForcePredictionConsistent(
+        2.0f, FVector(4.0f, 0.0f, 0.0f), 1.0f, FVector(2.0f, 0.0f, 0.0f), FVector(2.02f, 0.0f, 0.0f)));
+
+    TestFalse(TEXT("Wrong current cannot stabilize circuit"), FWMEclipseSystemsRuntime::IsCircuitModelConsistent(12.0f, 6.0f, 3.0f, 24.0f));
+    TestTrue(TEXT("Current and power model stabilize circuit"), FWMEclipseSystemsRuntime::IsCircuitModelConsistent(12.0f, 6.0f, 2.0f, 24.0f));
+
+    TestFalse(TEXT("Meaning guess without enough observed clues fails"), FWMEclipseSystemsRuntime::IsContextInferenceSupported(
+        TEXT("meaning.open"), TEXT("meaning.open"), { TEXT("clue.symbol") }));
+    TestTrue(TEXT("Context inference requires correct meaning and multiple clues"), FWMEclipseSystemsRuntime::IsContextInferenceSupported(
+        TEXT("meaning.open"), TEXT("meaning.open"), { TEXT("clue.symbol"), TEXT("clue.motion") }));
     return true;
 }
 
