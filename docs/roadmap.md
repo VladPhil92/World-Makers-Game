@@ -58,12 +58,12 @@ M4.2 implementation status:
 - Guardians create a child's player profile from the portal and hand off into `player-dashboard` through the existing `ctg-one-identity-v1` assertion protocol (parent-portal now issues assertions; player-dashboard already verified them) via a same-origin `/handoff` page — no new cross-origin trust surface.
 - `player-dashboard`'s persistent profile store (D2) now has a Supabase-backed implementation alongside the original local `JsonFileProfileStore`, so profiles survive redeploys once `SUPABASE_URL`/`SUPABASE_ANON_KEY` are configured.
 - Both apps are deployed on Railway for the first live web playtest.
+- Custom SMTP (Resend, on a dedicated `mail.ctgone.com` sending subdomain) is configured for the Supabase project, so guardian confirmation emails deliver reliably instead of hitting the default mailer's very low rate limit.
 
 M4.2 remaining outcomes:
 
 - Real gameplay-telemetry sync into `child_dashboard_stats` (currently zeroed on child creation; the game/runtime side of that pipeline is separate future work).
 - Co-parent invite flow (today a guardian can only self-link the family they created at signup).
-- Frictionless test signup: Supabase's default "confirm email" flow is still on for this project; either configure production SMTP or toggle confirmations off in the Supabase dashboard for faster internal testing.
 - Durable export/delete/unlink workflows with audit and retention semantics (privacy-request endpoints exist but remain a stub, as in M4.1).
 - Production localization.
 
