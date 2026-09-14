@@ -2,7 +2,7 @@
 
 namespace
 {
-    bool IsFiniteVector(const FVector& Value)
+    bool IsFiniteReferenceVector(const FVector& Value)
     {
         return FMath::IsFinite(Value.X) && FMath::IsFinite(Value.Y) && FMath::IsFinite(Value.Z);
     }
@@ -16,9 +16,9 @@ namespace
 bool FWMFirstPersonVisualProfile::IsSane() const
 {
     return FMath::IsFinite(FieldOfViewDegrees) && FieldOfViewDegrees >= 58.0f && FieldOfViewDegrees <= 84.0f &&
-        IsFiniteVector(ToolOffsetCm) && ToolOffsetCm.Size() <= 80.0f &&
+        IsFiniteReferenceVector(ToolOffsetCm) && ToolOffsetCm.Size() <= 80.0f &&
         IsFiniteRotator(ToolRotationDegrees) &&
-        IsFiniteVector(WristDeviceOffsetCm) && WristDeviceOffsetCm.Size() <= 80.0f &&
+        IsFiniteReferenceVector(WristDeviceOffsetCm) && WristDeviceOffsetCm.Size() <= 80.0f &&
         FMath::IsFinite(CameraBobCm) && CameraBobCm >= 0.0f && CameraBobCm <= 1.5f &&
         FMath::IsFinite(ToolLagDegrees) && ToolLagDegrees >= 0.0f && ToolLagDegrees <= 4.0f &&
         MaxLargePanels >= 0 && MaxLargePanels <= 2;
