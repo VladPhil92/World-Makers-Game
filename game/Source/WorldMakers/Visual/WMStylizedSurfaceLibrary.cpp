@@ -90,8 +90,10 @@ bool UWMStylizedSurfaceLibrary::ApplyLook(UMeshComponent* Mesh, const EWMStylize
     }
 
     // Temporary visible fallback for /Engine/BasicShapes/BasicShapeMaterial.
-    // Authored V2 materials consume the Custom Primitive Data contract below.
-    Mesh->SetVectorParameterValueOnMaterials(TEXT("Color"), Look.BaseColor);
+    // UE 5.8 UMeshComponent expects FVector for vector material overrides.
+    Mesh->SetVectorParameterValueOnMaterials(
+        TEXT("Color"),
+        FVector(Look.BaseColor.R, Look.BaseColor.G, Look.BaseColor.B));
 
     Mesh->SetCustomPrimitiveDataVector4(
         WMStylizedSurface::BaseColorIndex,

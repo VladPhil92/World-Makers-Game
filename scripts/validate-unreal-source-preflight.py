@@ -146,6 +146,19 @@ def main() -> None:
             + ", ".join(slot_shadowing)
         )
 
+    legacy_material_vector_calls = scan_sources(
+        re.compile(
+            r"SetVectorParameterValueOnMaterials\s*\(\s*TEXT\([^)]*\)\s*,\s*"
+            r"(?:Style\.Color(?:\s*\*[^;)]+)?|Look\.BaseColor)"
+        )
+    )
+    if legacy_material_vector_calls:
+        fail(
+            "UE 5.8 UMeshComponent::SetVectorParameterValueOnMaterials expects FVector; "
+            "convert FLinearColor RGB explicitly in: "
+            + ", ".join(legacy_material_vector_calls)
+        )
+
     game_ini = require_file(GAME / "Config" / "DefaultGame.ini")
     project_id_match = re.search(r"^ProjectID=([0-9A-Fa-f]{32})$", game_ini, re.MULTILINE)
     if not project_id_match or set(project_id_match.group(1)) == {"0"}:
@@ -208,7 +221,8 @@ def main() -> None:
         "World Makers Unreal source preflight passed: "
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
-        "native_readiness_orchestrator=present, unity_mode=disabled. "
+        "native_readiness_orchestrator=present, unity_mode=disabled, "
+        "material_vector_api=ue58. "
         "Native UE build/test certification remains a separate gate."
     )
 

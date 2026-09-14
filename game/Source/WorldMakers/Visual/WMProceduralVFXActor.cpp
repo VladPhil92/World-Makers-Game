@@ -67,7 +67,11 @@ bool AWMProceduralVFXActor::InitializeEffect(const FWMVFXEvent& InEvent, const F
         Geometry.VertexColors,
         Geometry.Tangents,
         false);
-    Mesh->SetVectorParameterValueOnMaterials(TEXT("Color"), Style.Color * Event.Intensity);
+
+    const FLinearColor ScaledColor = Style.Color * Event.Intensity;
+    Mesh->SetVectorParameterValueOnMaterials(
+        TEXT("Color"),
+        FVector(ScaledColor.R, ScaledColor.G, ScaledColor.B));
 
     SetActorLocation(Event.LocationCm);
     if (Style.Shape == EWMVFXShape::Directional && !Event.Direction.IsNearlyZero())
