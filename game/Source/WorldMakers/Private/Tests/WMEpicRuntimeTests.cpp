@@ -153,4 +153,60 @@ bool FWMEpicAttributionFailClosedTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FWMEpicCatalogEndToEndTest,
+    "WorldMakers.Epic.Runtime.CatalogEndToEnd",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FWMEpicCatalogEndToEndTest::RunTest(const FString& Parameters)
+{
+    const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("WorldMakers/Epics/cross-disciplinary-epics-v1.json"));
+    FString Json;
+    TestTrue(TEXT("Epic catalog file loads for end-to-end traversal"), FFileHelper::LoadFileToString(Json, *Path));
+
+    FWMEpicCatalog Catalog;
+    FString Error;
+    TestTrue(TEXT("Epic catalog parses for end-to-end traversal"), FWMEpicCatalog::TryParseJson(Json, Catalog, Error));
+
+    for (const FWMEpicDefinition& Epic : Catalog.Epics)
+    {
+        FWMEpicProgressModel Progress;
+        TestTrue(*FString::Printf(TEXT("%s begins"), *Epic.EpicId.ToString()), Progress.Begin(Epic));
+
+        for (const FWMEpicChapterDefinition& Chapter : Epic.Chapters)
+        {
+            const FWMEpicChapterDefinition* Current = Progress.GetCurrentChapter();
+            TestNotNull(TEXT("Current chapter exists during catalog traversal"), Current);
+            if (!Current) return false;
+            TestEqual(TEXT("Catalog traversal preserves chapter order"), Current->ChapterId, Chapter.ChapterId);
+
+            for (const FWMEpicEvidenceRequirement& Requirement : Chapter.EvidenceRequirements)
+            {
+                for (int32 Count = 0; Count < Requirement.RequiredCount; ++Count)
+                {
+                    TestTrue(TEXT("Catalog evidence requirement accepts its trusted identity"), Progress.CommitEvidence(
+                        Requirement.ObjectiveId,
+                        Requirement.DisciplineId,
+                        Requirement.ProducerKind,
+                        Requirement.ProducerRefId,
+                        Requirement.PrimitiveId,
+                        Requirement.EvidenceEventId));
+                }
+            }
+            for (const FWMEpicWorldStateRequirement& State : Chapter.WorldStateRequirements)
+            {
+                TestTrue(TEXT("Catalog world state accepts its trusted identity"), Progress.CommitWorldState(
+                    State.ProducerKind, State.ProducerRefId, State.WorldStateId));
+            }
+
+            TestTrue(TEXT("Catalog chapter is ready after all trusted requirements"), Progress.IsCurrentChapterReadyToAdvance());
+            TestTrue(TEXT("Catalog chapter advances deterministically"), Progress.AdvanceChapter());
+        }
+
+        TestTrue(*FString::Printf(TEXT("%s completes end-to-end"), *Epic.EpicId.ToString()), Progress.IsCompleted());
+        TestTrue(TEXT("Completed catalog epic reaches full progress"), FMath::IsNearlyEqual(Progress.GetProgressFraction(), 1.0f));
+    }
+    return true;
+}
+
 #endif
