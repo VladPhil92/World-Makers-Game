@@ -5,6 +5,7 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/resolve-unreal-engine.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
       - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/resolve-unreal-engine.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
       - 'docs/native-unreal-readiness-gate.md'
       - '.gitattributes'
