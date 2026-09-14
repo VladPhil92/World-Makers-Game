@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Validate Unreal Production Baseline v1
+        run: python scripts/validate-unreal-production-baseline.py
       - name: Validate pedagogical content
         run: python scripts/validate-content.py
       - name: Validate M1.10 Trust Economy
