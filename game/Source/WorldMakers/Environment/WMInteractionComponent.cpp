@@ -1,5 +1,6 @@
 #include "Environment/WMInteractionComponent.h"
 
+#include "Adventure/WMEclipseEngineInteractableActor.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Environment/WMBiomeRuntimeSubsystem.h"
@@ -157,6 +158,12 @@ void UWMInteractionComponent::RefreshFocus()
 
     // M3.4 adds explicit ecosystem-care targets through the same focus contract.
     for (TActorIterator<AWMEnvironmentActionActor> It(World); It; ++It)
+    {
+        ConsiderTarget(*It);
+    }
+
+    // M5.6B makes epic puzzle artefacts first-class world interaction targets rather than a separate UI mode.
+    for (TActorIterator<AWMEclipseEngineInteractableActor> It(World); It; ++It)
     {
         ConsiderTarget(*It);
     }
