@@ -50,6 +50,7 @@ Key design references:
 - `docs/GDD.md`
 - `docs/TDD.md`
 - `docs/roadmap.md`
+- `docs/unreal-readiness-audit.md`
 - `docs/fantastic-learning-universe.md`
 - `docs/m5-2-composable-mission-runtime.md`
 - `docs/m5-3-science-simulation-core.md`
@@ -57,6 +58,10 @@ Key design references:
 
 ## Verification
 
-GitHub-hosted source CI validates content, policy and source contracts. Native runtime certification is separate: Unreal Engine 5.8.2 on the locked self-hosted environment must compile `WorldMakersEditor` and execute the full `WorldMakers.*` automation namespace. Representative-device evidence is required before claiming tablet certification.
+GitHub-hosted source CI validates content, policy and source contracts. The dedicated `Unreal Source Preflight` additionally catches known UE 5.8 repository-level compile hazards, but it still does **not** substitute for Unreal execution.
+
+Native runtime certification is separate: Unreal Engine 5.8.2 on the locked self-hosted environment must compile `WorldMakersEditor` and execute the full `WorldMakers.*` automation namespace. Representative-device evidence is required before claiming tablet certification.
+
+Broad authored-content production should begin only after the pre-Unreal hardening gate in `docs/unreal-readiness-audit.md` is satisfied. The first authored Unreal deliverable is the exact certification level `game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap`, committed through Git LFS.
 
 A green lightweight source check is therefore evidence of source integrity, not a substitute for native/device certification.
