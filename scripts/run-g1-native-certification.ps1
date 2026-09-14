@@ -108,19 +108,19 @@ if (-not (Test-Path $ReadinessScript -PathType Leaf)) {
     throw 'G1 certification cannot run because the readiness orchestrator is missing.'
 }
 
-$ReadinessArgs = @(
-    '-EvidenceDir', $EvidenceDir,
-    '-RunAutomation',
-    '-TestFilter', 'WorldMakers.'
-)
-if (-not [string]::IsNullOrWhiteSpace($EngineRoot)) { $ReadinessArgs += @('-EngineRoot', $EngineRoot) }
-if ($CleanIntermediate) { $ReadinessArgs += '-CleanIntermediate' }
-if ($AllowNonMain) { $ReadinessArgs += '-AllowNonMain' }
-if ($AllowDirtyWorktree) { $ReadinessArgs += '-AllowDirtyWorktree' }
-if ($StopBlockingProcesses) { $ReadinessArgs += '-StopBlockingProcesses' }
+$ReadinessParams = @{
+    EvidenceDir = $EvidenceDir
+    RunAutomation = $true
+    TestFilter = 'WorldMakers.'
+}
+if (-not [string]::IsNullOrWhiteSpace($EngineRoot)) { $ReadinessParams.EngineRoot = $EngineRoot }
+if ($CleanIntermediate) { $ReadinessParams.CleanIntermediate = $true }
+if ($AllowNonMain) { $ReadinessParams.AllowNonMain = $true }
+if ($AllowDirtyWorktree) { $ReadinessParams.AllowDirtyWorktree = $true }
+if ($StopBlockingProcesses) { $ReadinessParams.StopBlockingProcesses = $true }
 
 try {
-    & $ReadinessScript @ReadinessArgs
+    & $ReadinessScript @ReadinessParams
 }
 catch {
     $Readiness = Read-JsonIfPresent $ReadinessResult
