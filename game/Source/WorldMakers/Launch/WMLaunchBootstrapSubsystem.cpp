@@ -9,6 +9,7 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Mission/WMMissionRuntimeSubsystem.h"
 #include "Misc/CommandLine.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/DateTime.h"
@@ -82,6 +83,9 @@ void UWMLaunchBootstrapSubsystem::Deinitialize()
 {
     LaunchTicket.Reset();
     ProgressSyncToken.Reset();
+    SelectedModeId = NAME_None;
+    SelectedWorldId = NAME_None;
+    SelectedMissionId = NAME_None;
     EpicResume = FWMNativeEpicResume();
     Super::Deinitialize();
 }
@@ -200,11 +204,32 @@ bool UWMLaunchBootstrapSubsystem::ConsumeRedemptionJson(const FString& Json)
     FString Token;
     FString Scope;
     FString SyncExpiresAt;
-    if (!Context.IsValid() || !Context->TryGetStringField(TEXT("expiresAt"), ExpiresAt) || !IsFutureIso8601(ExpiresAt)) return false;
+    FString ModeId;
+    FString WorldId;
+    if (!Context.IsValid() ||
+        !Context->TryGetStringField(TEXT("expiresAt"), ExpiresAt) || !IsFutureIso8601(ExpiresAt) ||
+        !Context->TryGetStringField(TEXT("selectedMode"), ModeId) || ModeId.IsEmpty() ||
+        !Context->TryGetStringField(TEXT("selectedWorld"), WorldId) || WorldId.IsEmpty()) return false;
     if (!ProgressSync.IsValid() ||
         !ProgressSync->TryGetStringField(TEXT("token"), Token) || !IsOpaqueToken(Token) ||
         !ProgressSync->TryGetStringField(TEXT("scope"), Scope) || Scope != ProgressSyncScope ||
         !ProgressSync->TryGetStringField(TEXT("expiresAt"), SyncExpiresAt) || !IsFutureIso8601(SyncExpiresAt)) return false;
+
+    FName ParsedMissionId = NAME_None;
+    if (Context->HasTypedField<EJson::String>(TEXT("missionId")))
+    {
+        FString MissionId;
+        if (!Context->TryGetStringField(TEXT("missionId"), MissionId) || MissionId.IsEmpty()) return false;
+        ParsedMissionId = FName(*MissionId);
+    }
+    else if (!Context->HasField(TEXT("missionId")))
+    {
+        return false;
+    }
+
+    const FName ParsedModeId(*ModeId);
+    if (ParsedModeId == FName(TEXT("missions")) && ParsedMissionId.IsNone()) return false;
+    if (ParsedModeId != FName(TEXT("missions")) && !ParsedMissionId.IsNone()) return false;
 
     FWMNativeEpicResume ParsedResume;
     if (Context->HasTypedField<EJson::Object>(TEXT("epicResume")))
@@ -230,6 +255,9 @@ bool UWMLaunchBootstrapSubsystem::ConsumeRedemptionJson(const FString& Json)
     }
 
     ProgressSyncToken = MoveTemp(Token);
+    SelectedModeId = ParsedModeId;
+    SelectedWorldId = FName(*WorldId);
+    SelectedMissionId = ParsedMissionId;
     EpicResume = ParsedResume;
     LaunchTicket.Reset();
     NativeLaunchError.Reset();
@@ -247,12 +275,35 @@ void UWMLaunchBootstrapSubsystem::SetLaunchError(const FString& Error)
     NativeLaunchError = Error;
 }
 
+bool UWMLaunchBootstrapSubsystem::StartSelectedContent()
+{
+    UGameInstance* GameInstance = GetGameInstance();
+    UWorld* World = GameInstance ? GameInstance->GetWorld() : nullptr;
+    if (!World || !World->HasBegunPlay() || SelectedModeId.IsNone() || SelectedWorldId.IsNone()) return false;
+
+    if (SelectedModeId == FName(TEXT("missions")))
+    {
+        if (SelectedMissionId.IsNone()) return false;
+        UWMMissionRuntimeSubsystem* Mission = World->GetSubsystem<UWMMissionRuntimeSubsystem>();
+        return Mission && Mission->ActivateMission(SelectedMissionId);
+    }
+
+    // Free exploration and laboratory use the already loaded authored world. The redeemed world/mode
+    // remain available to presentation/gameplay systems via the getters above, with no config auto-start race.
+    return SelectedMissionId.IsNone();
+}
+
 bool UWMLaunchBootstrapSubsystem::TryApplyEpicResume()
 {
     if (!bNativeLaunchRequested || !bNativeLaunchReady || bNativeLaunchError) return false;
     if (bEpicResumeApplied) return true;
     if (!EpicResume.IsSet())
     {
+        if (!StartSelectedContent())
+        {
+            SetLaunchError(TEXT("Native selected content could not start."));
+            return false;
+        }
         bEpicResumeApplied = true;
         return true;
     }
