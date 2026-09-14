@@ -6,6 +6,7 @@ param(
     [switch]$CleanIntermediate,
     [switch]$AllowDirtyWorktree,
     [switch]$AllowNonMain,
+    [switch]$StopBlockingProcesses,
     [string]$TestFilter = 'WorldMakers.'
 )
 
@@ -13,7 +14,8 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $EvidencePath = Join-Path $RepoRoot $EvidenceDir
 $ExpectedVersionFile = Join-Path $RepoRoot 'game\UNREAL_ENGINE_VERSION'
-$EngineResolver = Join-Path $RepoRoot 'scripts\resolve-unreal-engine.ps1'
+$WorkstationDoctor = Join-Path $RepoRoot 'scripts\diagnose-unreal-workstation.ps1'
+$DoctorReportPath = Join-Path $EvidencePath 'workstation-doctor.json'
 $PreflightScript = Join-Path $RepoRoot 'scripts\validate-unreal-source-preflight.py'
 $BuildScript = Join-Path $RepoRoot 'scripts\build-unreal.ps1'
 $TestScript = Join-Path $RepoRoot 'scripts\test-unreal.ps1'
@@ -22,9 +24,13 @@ $ReadinessResult = Join-Path $EvidencePath 'readiness-result.json'
 $SourcePreflightLog = Join-Path $EvidencePath 'source-preflight.log'
 $RequestedEngineRoot = $EngineRoot
 
+# Contract ownership note: the isolated workstation doctor performs the
+# resolve-unreal-engine.ps1 and UnrealEditor-Cmd.exe dependency checks.
+
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 
 $Checks = [ordered]@{
+    workstationDoctor = $false
     gitAvailable = $false
     gitLfsAvailable = $false
     repositoryCommit = $false
@@ -32,11 +38,13 @@ $Checks = [ordered]@{
     originMainCurrent = $false
     worktreeClean = $false
     engineVersionFile = $false
-    engineResolver = $false
     engineRootResolved = $false
     engineVersionMatches = $false
     engineBuildTool = $false
     editorCommand = $false
+    cppToolchain = $false
+    windowsSdk = $false
+    blockingProcessState = $false
     sourcePreflight = $false
     nativeBuild = $false
     nativeAutomation = if ($RunAutomation) { $false } else { $null }
@@ -51,6 +59,8 @@ $ResolvedEngineRoot = $null
 $EngineResolutionSource = $null
 $EngineResolutionMode = $null
 $EngineCandidateCount = $null
+$DoctorStatus = 'not-run'
+$DoctorBlockerCodes = @()
 $SourcePreflightStatus = 'not-run'
 $NativeBuildStatus = 'not-run'
 $NativeAutomationStatus = if ($RunAutomation) { 'not-run' } else { 'not-requested' }
@@ -64,10 +74,11 @@ function Write-ReadinessReport {
     param([string]$Status)
 
     [ordered]@{
-        schemaVersion = 1
+        schemaVersion = 2
         generatedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
         status = $Status
         mode = if ($RequireAuthoredMap) { 'authored-map-certification-readiness' } else { 'pre-editor-native-readiness' }
+        installPolicy = 'manual-only-no-auto-install'
         repositoryCommit = $CommitSha
         branch = $BranchName
         originMainCommit = $OriginMainSha
@@ -78,6 +89,10 @@ function Write-ReadinessReport {
         engineCandidateCount = $EngineCandidateCount
         expectedUnrealVersion = $ExpectedVersion
         actualUnrealVersion = $ActualVersion
+        workstationDoctorStatus = $DoctorStatus
+        workstationDoctorReport = 'workstation-doctor.json'
+        workstationDoctorBlockerCodes = @($DoctorBlockerCodes)
+        stopBlockingProcesses = [bool]$StopBlockingProcesses
         requireAuthoredMap = [bool]$RequireAuthoredMap
         runAutomation = [bool]$RunAutomation
         testFilter = $TestFilter
@@ -90,9 +105,82 @@ function Write-ReadinessReport {
 }
 
 try {
+    if (-not (Test-Path $ExpectedVersionFile -PathType Leaf)) {
+        Add-Blocker 'Missing game/UNREAL_ENGINE_VERSION.'
+    }
+    else {
+        $ExpectedVersion = (Get-Content $ExpectedVersionFile -Raw).Trim()
+        $Checks.engineVersionFile = ($ExpectedVersion -eq '5.8.2')
+        if (-not $Checks.engineVersionFile) {
+            Add-Blocker "Repository engine baseline must be UE 5.8.2; found '$ExpectedVersion'."
+        }
+    }
+
+    if (-not (Test-Path $WorkstationDoctor -PathType Leaf)) {
+        Add-Blocker 'Missing scripts/diagnose-unreal-workstation.ps1.'
+    }
+    else {
+        $PowerShellExe = Get-Command powershell.exe -ErrorAction SilentlyContinue
+        if ($null -eq $PowerShellExe) {
+            Add-Blocker 'Windows PowerShell executable is not available to run the isolated workstation doctor.'
+        }
+        else {
+            if (Test-Path $DoctorReportPath) {
+                Remove-Item $DoctorReportPath -Force
+            }
+            $DoctorArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $WorkstationDoctor, '-EvidenceDir', $EvidenceDir)
+            if (-not [string]::IsNullOrWhiteSpace($RequestedEngineRoot)) {
+                $DoctorArgs += @('-EngineRoot', $RequestedEngineRoot)
+            }
+            if ($StopBlockingProcesses) {
+                $DoctorArgs += '-StopBlockingProcesses'
+            }
+
+            & $PowerShellExe.Source @DoctorArgs
+            $DoctorExitCode = $LASTEXITCODE
+
+            if (-not (Test-Path $DoctorReportPath -PathType Leaf)) {
+                Add-Blocker "Workstation doctor did not produce $DoctorReportPath (exit code $DoctorExitCode)."
+            }
+            else {
+                try {
+                    $Doctor = Get-Content $DoctorReportPath -Raw | ConvertFrom-Json
+                    $DoctorStatus = [string]$Doctor.status
+                    $Checks.workstationDoctor = ($DoctorStatus -eq 'ready')
+                    $ResolvedEngineRoot = [string]$Doctor.engineRoot
+                    $ActualVersion = [string]$Doctor.actualUnrealVersion
+                    $EngineResolutionSource = [string]$Doctor.engineResolutionSource
+                    $EngineResolutionMode = [string]$Doctor.engineResolutionMode
+                    $EngineCandidateCount = $Doctor.engineCandidateCount
+                    $Checks.engineRootResolved = [bool]$Doctor.checks.engineResolved
+                    $Checks.engineVersionMatches = [bool]$Doctor.checks.engineVersionMatches
+                    $Checks.engineBuildTool = [bool]$Doctor.checks.buildBat
+                    $Checks.editorCommand = [bool]$Doctor.checks.editorCommand
+                    $Checks.cppToolchain = [bool]$Doctor.checks.cppToolchain
+                    $Checks.windowsSdk = [bool]$Doctor.checks.windowsSdk
+                    $Checks.blockingProcessState = [bool]$Doctor.checks.blockingProcessState
+
+                    foreach ($DoctorBlocker in @($Doctor.blockers)) {
+                        if ($null -ne $DoctorBlocker) {
+                            $Code = [string]$DoctorBlocker.code
+                            $DoctorBlockerCodes += $Code
+                            Add-Blocker "Workstation doctor [$Code]: $($DoctorBlocker.message) Action: $($DoctorBlocker.remediation)"
+                        }
+                    }
+                }
+                catch {
+                    Add-Blocker "Unable to parse workstation doctor evidence: $($_.Exception.Message)"
+                }
+            }
+        }
+    }
+
     $GitCommand = Get-Command git -ErrorAction SilentlyContinue
     if ($null -eq $GitCommand) {
-        Add-Blocker 'Git is not available on PATH.'
+        $Checks.gitAvailable = $false
+        if (-not ($DoctorBlockerCodes -contains 'git-missing')) {
+            Add-Blocker 'Git is not available on PATH.'
+        }
     }
     else {
         $Checks.gitAvailable = $true
@@ -113,10 +201,10 @@ try {
 
         $GitLfsVersion = (& git lfs version 2>&1 | Out-String).Trim()
         $Checks.gitLfsAvailable = ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($GitLfsVersion))
-        if (-not $Checks.gitLfsAvailable) {
+        if (-not $Checks.gitLfsAvailable -and -not ($DoctorBlockerCodes -contains 'git-lfs-missing')) {
             Add-Blocker 'Git LFS is not installed or not available.'
         }
-        else {
+        elseif ($Checks.gitLfsAvailable) {
             & git -C $RepoRoot lfs pull
             if ($LASTEXITCODE -ne 0) {
                 Add-Blocker 'git lfs pull failed; authored/binary assets cannot be trusted.'
@@ -139,72 +227,6 @@ try {
         $Checks.worktreeClean = ($AllowDirtyWorktree -or $WorkingTree.Count -eq 0)
         if (-not $Checks.worktreeClean) {
             Add-Blocker 'Working tree contains uncommitted or untracked changes. Commit/stash them or use -AllowDirtyWorktree explicitly.'
-        }
-    }
-
-    if (-not (Test-Path $ExpectedVersionFile)) {
-        Add-Blocker 'Missing game/UNREAL_ENGINE_VERSION.'
-    }
-    else {
-        $ExpectedVersion = (Get-Content $ExpectedVersionFile -Raw).Trim()
-        $Checks.engineVersionFile = ($ExpectedVersion -eq '5.8.2')
-        if (-not $Checks.engineVersionFile) {
-            Add-Blocker "Repository engine baseline must be UE 5.8.2; found '$ExpectedVersion'."
-        }
-    }
-
-    $Checks.engineResolver = Test-Path $EngineResolver -PathType Leaf
-    if (-not $Checks.engineResolver) {
-        Add-Blocker 'Missing scripts/resolve-unreal-engine.ps1.'
-    }
-    elseif ($ExpectedVersion) {
-        try {
-            $Resolution = & $EngineResolver -RequestedRoot $RequestedEngineRoot -ExpectedVersion $ExpectedVersion
-            if ($null -eq $Resolution -or [string]::IsNullOrWhiteSpace([string]$Resolution.path)) {
-                throw 'Engine resolver returned no path.'
-            }
-            $ResolvedEngineRoot = [string]$Resolution.path
-            $EngineResolutionSource = [string]$Resolution.source
-            $EngineResolutionMode = [string]$Resolution.resolutionMode
-            $EngineCandidateCount = $Resolution.candidateCount
-            $Checks.engineRootResolved = $true
-            Write-Host "Resolved Unreal Engine $ExpectedVersion: $ResolvedEngineRoot ($EngineResolutionSource)"
-        }
-        catch {
-            Add-Blocker "Unable to resolve exact Unreal Engine $ExpectedVersion: $($_.Exception.Message)"
-        }
-    }
-
-    if ($Checks.engineRootResolved) {
-        $BuildVersionFile = Join-Path $ResolvedEngineRoot 'Engine\Build\Build.version'
-        $BuildBat = Join-Path $ResolvedEngineRoot 'Engine\Build\BatchFiles\Build.bat'
-        $EditorCmd = Join-Path $ResolvedEngineRoot 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
-
-        if (-not (Test-Path $BuildVersionFile -PathType Leaf)) {
-            Add-Blocker "Engine Build.version not found under '$ResolvedEngineRoot'."
-        }
-        else {
-            try {
-                $BuildVersion = Get-Content $BuildVersionFile -Raw | ConvertFrom-Json
-                $ActualVersion = "$($BuildVersion.MajorVersion).$($BuildVersion.MinorVersion).$($BuildVersion.PatchVersion)"
-                $Checks.engineVersionMatches = ($ExpectedVersion -and $ActualVersion -eq $ExpectedVersion)
-                if (-not $Checks.engineVersionMatches) {
-                    Add-Blocker "Unreal version mismatch. Expected $ExpectedVersion but workstation has $ActualVersion."
-                }
-            }
-            catch {
-                Add-Blocker "Unable to parse Unreal Build.version: $($_.Exception.Message)"
-            }
-        }
-
-        $Checks.engineBuildTool = Test-Path $BuildBat -PathType Leaf
-        if (-not $Checks.engineBuildTool) {
-            Add-Blocker "Unreal Build.bat is missing under '$ResolvedEngineRoot'."
-        }
-
-        $Checks.editorCommand = Test-Path $EditorCmd -PathType Leaf
-        if (-not $Checks.editorCommand) {
-            Add-Blocker "UnrealEditor-Cmd.exe is missing under '$ResolvedEngineRoot'."
         }
     }
 
@@ -235,7 +257,11 @@ try {
 
     if ($Blockers.Count -eq 0) {
         try {
-            & $BuildScript -EngineRoot $ResolvedEngineRoot -Configuration Development -EvidenceDir $EvidenceDir
+            & $BuildScript `
+                -EngineRoot $ResolvedEngineRoot `
+                -Configuration Development `
+                -EvidenceDir $EvidenceDir `
+                -StopBlockingProcesses:$StopBlockingProcesses
             $Checks.nativeBuild = $true
             $NativeBuildStatus = 'passed'
         }
@@ -247,7 +273,11 @@ try {
 
     if ($Blockers.Count -eq 0 -and $RunAutomation) {
         try {
-            & $TestScript -EngineRoot $ResolvedEngineRoot -TestFilter $TestFilter -EvidenceDir $EvidenceDir
+            & $TestScript `
+                -EngineRoot $ResolvedEngineRoot `
+                -TestFilter $TestFilter `
+                -EvidenceDir $EvidenceDir `
+                -StopBlockingProcesses:$StopBlockingProcesses
             $Checks.nativeAutomation = $true
             $NativeAutomationStatus = 'passed'
         }
@@ -259,7 +289,7 @@ try {
 
     if ($Blockers.Count -gt 0) {
         Write-ReadinessReport -Status 'blocked'
-        throw "World Makers Unreal readiness gate blocked. See $ReadinessResult"
+        throw "World Makers Unreal readiness gate blocked. See $ReadinessResult and $DoctorReportPath. Do not reinstall Unreal unless the doctor specifically reports an Unreal dependency defect."
     }
 
     Write-ReadinessReport -Status 'ready'
