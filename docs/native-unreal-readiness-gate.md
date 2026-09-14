@@ -17,42 +17,72 @@ These states do not imply representative-device certification.
 
 **Do not reinstall Unreal Engine, Visual Studio, Python, Git, or Git LFS merely because a native build failed.** The repository follows a diagnostic-first and manual-only policy. It never runs `winget`, Chocolatey, MSI installers, Epic installers, or Visual Studio installers automatically.
 
-The workstation doctor distinguishes four classes of failure:
+The workstation flow distinguishes five classes of failure:
 
 1. **repository defect** — a required repository script or version lock is missing;
 2. **dependency defect** — a specific executable/toolchain/SDK cannot be verified;
 3. **runtime-state blocker** — Unreal Editor or Live Coding is already running and blocks compilation;
-4. **native source/build failure** — prerequisites are present and Unreal Build Tool reached the project code.
+4. **classified native build defect** — UnrealBuildTool reached project code and the failure can be categorized as include/UHT/compiler/linker/plugin/file-lock/out-of-memory/LFS/etc.;
+5. **unknown native build defect** — prerequisites are green but the log does not yet match a known failure signature.
 
 A `blocking-unreal-process` result is **not an installation failure**. Save editor work, close Unreal Editor / `LiveCodingConsole`, and retry. The optional `-StopBlockingProcesses` switch may be used only when it is safe to terminate those known blocking processes.
 
 ## Easiest Windows entry points
 
-You no longer need to type installation commands in PowerShell.
+You no longer need to type installation commands in PowerShell. From File Explorer or Command Prompt, use the repository-owned launchers.
 
-From File Explorer or Command Prompt, the diagnostic entry point is:
+### 1. Diagnose the workstation
 
 ```bat
 WorldMakers-Doctor.cmd
 ```
 
-It runs the read-only workstation doctor and writes:
+This runs the read-only workstation doctor and writes:
 
 `artifacts/unreal-readiness/workstation-doctor.json`
 
-When the doctor is green, the native readiness entry point is:
+### 2. Run strict native readiness
 
 ```bat
 WorldMakers-Readiness.cmd
 ```
 
-The launcher delegates to the repository-owned PowerShell scripts; it does not install dependencies.
+This performs source freshness, Git LFS, workstation diagnosis, UE 5.8.2 validation and native compilation. It writes `readiness-result.json`, `build-result.json` and `build.log`.
 
-If you prefer PowerShell, the equivalent commands are:
+### 3. Open Unreal Editor only after readiness passes
+
+```bat
+WorldMakers-OpenEditor.cmd
+```
+
+`WorldMakers-OpenEditor.cmd` delegates to `scripts/open-unreal-project.ps1`. It runs the strict readiness gate first and opens the exact resolved `UnrealEditor.exe` only if readiness succeeds. When readiness fails, the editor is not opened.
+
+For local development on a deliberate non-main branch or with known uncommitted work, the same launcher supports the explicit diagnostic exceptions already defined by the readiness gate:
+
+```bat
+WorldMakers-OpenEditor.cmd -AllowNonMain -AllowDirtyWorktree
+```
+
+Those exceptions are useful for development but do **not** create certification evidence.
+
+### 4. Reclassify the last native build failure
+
+```bat
+WorldMakers-DiagnoseLastFailure.cmd
+```
+
+This reads the existing `build.log` and regenerates:
+
+`artifacts/unreal-readiness/native-failure-summary.json`
+
+No data is uploaded. The summary is bounded and redacts repository/home paths before storing diagnostic excerpts.
+
+If you prefer PowerShell, the equivalent entry points are:
 
 ```powershell
 .\scripts\diagnose-unreal-workstation.ps1
 .\scripts\run-unreal-readiness-gate.ps1 -CleanIntermediate
+.\scripts\open-unreal-project.ps1
 ```
 
 If Unreal Editor or Live Coding is open and you have already saved your work, an explicit opt-in exists:
@@ -63,7 +93,7 @@ If Unreal Editor or Live Coding is open and you have already saved your work, an
 
 The default remains fail-closed and will never kill Unreal processes silently.
 
-## What the workstation doctor verifies
+## Workstation doctor
 
 `scripts/diagnose-unreal-workstation.ps1` verifies the existing workstation without installing anything:
 
@@ -77,7 +107,7 @@ The default remains fail-closed and will never kill Unreal processes silently.
 - a usable Windows 10/11 SDK with x64 libraries;
 - running `UnrealEditor` / `LiveCodingConsole` processes.
 
-Every failure is emitted with a stable blocker code plus a remediation message. This makes `workstation-doctor.json` the first artifact to inspect after a failed local attempt.
+Every failure is emitted with a stable blocker code plus a remediation message. `workstation-doctor.json` is therefore the first artifact to inspect after a failed local attempt.
 
 ### Visual Studio remediation
 
@@ -86,6 +116,30 @@ If the doctor reports `visual-studio-cpp-toolchain-missing` or `windows-sdk-miss
 ### Unreal remediation
 
 If the doctor reports `unreal-engine-unresolved` or an Unreal binary is missing, first open **Epic Games Launcher → Unreal Engine → Library** and verify the existing UE 5.8.2 installation. Use Epic's **Verify** action before considering a second installation.
+
+## Native failure classification
+
+`scripts/classify-unreal-build-log.py` turns a failed `build.log` into `native-failure-summary.json`. `scripts/build-unreal.ps1` invokes it automatically after a non-zero UnrealBuildTool exit code and records the resulting category in `build-result.json` as `primaryFailureCategory`.
+
+Current stable categories include:
+
+- `live-coding-active`;
+- `visual-studio-toolchain-missing`;
+- `windows-sdk-missing`;
+- `out-of-memory`;
+- `include-file-missing`;
+- `file-lock-or-access-denied`;
+- `unreal-header-tool-error`;
+- `compiler-error`;
+- `linker-error`;
+- `plugin-or-module-error`;
+- `git-lfs-or-binary-pointer-error`;
+- `generated-files-stale`;
+- `unknown-native-build-failure`.
+
+Specific causes outrank generic compiler/linker categories. For example, `C1060` is classified as `out-of-memory`, and a linker diagnostic that explicitly says a binary is being used by another process is classified as `file-lock-or-access-denied`.
+
+The classifier emits only bounded diagnostic excerpts. Repository and home-directory paths are redacted, and the classifier never uploads data. The full local `build.log` remains available for deep debugging on the workstation.
 
 ## Engine auto-discovery
 
@@ -132,6 +186,16 @@ The readiness gate requires:
 
 Temporary diagnostic exceptions exist through `-AllowNonMain` and `-AllowDirtyWorktree`, but they must not be used as certification evidence.
 
+## Guarded editor launch
+
+`scripts/open-unreal-project.ps1` is intentionally strict. It runs `run-unreal-readiness-gate.ps1` in an isolated Windows PowerShell process and refuses to launch Unreal Editor after a failed readiness result. If a native build fails, it displays the primary category/remediation from `native-failure-summary.json` when available.
+
+On success it launches the exact engine binary resolved by the workstation doctor and writes:
+
+`artifacts/unreal-readiness/editor-launch-result.json`
+
+That record contains the repository commit, UE version, process ID and references to the readiness/workstation/native-build evidence. It does not claim runtime or device certification.
+
 ## Post-map certification mode
 
 After the first Unreal-authored certification map has been created and committed through Git LFS:
@@ -159,7 +223,9 @@ Primary records:
 
 - `workstation-doctor.json`: machine prerequisite classification and remediation codes;
 - `readiness-result.json`: repository/native readiness orchestration;
-- `build-result.json` and `build.log`: native build result;
+- `build-result.json` and `build.log`: native build result and full local build log;
+- `native-failure-summary.json`: bounded, privacy-minimized failure classification when a build fails or is process-blocked;
+- `editor-launch-result.json`: guarded editor launch record after readiness passes;
 - `automation-result.json` and `automation.log`: optional native automation result.
 
 `readiness-result.json` records repository commit/branch, fetched `origin/main`, requested/resolved engine roots, engine resolution source/mode, expected/actual Unreal versions, workstation doctor status and blocker codes, source-preflight state, native build state, optional automation state, and blocking reasons.
@@ -198,10 +264,13 @@ Only after this route and `WorldMakers.*` automation are clean should broad auth
 
 - `Unreal Source Preflight`: hosted static regression gate; no engine execution.
 - `validate-windows-workstation-contract.py`: hosted regression guard for the diagnostic/manual-only Windows contract.
+- `test-unreal-build-classifier.py`: deterministic hosted tests for native failure categorization and path redaction.
 - `resolve-unreal-engine.ps1`: deterministic workstation engine resolution; no build/test claim.
 - `diagnose-unreal-workstation.ps1`: read-only dependency/process-state doctor; no installation actions.
+- `build-unreal.ps1`: native compile plus structured failure evidence.
 - `run-unreal-readiness-gate.ps1`: workstation doctor + source freshness + native compile + optional automation.
+- `open-unreal-project.ps1`: guarded editor launch after readiness.
 - `Unreal CI / unreal-build-and-test`: continuous native evidence once the self-hosted UE 5.8.2 runner is provisioned.
 - M3/M5 certification assessors: higher-level route/device evidence, not substitutes for compilation.
 
-See also `docs/unreal-readiness-audit.md`, Issue #9, Issue #106 and Issue #108.
+See also `docs/unreal-readiness-audit.md`, Issue #9, Issue #106 and Issue #114.

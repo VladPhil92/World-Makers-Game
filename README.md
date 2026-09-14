@@ -51,14 +51,41 @@ Key design references:
 - `docs/TDD.md`
 - `docs/roadmap.md`
 - `docs/unreal-readiness-audit.md`
+- `docs/native-unreal-readiness-gate.md`
 - `docs/fantastic-learning-universe.md`
 - `docs/m5-2-composable-mission-runtime.md`
 - `docs/m5-3-science-simulation-core.md`
 - `docs/m5-4-language-literature-thought-runtime.md`
 
+## Windows native workflow
+
+World Makers follows a **diagnostic-first, no-auto-install** policy. A failed build is not treated as proof that Unreal Engine or Visual Studio needs to be reinstalled.
+
+The normal Windows entry points are:
+
+```bat
+WorldMakers-Doctor.cmd
+WorldMakers-Readiness.cmd
+WorldMakers-OpenEditor.cmd
+```
+
+If the native build fails, the repository automatically writes:
+
+`artifacts/unreal-readiness/native-failure-summary.json`
+
+The summary classifies common Unreal failures such as Live Coding, missing SDK/toolchain, include/UHT/compiler/linker/plugin errors, file locks, memory pressure and Git LFS/binary-pointer problems. It stores only bounded diagnostics with local repository/home paths redacted.
+
+To reclassify the most recent local `build.log` without rerunning Unreal:
+
+```bat
+WorldMakers-DiagnoseLastFailure.cmd
+```
+
+`WorldMakers-OpenEditor.cmd` is fail-closed: it runs native readiness first and only launches the exact resolved UE 5.8.2 `UnrealEditor.exe` after the readiness gate succeeds.
+
 ## Verification
 
-GitHub-hosted source CI validates content, policy and source contracts. The dedicated `Unreal Source Preflight` additionally catches known UE 5.8 repository-level compile hazards, but it still does **not** substitute for Unreal execution.
+GitHub-hosted source CI validates content, policy and source contracts. The dedicated `Unreal Source Preflight` additionally catches known UE 5.8 repository-level compile hazards, verifies the Windows bootstrap contract and exercises synthetic native-failure classification cases, but it still does **not** substitute for Unreal execution.
 
 Native runtime certification is separate: Unreal Engine 5.8.2 on the locked self-hosted environment must compile `WorldMakersEditor` and execute the full `WorldMakers.*` automation namespace. Representative-device evidence is required before claiming tablet certification.
 

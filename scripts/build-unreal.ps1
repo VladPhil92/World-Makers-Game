@@ -11,14 +11,75 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $Project = Join-Path $RepoRoot 'game\WorldMakers.uproject'
 $ExpectedVersionFile = Join-Path $RepoRoot 'game\UNREAL_ENGINE_VERSION'
 $EngineResolver = Join-Path $RepoRoot 'scripts\resolve-unreal-engine.ps1'
+$FailureClassifier = Join-Path $RepoRoot 'scripts\classify-unreal-build-log.py'
 $EvidencePath = Join-Path $RepoRoot $EvidenceDir
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 $LogPath = Join-Path $EvidencePath 'build.log'
 $ResultPath = Join-Path $EvidencePath 'build-result.json'
+$FailureSummaryPath = Join-Path $EvidencePath 'native-failure-summary.json'
+
+if (Test-Path $FailureSummaryPath -PathType Leaf) {
+    Remove-Item $FailureSummaryPath -Force
+}
 
 function Get-BlockingUnrealProcesses {
     $Names = @('UnrealEditor', 'LiveCodingConsole')
     return @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $Names -contains $_.ProcessName })
+}
+
+function Write-KnownFailureSummary {
+    param(
+        [Parameter(Mandatory = $true)][string]$Category,
+        [Parameter(Mandatory = $true)][string]$Confidence,
+        [Parameter(Mandatory = $true)][bool]$RepositoryActionable,
+        [Parameter(Mandatory = $true)][string]$Remediation,
+        [string[]]$Excerpts = @()
+    )
+
+    [ordered]@{
+        schemaVersion = 1
+        status = 'failed'
+        primaryCategory = $Category
+        confidence = $Confidence
+        repositoryActionable = $RepositoryActionable
+        remediation = $Remediation
+        matchedCategories = @()
+        primaryExcerpts = @($Excerpts)
+        diagnostics = @()
+        diagnosticCount = 0
+        privacy = [ordered]@{
+            boundedDiagnostics = $true
+            absoluteRepositoryPathRedacted = $true
+            homePathRedacted = $true
+            uploadsData = $false
+        }
+    } | ConvertTo-Json -Depth 6 | Set-Content -Path $FailureSummaryPath -Encoding UTF8
+}
+
+function Invoke-FailureClassifier {
+    if (-not (Test-Path $FailureClassifier -PathType Leaf)) {
+        return 'classifier-script-missing'
+    }
+
+    $Python = Get-Command python -ErrorAction SilentlyContinue
+    if ($null -eq $Python) {
+        return 'classifier-python-unavailable'
+    }
+
+    try {
+        & $Python.Source $FailureClassifier --log $LogPath --output $FailureSummaryPath --repo-root $RepoRoot
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $FailureSummaryPath -PathType Leaf)) {
+            return 'classifier-failed'
+        }
+        $Summary = Get-Content $FailureSummaryPath -Raw | ConvertFrom-Json
+        if ([string]::IsNullOrWhiteSpace([string]$Summary.primaryCategory)) {
+            return 'classifier-no-category'
+        }
+        return [string]$Summary.primaryCategory
+    }
+    catch {
+        return 'classifier-failed'
+    }
 }
 
 function Write-BuildResult {
@@ -30,14 +91,17 @@ function Write-BuildResult {
         [string]$UnrealVersion,
         [string]$ResolvedEngineRoot,
         [datetime]$Started,
-        [datetime]$Finished
+        [datetime]$Finished,
+        [string]$PrimaryFailureCategory
     )
 
     [ordered]@{
-        schemaVersion = 2
+        schemaVersion = 3
         status = $Status
         exitCode = $ExitCode
         blocker = $Blocker
+        primaryFailureCategory = $PrimaryFailureCategory
+        failureSummary = if (Test-Path $FailureSummaryPath -PathType Leaf) { 'native-failure-summary.json' } else { $null }
         blockingProcesses = @($BlockingProcesses | ForEach-Object { [ordered]@{ name = $_.ProcessName; pid = $_.Id } })
         configuration = $Configuration
         target = 'WorldMakersEditor'
@@ -80,8 +144,14 @@ if ($BlockingProcesses.Count -gt 0 -and $StopBlockingProcesses) {
 }
 
 if ($BlockingProcesses.Count -gt 0) {
-    Write-BuildResult -Status 'blocked' -ExitCode $null -Blocker 'blocking-unreal-process' -BlockingProcesses $BlockingProcesses -UnrealVersion $ActualVersion -ResolvedEngineRoot $ResolvedEngineRoot -Started $null -Finished $null
     $Summary = (@($BlockingProcesses | ForEach-Object { "$($_.ProcessName) (PID $($_.Id))" }) -join ', ')
+    Write-KnownFailureSummary `
+        -Category 'live-coding-active' `
+        -Confidence 'high' `
+        -RepositoryActionable $false `
+        -Remediation 'Save editor work, close Unreal Editor / Live Coding, then rerun the build. This is a runtime-state blocker, not an installation failure.' `
+        -Excerpts @($Summary)
+    Write-BuildResult -Status 'blocked' -ExitCode $null -Blocker 'blocking-unreal-process' -BlockingProcesses $BlockingProcesses -UnrealVersion $ActualVersion -ResolvedEngineRoot $ResolvedEngineRoot -Started $null -Finished $null -PrimaryFailureCategory 'live-coding-active'
     throw "Native build blocked because Unreal Editor or Live Coding is running: $Summary. Save your work and close those processes, or explicitly use -StopBlockingProcesses. This is not an installation failure."
 }
 
@@ -92,6 +162,17 @@ Write-Host "Resolved engine root: $ResolvedEngineRoot"
 $ExitCode = $LASTEXITCODE
 $Finished = (Get-Date).ToUniversalTime()
 
-Write-BuildResult -Status $(if ($ExitCode -eq 0) { 'passed' } else { 'failed' }) -ExitCode $ExitCode -Blocker $null -BlockingProcesses @() -UnrealVersion $ActualVersion -ResolvedEngineRoot $ResolvedEngineRoot -Started $Started -Finished $Finished
+$PrimaryFailureCategory = $null
+if ($ExitCode -ne 0) {
+    $PrimaryFailureCategory = Invoke-FailureClassifier
+    Write-Host "Native failure category: $PrimaryFailureCategory" -ForegroundColor Yellow
+    if (Test-Path $FailureSummaryPath -PathType Leaf) {
+        Write-Host "Failure summary: $FailureSummaryPath" -ForegroundColor Yellow
+    }
+}
 
-if ($ExitCode -ne 0) { throw "Unreal build failed with exit code $ExitCode. Inspect $LogPath; reinstalling Unreal is not the default corrective action." }
+Write-BuildResult -Status $(if ($ExitCode -eq 0) { 'passed' } else { 'failed' }) -ExitCode $ExitCode -Blocker $null -BlockingProcesses @() -UnrealVersion $ActualVersion -ResolvedEngineRoot $ResolvedEngineRoot -Started $Started -Finished $Finished -PrimaryFailureCategory $PrimaryFailureCategory
+
+if ($ExitCode -ne 0) {
+    throw "Unreal build failed with exit code $ExitCode (category: $PrimaryFailureCategory). Inspect $FailureSummaryPath and $LogPath; reinstalling Unreal is not the default corrective action."
+}

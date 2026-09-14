@@ -6,14 +6,20 @@ on:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
       - 'scripts/validate-windows-workstation-contract.py'
+      - 'scripts/classify-unreal-build-log.py'
+      - 'scripts/test-unreal-build-classifier.py'
       - 'scripts/resolve-unreal-engine.ps1'
       - 'scripts/diagnose-unreal-workstation.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/open-unreal-project.ps1'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'WorldMakers-Doctor.cmd'
       - 'WorldMakers-Readiness.cmd'
+      - 'WorldMakers-OpenEditor.cmd'
+      - 'WorldMakers-DiagnoseLastFailure.cmd'
       - 'docs/native-unreal-readiness-gate.md'
+      - 'README.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
   push:
@@ -23,14 +29,20 @@ on:
       - 'game/**'
       - 'scripts/validate-unreal-source-preflight.py'
       - 'scripts/validate-windows-workstation-contract.py'
+      - 'scripts/classify-unreal-build-log.py'
+      - 'scripts/test-unreal-build-classifier.py'
       - 'scripts/resolve-unreal-engine.ps1'
       - 'scripts/diagnose-unreal-workstation.ps1'
       - 'scripts/run-unreal-readiness-gate.ps1'
+      - 'scripts/open-unreal-project.ps1'
       - 'scripts/build-unreal.ps1'
       - 'scripts/test-unreal.ps1'
       - 'WorldMakers-Doctor.cmd'
       - 'WorldMakers-Readiness.cmd'
+      - 'WorldMakers-OpenEditor.cmd'
+      - 'WorldMakers-DiagnoseLastFailure.cmd'
       - 'docs/native-unreal-readiness-gate.md'
+      - 'README.md'
       - '.gitattributes'
       - '.github/workflows/unreal-source-preflight.yml'
   workflow_dispatch:
@@ -52,3 +64,5 @@ jobs:
         run: python scripts/validate-unreal-source-preflight.py
       - name: Validate Windows workstation bootstrap contract
         run: python scripts/validate-windows-workstation-contract.py
+      - name: Test native Unreal failure classifier
+        run: python scripts/test-unreal-build-classifier.py
