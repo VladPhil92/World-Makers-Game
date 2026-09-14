@@ -22,7 +22,8 @@ public class WorldMakers : ModuleRules
         {
             "Slate",
             "SlateCore",
-            "Json"
+            "Json",
+            "HTTP"
         });
     }
 }
