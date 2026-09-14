@@ -72,14 +72,9 @@ def ensure_actor(label: str, class_path: str, location: unreal.Vector):
             unreal.EditorLevelLibrary.destroy_actor(duplicate)
         existing = existing[:1]
 
-    if existing:
-        actor = existing[0]
-        if not actor.is_a(actor_class):
-            unreal.EditorLevelLibrary.destroy_actor(actor)
-            actor = None
-        else:
-            actor.set_actor_location(location, False, False)
-    else:
+    actor = existing[0] if existing else None
+    if actor is not None and actor_class_path(actor) != class_path:
+        unreal.EditorLevelLibrary.destroy_actor(actor)
         actor = None
 
     if actor is None:
@@ -87,6 +82,8 @@ def ensure_actor(label: str, class_path: str, location: unreal.Vector):
         if actor is None:
             raise RuntimeError(f"Unable to spawn {class_path} for {label}")
         actor.set_actor_label(label, True)
+    else:
+        actor.set_actor_location(location, False, False)
 
     return actor
 
@@ -107,11 +104,12 @@ def main() -> None:
     authored = []
     for label, class_path, location in ACTORS:
         actor = ensure_actor(label, class_path, location)
+        actor_location = actor.get_actor_location()
         authored.append(
             {
                 "label": label,
                 "classPath": actor_class_path(actor),
-                "location": [actor.get_actor_location().x, actor.get_actor_location().y, actor.get_actor_location().z],
+                "location": [actor_location.x, actor_location.y, actor_location.z],
             }
         )
 
