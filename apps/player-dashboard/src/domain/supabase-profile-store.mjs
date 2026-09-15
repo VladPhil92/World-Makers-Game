@@ -5,27 +5,27 @@ function safeProfileId(value) {
   return value;
 }
 
-// Persists player profiles through two SECURITY DEFINER Postgres RPCs (wm_get_player_profile /
-// wm_put_player_profile) instead of direct table access, so this app never needs a Supabase
-// service-role key: the project's anon key is enough, and RLS on player_profiles denies
-// everyone else. That anon key must still be treated as a server secret and never shipped to
-// the browser, since these RPCs trust any caller that holds it.
+// Legacy dashboard profiles remain on their established RPC contract, but those
+// RPCs are no longer callable with the public anon role. This adapter runs only
+// inside the Node server process and therefore requires the Supabase service-role
+// credential. Never expose this key to browser code, launch tickets or the Unreal
+// runtime. New CTG One runtime synchronization uses the separate signed bridge.
 export class SupabaseProfileStore {
   #url;
-  #anonKey;
+  #serviceRoleKey;
 
-  constructor({ url, anonKey }) {
-    if (!url || !anonKey) throw new TypeError('Supabase profile store requires a url and anon key.');
+  constructor({ url, serviceRoleKey }) {
+    if (!url || !serviceRoleKey) throw new TypeError('Supabase profile store requires a url and server-only service-role key.');
     this.#url = url;
-    this.#anonKey = anonKey;
+    this.#serviceRoleKey = serviceRoleKey;
   }
 
   async #rpc(name, args) {
     const response = await fetch(`${this.#url}/rest/v1/rpc/${name}`, {
       method: 'POST',
       headers: {
-        apikey: this.#anonKey,
-        Authorization: `Bearer ${this.#anonKey}`,
+        apikey: this.#serviceRoleKey,
+        Authorization: `Bearer ${this.#serviceRoleKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(args),
