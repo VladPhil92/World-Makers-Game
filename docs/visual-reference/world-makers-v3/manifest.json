@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "referenceSet": "world-makers-v3",
+  "storagePolicy": "original PNG masters only; byte-for-byte; no recompression, re-encoding, resize, crop, metadata stripping, WebP/AVIF conversion or image optimization",
+  "status": "awaiting-original-binary-transfer",
+  "assets": [
+    {
+      "filename": "Portada sin letras(4).png",
+      "role": "hero-clean",
+      "width": 1672,
+      "height": 941,
+      "bytes": 3741981,
+      "sha256": "8626983c068662f8b014e84e10afdcb9a862bc6103989dee0042a52b53b33220",
+      "gitBlobSha": "d4cbc1ee9af3ea712074b4f20cefb69c432c89a9"
+    },
+    {
+      "filename": "Antes y Después(1).png",
+      "role": "environment-transformation",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 4041120,
+      "sha256": "0e43dd5b6b8307d09d914e8ea422cc7675cb5998813e534b616880d7f5bde658",
+      "gitBlobSha": "14dc2b43fbfc34fe7c9525e8b83ea6743ce4d5e1"
+    },
+    {
+      "filename": "Construcción Ecológica(1).png",
+      "role": "ecological-construction",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3769062,
+      "sha256": "718707c2e867b41822501385aa1178847854d2a1e4993e644efc10ede27d9ca6",
+      "gitBlobSha": "25d385ca57eaeb10892780577dd8a15b81821539"
+    },
+    {
+      "filename": "Experimento(1).png",
+      "role": "science-experiment",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3470760,
+      "sha256": "00c6454629a7dbf9f138f1779d28c1b238624d0163604ef0617077bfe1efd468",
+      "gitBlobSha": "b3825d4af1c76f39c7ab5206e26420bfd69d8e78"
+    }
+  ]
+}
