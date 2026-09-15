@@ -24,6 +24,7 @@ public class WorldMakers : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
+            "EnhancedInput",
             "PhysicsCore",
             "ProceduralMeshComponent",
             "Niagara",
