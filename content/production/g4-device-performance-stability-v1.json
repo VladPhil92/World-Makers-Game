@@ -61,7 +61,7 @@
     "canonicalResult": "artifacts/g4-device/g4-device-performance.json",
     "v8EvidenceDirectory": "artifacts/g4-device/v8",
     "stabilityEvidenceDirectory": "artifacts/g4-device/stability",
-    "g3Result": "artifacts/g4-device/g3/g3-visual-fidelity.json",
+    "g3Result": "artifacts/g3-visual/g3-visual-fidelity.json",
     "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
   },
   "gateBoundary": {
