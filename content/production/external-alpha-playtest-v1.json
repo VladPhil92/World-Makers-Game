@@ -1,0 +1,90 @@
+{
+  "schema": "worldmakers.external-alpha-playtest.v1",
+  "version": 1,
+  "status": "source-ready-controlled-playtest-evidence-required",
+  "dependencies": {
+    "productionAlphaContract": "content/production/production-alpha-readiness-v1.json",
+    "productionAlphaResult": "artifacts/production-alpha/production-alpha-readiness.json"
+  },
+  "releaseChannel": "external-alpha",
+  "requiredPlatforms": ["Win64", "Android", "iPadOS"],
+  "cohort": {
+    "minimumUniqueTesters": 10,
+    "minimumTotalSessions": 20,
+    "minimumCompletedSessions": 18,
+    "minimumSessionsByPlatform": {
+      "Win64": 4,
+      "Android": 6,
+      "iPadOS": 6
+    },
+    "minimumSessionDurationMinutesForCompletion": 10,
+    "pseudonymousTesterIdsRequired": true,
+    "rawIdentityDataAllowed": false,
+    "minorTestingRequiresAuthorizedAdult": true,
+    "guardianAuthorizationReferenceMustBeHashed": true
+  },
+  "experienceSlo": {
+    "minimumSessionCompletionRate": 0.90,
+    "minimumCrashFreeSessionRate": 0.98,
+    "minimumFatalErrorFreeSessionRate": 0.99,
+    "minimumCoreJourneyCompletionRate": 0.90,
+    "minimumSaveReloadSuccessRate": 0.95,
+    "minimumMobileBackgroundResumeSuccessRate": 0.95
+  },
+  "issuePolicy": {
+    "severities": ["P0", "P1", "P2", "P3"],
+    "openP0Allowed": 0,
+    "openP1Allowed": 0,
+    "maxOpenP2": 3,
+    "openSafetyIssuesAllowed": 0,
+    "childPiiInIssueEvidenceAllowed": false,
+    "saveCorruptionIssueForcesRollback": true,
+    "childSafetyIncidentForcesRollback": true
+  },
+  "playtestSafety": {
+    "openChatAllowed": false,
+    "realMoneyOrTokenEarningAllowed": false,
+    "childPiiCollectionAllowed": false,
+    "freeTextChildDataCollectionAllowed": false,
+    "guardianOrAuthorizedAdultFlowRequiredForMinorTesting": true,
+    "privacyReviewRequired": true,
+    "childSafetyReviewRequired": true
+  },
+  "promotion": {
+    "fromChannel": "external-alpha",
+    "toChannel": "release-candidate",
+    "humanGoNoGoRequired": true,
+    "qaApprovalRequired": true,
+    "childSafetyApprovalRequired": true,
+    "productApprovalRequired": true,
+    "rollbackPlanRequired": true,
+    "telemetryReviewRequired": true,
+    "promotionDecisionMustMatchBuildCommit": true
+  },
+  "rollbackTriggers": [
+    "open-P0-or-P1",
+    "crash-free-rate-below-slo",
+    "fatal-error-free-rate-below-slo",
+    "save-corruption",
+    "confirmed-child-safety-incident",
+    "telemetry-integrity-failure"
+  ],
+  "evidence": {
+    "cohortFile": "artifacts/external-alpha/cohort.json",
+    "sessionDirectory": "artifacts/external-alpha/sessions",
+    "issueDirectory": "artifacts/external-alpha/issues",
+    "releaseDecisionFile": "artifacts/external-alpha/release-decision.json",
+    "telemetryHashRequired": true,
+    "allEvidenceMustMatchOneBuildCommit": true
+  },
+  "certification": {
+    "requiresProductionAlphaCertifiedSameCommit": true,
+    "requiresCleanCurrentMain": true,
+    "canonicalResult": "artifacts/external-alpha/external-alpha-readiness.json",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "exit": {
+    "nextPhase": "release-candidate-readiness",
+    "meaning": "controlled external alpha has met experience, reliability, safety and issue-quality thresholds for a release-candidate build"
+  }
+}
