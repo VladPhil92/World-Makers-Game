@@ -1,0 +1,13 @@
+{
+  "schema": "worldmakers.rc-regression.v1",
+  "status": "pending",
+  "releaseVersion": "",
+  "repositoryCommit": "",
+  "testedAtUtc": "",
+  "targets": [
+    {"targetId": "windows-reference", "freshInstallPassed": false, "upgradeInstallPassed": false, "criticalJourneyPassed": false, "saveUpgradeCompatibilityPassed": false, "offlineRecoveryPassed": false, "backgroundResumePassed": true, "crashes": 0, "fatalErrors": 0, "dataLossEvents": 0},
+    {"targetId": "android-alpha", "freshInstallPassed": false, "upgradeInstallPassed": false, "criticalJourneyPassed": false, "saveUpgradeCompatibilityPassed": false, "offlineRecoveryPassed": false, "backgroundResumePassed": false, "crashes": 0, "fatalErrors": 0, "dataLossEvents": 0},
+    {"targetId": "ipados-alpha", "freshInstallPassed": false, "upgradeInstallPassed": false, "criticalJourneyPassed": false, "saveUpgradeCompatibilityPassed": false, "offlineRecoveryPassed": false, "backgroundResumePassed": false, "crashes": 0, "fatalErrors": 0, "dataLossEvents": 0}
+  ],
+  "openIssues": {"P0": 0, "P1": 0, "P2": 0, "P3": 0}
+}
