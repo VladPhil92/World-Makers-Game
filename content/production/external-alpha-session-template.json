@@ -1,0 +1,40 @@
+{
+  "schema": "worldmakers.external-alpha-session.v1",
+  "status": "pending",
+  "sessionId": "",
+  "testerIdHash": "",
+  "participantClass": "adult",
+  "guardianAuthorizationRefHash": "",
+  "platform": "",
+  "buildCommit": "",
+  "buildId": "",
+  "startedAtUtc": "",
+  "endedAtUtc": "",
+  "durationMinutes": 0,
+  "outcome": "pending",
+  "telemetryFile": "",
+  "telemetrySha256": "",
+  "checks": {
+    "installLaunchPassed": false,
+    "certificationMapLoaded": false,
+    "firstPersonControlPassed": false,
+    "observeScanPassed": false,
+    "scienceInteractionPassed": false,
+    "buildPlacePassed": false,
+    "coreJourneyCompleted": false,
+    "saveReloadPassed": false,
+    "backgroundResumeApplicable": false,
+    "backgroundResumePassed": false
+  },
+  "reliability": {
+    "crashCount": 0,
+    "fatalErrorCount": 0,
+    "blockingIssueEncountered": false,
+    "saveCorruptionObserved": false
+  },
+  "privacy": {
+    "containsRawIdentity": false,
+    "containsChildPii": false,
+    "containsFreeTextChildData": false
+  }
+}
