@@ -1,0 +1,11 @@
+{
+  "schema": "worldmakers.production-release-decision.v1",
+  "status": "pending",
+  "decision": "HOLD",
+  "repositoryCommit": "",
+  "publicVersion": "",
+  "decidedAtUtc": "",
+  "approvals": {"qa": false, "engineering": false, "childSafety": false, "product": false, "privacyLegal": false, "releaseOperations": false},
+  "reviewers": {"qa": "", "engineering": "", "childSafety": "", "product": "", "privacyLegal": "", "releaseOperations": ""},
+  "knownBlockingIssues": []
+}

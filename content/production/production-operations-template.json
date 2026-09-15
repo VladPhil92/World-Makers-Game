@@ -1,0 +1,13 @@
+{
+  "schema": "worldmakers.production-operations.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "publicVersion": "",
+  "reviewedAtUtc": "",
+  "reviewer": "",
+  "health": {"dashboardReady": false, "alertRoutingReady": false, "crashSymbolsReady": false, "telemetryCoverageVerified": false},
+  "rollback": {"drillPassed": false, "withdrawalProcedureVerified": false, "rollbackTargetVersion": "", "rollbackTargetSha256": "", "authority": ""},
+  "incidentResponse": {"incidentCommander": "", "supportEscalationReady": false},
+  "compliance": {"privacyPolicyReviewed": false, "termsReviewed": false, "childSafetyReviewed": false, "storeDataSafetyReviewed": false},
+  "safety": {"childPiiCollected": false, "openChatEnabled": false, "realMoneyOrTokenEarningEnabled": false}
+}

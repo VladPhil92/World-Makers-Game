@@ -1,0 +1,95 @@
+{
+  "schema": "worldmakers.production-release-readiness.v1",
+  "version": 1,
+  "status": "source-ready-launch-evidence-required",
+  "dependencies": {
+    "releaseCandidateContract": "content/production/release-candidate-readiness-v1.json",
+    "releaseCandidateResult": "artifacts/release-candidate/release-candidate-readiness.json",
+    "releaseCandidateFreeze": "artifacts/release-candidate/freeze-manifest.json"
+  },
+  "releaseChannel": "production",
+  "requiredTargets": ["windows-reference", "android-alpha", "ipados-alpha"],
+  "immutablePromotion": {
+    "sameRcCommitRequired": true,
+    "sameRcPayloadSha256Required": true,
+    "rebuildAfterRcAllowed": false,
+    "publicVersionMustMatchRcBaseVersion": true
+  },
+  "distribution": {
+    "windows-reference": "managed-windows-production",
+    "android-alpha": "google-play-production",
+    "ipados-alpha": "apple-app-store-production",
+    "listingApprovalRequired": true,
+    "privacyDisclosureReviewRequired": true,
+    "ageRatingReviewRequired": true,
+    "supportContactRequired": true,
+    "mobileSigningMustRemainVerified": true,
+    "credentialsMayBeStoredInRepository": false
+  },
+  "rollout": {
+    "stagesPercent": [5, 25, 50, 100],
+    "minimumObservationHours": [2, 6, 12, 24],
+    "manualPromotionRequiredBetweenStages": true,
+    "rollbackAuthorityRequired": true,
+    "haltTriggers": [
+      "open-P0-or-P1",
+      "crash-free-rate-below-slo",
+      "fatal-error-free-rate-below-slo",
+      "save-integrity-failure",
+      "confirmed-child-safety-incident",
+      "telemetry-blindness"
+    ]
+  },
+  "healthSlo": {
+    "minimumCrashFreeSessionRate": 0.995,
+    "minimumFatalErrorFreeSessionRate": 0.999,
+    "minimumInstallLaunchSuccessRate": 0.98,
+    "minimumCoreJourneySuccessRate": 0.95,
+    "minimumSaveIntegrityRate": 1.0,
+    "minimumMobileBackgroundResumeRate": 0.98,
+    "minimumTelemetryCoverageRate": 0.99
+  },
+  "operations": {
+    "healthDashboardRequired": true,
+    "alertRoutingRequired": true,
+    "crashSymbolsRequired": true,
+    "rollbackDrillRequired": true,
+    "storeWithdrawalProcedureRequired": true,
+    "incidentCommanderRequired": true,
+    "supportEscalationRequired": true,
+    "privacyPolicyReviewRequired": true,
+    "termsReviewRequired": true,
+    "childSafetyReviewRequired": true,
+    "storeDataSafetyReviewRequired": true,
+    "childPiiAllowed": false,
+    "openChatAllowed": false,
+    "realMoneyOrTokenEarningAllowed": false
+  },
+  "promotion": {
+    "humanGoNoGoRequired": true,
+    "qaApprovalRequired": true,
+    "engineeringApprovalRequired": true,
+    "childSafetyApprovalRequired": true,
+    "productApprovalRequired": true,
+    "privacyLegalApprovalRequired": true,
+    "releaseOperationsApprovalRequired": true,
+    "decisionMustMatchCommitAndVersion": true
+  },
+  "evidence": {
+    "releaseManifest": "artifacts/production-release/release-manifest.json",
+    "distribution": "artifacts/production-release/distribution.json",
+    "rolloutPlan": "artifacts/production-release/rollout-plan.json",
+    "operations": "artifacts/production-release/operations.json",
+    "releaseDecision": "artifacts/production-release/release-decision.json"
+  },
+  "certification": {
+    "requiresReleaseCandidateCertifiedSameCommit": true,
+    "requiresCleanCurrentMain": true,
+    "canonicalResult": "artifacts/production-release/production-release-readiness.json",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "exit": {
+    "nextPhase": "production-release-execution",
+    "meaning": "the exact certified RC payload is authorized for controlled staged production rollout; publication has not yet occurred"
+  }
+}

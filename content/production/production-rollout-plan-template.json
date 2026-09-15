@@ -1,0 +1,17 @@
+{
+  "schema": "worldmakers.production-rollout-plan.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "publicVersion": "",
+  "approvedAtUtc": "",
+  "approvedBy": "",
+  "rollbackAuthority": "",
+  "stages": [
+    {"percent": 5, "minimumObservationHours": 2},
+    {"percent": 25, "minimumObservationHours": 6},
+    {"percent": 50, "minimumObservationHours": 12},
+    {"percent": 100, "minimumObservationHours": 24}
+  ],
+  "manualPromotionBetweenStages": true,
+  "haltTriggers": ["open-P0-or-P1", "crash-free-rate-below-slo", "fatal-error-free-rate-below-slo", "save-integrity-failure", "confirmed-child-safety-incident", "telemetry-blindness"]
+}

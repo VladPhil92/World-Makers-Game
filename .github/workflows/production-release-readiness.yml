@@ -1,0 +1,56 @@
+name: Production Release Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/production-*'
+      - 'content/production/release-candidate-readiness-v1.json'
+      - 'scripts/assess-production-release-readiness.py'
+      - 'scripts/validate-production-release-readiness.py'
+      - 'scripts/run-production-release-readiness.ps1'
+      - 'docs/production-release-readiness.md'
+      - 'WorldMakers-ProductionRelease-Certify.cmd'
+      - '.github/workflows/production-release-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/production-*'
+      - 'content/production/release-candidate-readiness-v1.json'
+      - 'scripts/assess-production-release-readiness.py'
+      - 'scripts/validate-production-release-readiness.py'
+      - 'scripts/run-production-release-readiness.ps1'
+      - 'docs/production-release-readiness.md'
+      - 'WorldMakers-ProductionRelease-Certify.cmd'
+      - '.github/workflows/production-release-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-production-release-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Production Release source contract
+        run: python scripts/validate-production-release-readiness.py
+      - name: Compile Production Release tooling
+        run: |
+          python -m py_compile scripts/assess-production-release-readiness.py
+          python -m py_compile scripts/validate-production-release-readiness.py
+      - name: Run fail-closed Production Release assessor self-test
+        run: python scripts/assess-production-release-readiness.py --self-test
+      - name: Parse Production Release PowerShell orchestration
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile('scripts/run-production-release-readiness.ps1', [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Host 'Production Release PowerShell syntax PASS.'
