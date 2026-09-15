@@ -1,0 +1,114 @@
+{
+  "schema": "worldmakers.production-alpha-readiness.v1",
+  "version": 1,
+  "status": "source-ready-native-packaging-and-playtest-evidence-required",
+  "engine": {
+    "expectedVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject",
+    "gameTarget": "WorldMakers"
+  },
+  "dependencies": {
+    "g4Contract": "content/production/g4-device-performance-stability-v1.json",
+    "g4Result": "artifacts/g4-device/g4-device-performance.json"
+  },
+  "releaseChannel": "internal-alpha",
+  "requiredBuildTargets": [
+    {
+      "id": "windows-reference",
+      "unrealPlatform": "Win64",
+      "configuration": "Development",
+      "purpose": "internal-reference-and-desktop-smoke"
+    },
+    {
+      "id": "android-alpha",
+      "unrealPlatform": "Android",
+      "configuration": "Development",
+      "purpose": "representative-tablet-playtest"
+    },
+    {
+      "id": "ipados-alpha",
+      "unrealPlatform": "IOS",
+      "configuration": "Development",
+      "purpose": "representative-ipad-playtest"
+    }
+  ],
+  "packaging": {
+    "buildCookRunRequired": true,
+    "cookRequired": true,
+    "stageRequired": true,
+    "pakRequired": true,
+    "archiveRequired": true,
+    "prerequisitesAllowed": true,
+    "distributionSigningRequiredForExternalDistribution": true,
+    "platformSigningMayRemainPendingForSourceReadiness": true,
+    "singleBuildCommitRequired": true,
+    "artifactSha256Required": true,
+    "manifestSha256Required": true
+  },
+  "buildProvenance": {
+    "repositoryCommitRequired": true,
+    "engineVersionRequired": true,
+    "buildTargetRequired": true,
+    "configurationRequired": true,
+    "buildHostRequired": true,
+    "builtAtUtcRequired": true,
+    "artifactSizeRequired": true,
+    "artifactSha256Required": true,
+    "sourceTreeMustBeCleanForCertification": true,
+    "mainMustMatchOriginMainForCertification": true
+  },
+  "smokeTest": {
+    "installLaunchRequired": true,
+    "certificationMapLoadRequired": true,
+    "firstPersonControlRequired": true,
+    "observeScanRequired": true,
+    "scienceInteractionRequired": true,
+    "buildPlaceRequired": true,
+    "saveReloadRequired": true,
+    "backgroundResumeRequiredOnMobile": true,
+    "cleanExitRequired": true,
+    "crashesAllowed": 0,
+    "fatalErrorsAllowed": 0,
+    "blockingIssuesAllowed": 0
+  },
+  "crashTelemetry": {
+    "crashCollectionRequiredForExternalAlpha": true,
+    "symbolRetentionRequired": true,
+    "buildCommitCorrelationRequired": true,
+    "platformAndVersionCorrelationRequired": true,
+    "childPiiAllowed": false,
+    "freeTextChildDataCollectionAllowed": false,
+    "minimumFields": [
+      "buildCommit",
+      "buildVersion",
+      "platform",
+      "engineVersion",
+      "crashSignature",
+      "timestampUtc"
+    ]
+  },
+  "playtest": {
+    "minimumExternalTestersBeforeExit": 5,
+    "guardianOrAuthorizedAdultFlowRequiredForChildTesting": true,
+    "noRealMoneyOrTokenEarningRequired": true,
+    "noOpenChatRequired": true,
+    "feedbackMustNotRequestChildPii": true,
+    "knownBlockingIssuesMustBeZero": true
+  },
+  "certification": {
+    "requiresG4CertifiedSameCommit": true,
+    "requiresAllBuildTargets": true,
+    "requiresAllSmokeTestsPassed": true,
+    "requiresCrashTelemetryReadiness": true,
+    "requiresPlaytestReadiness": true,
+    "requiresCleanCurrentMain": true,
+    "canonicalResult": "artifacts/production-alpha/production-alpha-readiness.json",
+    "buildManifestDirectory": "artifacts/production-alpha/builds",
+    "smokeEvidenceDirectory": "artifacts/production-alpha/smoke",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "exit": {
+    "nextPhase": "external-alpha-playtest",
+    "meaning": "installable, traceable, smoke-tested alpha builds are ready for controlled external testing"
+  }
+}
