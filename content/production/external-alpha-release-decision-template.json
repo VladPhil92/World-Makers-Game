@@ -1,0 +1,15 @@
+{
+  "schema": "worldmakers.external-alpha-release-decision.v1",
+  "status": "pending",
+  "buildCommit": "",
+  "decision": "hold",
+  "qaApproved": false,
+  "childSafetyApproved": false,
+  "productApproved": false,
+  "telemetryReviewed": false,
+  "rollbackPlanVerified": false,
+  "knownBlockingIssues": 0,
+  "confirmedChildSafetyIncidents": 0,
+  "saveCorruptionIncidents": 0,
+  "notes": ""
+}
