@@ -1,0 +1,24 @@
+{
+  "schema": "worldmakers.rc-freeze-manifest.v1",
+  "status": "pending",
+  "releaseVersion": "",
+  "repositoryCommit": "",
+  "engineVersion": "5.8.2",
+  "source": {
+    "branch": "main",
+    "originMainCommit": "",
+    "cleanWorktree": false
+  },
+  "freeze": {
+    "contentFrozen": false,
+    "dependenciesFrozen": false,
+    "configurationFrozen": false,
+    "frozenAtUtc": "",
+    "frozenBy": ""
+  },
+  "targets": [
+    {"targetId": "windows-reference", "normalizedPayloadSha256": "", "signedArtifactSha256": "", "signatureStatus": "internal-not-required"},
+    {"targetId": "android-alpha", "normalizedPayloadSha256": "", "signedArtifactSha256": "", "signatureStatus": "pending"},
+    {"targetId": "ipados-alpha", "normalizedPayloadSha256": "", "signedArtifactSha256": "", "signatureStatus": "pending"}
+  ]
+}
