@@ -1,0 +1,51 @@
+name: G4 Device Performance
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/g4-*'
+      - 'content/production/g3-visual-fidelity-v1.json'
+      - 'content/visual/certification/visual-certification-v8.json'
+      - 'content/performance/tablet-performance-profiles.json'
+      - 'scripts/assess-v8-visual-certification.py'
+      - 'scripts/assess-g4-device-performance.py'
+      - 'scripts/validate-g4-device-performance.py'
+      - 'scripts/run-g4-device-certification.ps1'
+      - 'docs/g4-device-performance-stability.md'
+      - 'WorldMakers-G4-Certify.cmd'
+      - '.github/workflows/g4-device-performance.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/g4-*'
+      - 'content/production/g3-visual-fidelity-v1.json'
+      - 'content/visual/certification/visual-certification-v8.json'
+      - 'content/performance/tablet-performance-profiles.json'
+      - 'scripts/assess-v8-visual-certification.py'
+      - 'scripts/assess-g4-device-performance.py'
+      - 'scripts/validate-g4-device-performance.py'
+      - 'scripts/run-g4-device-certification.ps1'
+      - 'docs/g4-device-performance-stability.md'
+      - 'WorldMakers-G4-Certify.cmd'
+      - '.github/workflows/g4-device-performance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-g4-source-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate G4 device performance source contract
+        run: python scripts/validate-g4-device-performance.py
+      - name: Compile G4 Python tooling
+        run: |
+          python -m py_compile scripts/assess-g4-device-performance.py
+          python -m py_compile scripts/validate-g4-device-performance.py
+      - name: Run fail-closed G4 assessor self-test
+        run: python scripts/assess-g4-device-performance.py --self-test
