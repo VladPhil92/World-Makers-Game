@@ -1,0 +1,14 @@
+{
+  "schema": "worldmakers.production-distribution.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "publicVersion": "",
+  "reviewedAtUtc": "",
+  "reviewer": "",
+  "targets": [
+    {"targetId": "windows-reference", "provider": "managed-windows-production", "channelReference": "", "payloadSha256": "", "listingApproved": false, "privacyDisclosureReviewed": false, "ageRatingReviewed": false, "supportContactConfigured": false, "signingVerified": true},
+    {"targetId": "android-alpha", "provider": "google-play-production", "channelReference": "", "payloadSha256": "", "listingApproved": false, "privacyDisclosureReviewed": false, "ageRatingReviewed": false, "supportContactConfigured": false, "signingVerified": false},
+    {"targetId": "ipados-alpha", "provider": "apple-app-store-production", "channelReference": "", "payloadSha256": "", "listingApproved": false, "privacyDisclosureReviewed": false, "ageRatingReviewed": false, "supportContactConfigured": false, "signingVerified": false}
+  ],
+  "credentialsStoredInRepository": false
+}

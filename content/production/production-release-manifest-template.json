@@ -1,0 +1,14 @@
+{
+  "schema": "worldmakers.production-release-manifest.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "rcVersion": "",
+  "publicVersion": "",
+  "preparedAtUtc": "",
+  "preparedBy": "",
+  "targets": [
+    {"targetId": "windows-reference", "payloadSha256": ""},
+    {"targetId": "android-alpha", "payloadSha256": ""},
+    {"targetId": "ipados-alpha", "payloadSha256": ""}
+  ]
+}
