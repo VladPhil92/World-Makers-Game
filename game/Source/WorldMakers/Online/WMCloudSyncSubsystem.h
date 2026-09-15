@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "WMCloudSyncSubsystem.generated.h"
 
