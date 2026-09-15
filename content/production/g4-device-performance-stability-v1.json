@@ -1,0 +1,84 @@
+{
+  "schema": "worldmakers.g4-device-performance-stability.v1",
+  "version": 1,
+  "status": "source-ready-device-evidence-required",
+  "engine": {
+    "expectedVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject"
+  },
+  "dependencies": {
+    "g3Contract": "content/production/g3-visual-fidelity-v1.json",
+    "v8Matrix": "content/visual/certification/visual-certification-v8.json",
+    "tabletProfiles": "content/performance/tablet-performance-profiles.json",
+    "v8Assessor": "scripts/assess-v8-visual-certification.py"
+  },
+  "requiredPlatforms": ["Android", "iPadOS"],
+  "requiredProfiles": [
+    "performance.tablet.low",
+    "performance.tablet.medium",
+    "performance.tablet.high"
+  ],
+  "requiredScenarios": [
+    "visual.rainforest.explore",
+    "visual.build.dense",
+    "visual.science.vfx-burst",
+    "visual.adventure.reveal"
+  ],
+  "performanceEvidence": {
+    "minimumFrameSamplesPerScenario": 1800,
+    "requiresEveryPlatformProfilePair": true,
+    "requiresSingleBuildCommit": true,
+    "requiresCaptureHashes": true,
+    "requiresScreenshotHashes": true,
+    "requiresV8Certified": true
+  },
+  "stabilityEvidence": {
+    "minimumSoakDurationSeconds": 900,
+    "minimumForegroundBackgroundCycles": 3,
+    "maxFrameTimeDriftPercent": 15.0,
+    "maxSustainedPerformanceDropPercent": 15.0,
+    "maxProcessMemoryFractionOfPhysical": 0.8,
+    "maxResidentMemoryGrowthMBByProfile": {
+      "performance.tablet.low": 96,
+      "performance.tablet.medium": 128,
+      "performance.tablet.high": 192
+    },
+    "crashesAllowed": 0,
+    "fatalErrorsAllowed": 0,
+    "outOfMemoryEventsAllowed": 0,
+    "thermalThrottlingAllowed": false,
+    "criticalThermalStateAllowed": false,
+    "suspendResumeRequired": true,
+    "inputRecoveryRequired": true,
+    "physicalDeviceRequired": true,
+    "telemetryHashRequired": true
+  },
+  "certification": {
+    "requiresG3CertifiedSameCommit": true,
+    "requiresV8CertifiedSameCommit": true,
+    "requiresExactSixStabilityPackages": true,
+    "requiresCleanCurrentMain": true,
+    "canonicalResult": "artifacts/g4-device/g4-device-performance.json",
+    "v8EvidenceDirectory": "artifacts/g4-device/v8",
+    "stabilityEvidenceDirectory": "artifacts/g4-device/stability",
+    "g3Result": "artifacts/g3-visual/g3-visual-fidelity.json",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "gateBoundary": {
+    "g4Owns": [
+      "representative-android-performance",
+      "representative-ipados-performance",
+      "long-session-stability",
+      "thermal-throttling-rejection",
+      "process-memory-stability",
+      "suspend-resume-recovery",
+      "capture-integrity"
+    ],
+    "postG4Owns": [
+      "production-alpha-packaging",
+      "store-distribution-readiness",
+      "external-playtest-expansion",
+      "live-operations-readiness"
+    ]
+  }
+}

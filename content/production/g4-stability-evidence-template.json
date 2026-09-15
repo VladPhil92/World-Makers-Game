@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "platform": "Android",
+  "profileId": "performance.tablet.low",
+  "buildCommit": "",
+  "unrealVersion": "5.8.2",
+  "device": {
+    "isPhysicalDevice": false,
+    "manufacturer": "",
+    "model": "",
+    "osVersion": "",
+    "soc": "",
+    "gpu": "",
+    "physicalMemoryMB": 0
+  },
+  "telemetryFile": "",
+  "telemetrySha256": "",
+  "soak": {
+    "durationSeconds": 0,
+    "initialP95FrameTimeMs": 0,
+    "finalP95FrameTimeMs": 0,
+    "frameTimeDriftPercent": 0,
+    "initialProcessMemoryMB": 0,
+    "finalProcessMemoryMB": 0,
+    "peakProcessMemoryMB": 0,
+    "residentMemoryGrowthMB": 0,
+    "thermalStateStart": "",
+    "thermalStateEnd": "",
+    "thermalThrottlingObserved": false,
+    "criticalThermalStateObserved": false,
+    "sustainedPerformanceDropPercent": 0
+  },
+  "reliability": {
+    "crashCount": 0,
+    "fatalErrorCount": 0,
+    "outOfMemoryEventCount": 0,
+    "foregroundBackgroundCycles": 0,
+    "suspendResumePassed": false,
+    "inputRecoveryPassed": false
+  },
+  "notes": "Populate from a real representative device run. Do not mark passed until every measurement and hash is real."
+}
