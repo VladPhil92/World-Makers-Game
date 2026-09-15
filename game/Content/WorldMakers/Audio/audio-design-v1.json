@@ -1,0 +1,55 @@
+{
+  "schema": "worldmakers.audio-design.v1",
+  "status": "source-ready-native-audio-authoring-required",
+  "mix": {
+    "buses": ["master", "music", "ambience", "sfx", "ui", "voice"],
+    "defaultDb": {
+      "master": 0,
+      "music": -5,
+      "ambience": -3,
+      "sfx": -1,
+      "ui": -3,
+      "voice": 0
+    },
+    "targetIntegratedLufs": -16,
+    "truePeakDbtp": -1,
+    "backgroundMuteDefault": true
+  },
+  "rainforestSoundscape": {
+    "layers": [
+      {"cueId": "audio.ambience.rainforest.day", "loop": true, "spatial": false, "intent": "continuous canopy insects and distant birds without masking gameplay cues"},
+      {"cueId": "audio.ambience.rainforest.water", "loop": true, "spatial": true, "intent": "water-edge bed with distance attenuation"},
+      {"cueId": "audio.ambience.rainforest.wind", "loop": true, "spatial": false, "intent": "soft foliage movement with low-frequency restraint"}
+    ],
+    "music": [
+      {"cueId": "audio.music.discovery", "loop": true, "intent": "light curiosity motif; no lyrics"},
+      {"cueId": "audio.music.build", "loop": true, "intent": "rhythmic but non-urgent building layer"}
+    ]
+  },
+  "semanticCues": [
+    {"cueId": "audio.sfx.observe.scan", "bus": "sfx", "spatial": false, "maxDurationSec": 1.2},
+    {"cueId": "audio.sfx.collect", "bus": "sfx", "spatial": true, "maxDurationSec": 0.8},
+    {"cueId": "audio.sfx.build.preview-valid", "bus": "sfx", "spatial": false, "maxDurationSec": 0.4},
+    {"cueId": "audio.sfx.build.preview-invalid", "bus": "sfx", "spatial": false, "maxDurationSec": 0.4},
+    {"cueId": "audio.sfx.build.place", "bus": "sfx", "spatial": true, "maxDurationSec": 1.0},
+    {"cueId": "audio.sfx.build.remove", "bus": "sfx", "spatial": true, "maxDurationSec": 0.8},
+    {"cueId": "audio.sfx.science.success", "bus": "sfx", "spatial": false, "maxDurationSec": 1.5},
+    {"cueId": "audio.sfx.ecosystem.reaction", "bus": "sfx", "spatial": true, "maxDurationSec": 1.8},
+    {"cueId": "audio.ui.focus", "bus": "ui", "spatial": false, "maxDurationSec": 0.25},
+    {"cueId": "audio.ui.confirm", "bus": "ui", "spatial": false, "maxDurationSec": 0.35},
+    {"cueId": "audio.ui.cancel", "bus": "ui", "spatial": false, "maxDurationSec": 0.35},
+    {"cueId": "audio.ui.error", "bus": "ui", "spatial": false, "maxDurationSec": 0.45}
+  ],
+  "nativeAuthoring": {
+    "preferredTechnology": "MetaSounds-or-SoundCue",
+    "requiredAssetTypes": ["SoundWave", "SoundClass-or-MetaSound routing", "SoundMix", "attenuation for spatial cues"],
+    "voiceRequiredForVerticalSlice": false,
+    "lyricsAllowed": false,
+    "nativeAudioAssetsPresent": false
+  },
+  "childSafety": {
+    "noUserVoiceCapture": true,
+    "noOpenVoiceChat": true,
+    "noBehavioralAudioProfiling": true
+  }
+}

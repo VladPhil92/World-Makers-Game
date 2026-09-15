@@ -1,0 +1,36 @@
+{
+  "schema": "worldmakers.accessibility-localization.v1",
+  "status": "source-ready-native-localization-assets-required",
+  "cultures": {
+    "native": "en",
+    "required": ["en", "es-419"],
+    "fallback": "en",
+    "userSelectable": true
+  },
+  "accessibility": {
+    "subtitlesDefault": true,
+    "subtitlesForAllNarratedContent": true,
+    "reducedMotion": true,
+    "highContrastUI": true,
+    "textScaleRange": [0.8, 1.6],
+    "cameraShakeScaleRange": [0.0, 1.0],
+    "uiAnimationScaleRange": [0.0, 1.0],
+    "holdToggleChoice": true,
+    "colorIndependentCriticalState": true,
+    "screenReaderFriendlyLabelsRequired": true,
+    "focusOrderRequired": true
+  },
+  "copyPolicy": {
+    "childAppropriateLanguage": true,
+    "plainLanguagePreferred": true,
+    "noDarkPatterns": true,
+    "noRealMoneyPrompts": true,
+    "noOpenChat": true,
+    "noChildPiiPrompts": true
+  },
+  "requiredLocalizationNamespaces": ["HUD", "Mission", "Science", "Build", "Settings", "Accessibility", "Errors"],
+  "nativeAuthoring": {
+    "required": ["String Tables or localization target", "English source archive", "Spanish Latin America archive", "subtitle style", "accessible focus labels"],
+    "nativeLocalizationAssetsPresent": false
+  }
+}

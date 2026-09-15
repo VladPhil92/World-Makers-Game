@@ -1,0 +1,58 @@
+{
+  "schema": "worldmakers.platform-readiness.v1",
+  "status": "source-ready-native-platform-validation-required",
+  "targets": [
+    {
+      "id": "windows-reference",
+      "unrealPlatform": "Win64",
+      "architecture": "x64",
+      "orientation": "landscape",
+      "input": ["keyboardMouse", "gamepad"],
+      "qualityTiers": ["mid", "high"],
+      "rendererPolicy": "desktop-scalable",
+      "onlineRequiredForCorePlay": false
+    },
+    {
+      "id": "android-tablet",
+      "unrealPlatform": "Android",
+      "architecture": "arm64",
+      "orientation": "landscape",
+      "input": ["touch", "gamepad"],
+      "qualityTiers": ["low", "mid", "high"],
+      "textureCookFlavor": "ASTC",
+      "rendererPolicy": "mobile-scalable",
+      "onlineRequiredForCorePlay": false
+    },
+    {
+      "id": "ipados-tablet",
+      "unrealPlatform": "IOS",
+      "architecture": "arm64",
+      "orientation": "landscape",
+      "input": ["touch", "gamepad"],
+      "qualityTiers": ["low", "mid", "high"],
+      "rendererPolicy": "mobile-scalable",
+      "onlineRequiredForCorePlay": false
+    }
+  ],
+  "sharedRequirements": {
+    "offlineFirstVerticalSlice": true,
+    "cloudSyncMayDegradeGracefully": true,
+    "backgroundResumeRequiredOnMobile": true,
+    "saveIntegrityRequired": true,
+    "safeAreaAwareUI": true,
+    "reducedMotion": true,
+    "noRuntimeSecretsInClient": true,
+    "runtimeApiHttpsOnly": true
+  },
+  "performance": {
+    "profileContract": "WorldMakers/Performance/tablet-performance-profiles.json",
+    "desktopReferenceTargetFps": 60,
+    "mobileLowMidTargetFps": 30,
+    "mobileHighTargetFps": 60,
+    "nativeRepresentativeDeviceEvidenceRequired": true
+  },
+  "nativeValidation": {
+    "required": ["cook", "package", "install", "launch", "background-resume mobile", "save-reload", "runtime API degraded-mode test"],
+    "nativePlatformCertified": false
+  }
+}

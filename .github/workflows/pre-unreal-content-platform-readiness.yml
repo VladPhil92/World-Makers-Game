@@ -1,0 +1,79 @@
+name: Pre-Unreal Content Platform Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'game/Source/WorldMakers/Audio/**'
+      - 'game/Source/WorldMakers/Accessibility/**'
+      - 'game/Source/WorldMakers/Input/**'
+      - 'game/Content/WorldMakers/Audio/**'
+      - 'game/Content/WorldMakers/Input/**'
+      - 'game/Content/WorldMakers/UI/**'
+      - 'game/Content/WorldMakers/Accessibility/**'
+      - 'game/Content/WorldMakers/Platforms/**'
+      - 'game/Config/**'
+      - 'game/WorldMakers.uproject'
+      - 'game/Source/WorldMakers/WorldMakers.Build.cs'
+      - 'content/production/pre-unreal-content-platform-readiness-v1.json'
+      - 'scripts/validate-pre-unreal-content-platform.py'
+      - 'scripts/run-pre-unreal-readiness.ps1'
+      - 'WorldMakers-PreUnreal-Validate.cmd'
+      - '.github/workflows/pre-unreal-content-platform-readiness.yml'
+      - 'docs/pre-unreal-content-platform-readiness.md'
+  push:
+    branches: [main]
+    paths:
+      - 'game/Source/WorldMakers/Audio/**'
+      - 'game/Source/WorldMakers/Accessibility/**'
+      - 'game/Source/WorldMakers/Input/**'
+      - 'game/Content/WorldMakers/Audio/**'
+      - 'game/Content/WorldMakers/Input/**'
+      - 'game/Content/WorldMakers/UI/**'
+      - 'game/Content/WorldMakers/Accessibility/**'
+      - 'game/Content/WorldMakers/Platforms/**'
+      - 'game/Config/**'
+      - 'game/WorldMakers.uproject'
+      - 'game/Source/WorldMakers/WorldMakers.Build.cs'
+      - 'content/production/pre-unreal-content-platform-readiness-v1.json'
+      - 'scripts/validate-pre-unreal-content-platform.py'
+      - 'scripts/run-pre-unreal-readiness.ps1'
+      - 'WorldMakers-PreUnreal-Validate.cmd'
+      - '.github/workflows/pre-unreal-content-platform-readiness.yml'
+      - 'docs/pre-unreal-content-platform-readiness.md'
+  workflow_dispatch:
+
+jobs:
+  validate-pre-unreal-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Pre-Unreal source readiness
+        run: python scripts/validate-pre-unreal-content-platform.py
+
+      - name: Run fail-closed self-test
+        run: python scripts/validate-pre-unreal-content-platform.py --self-test
+
+      - name: Compile validator
+        run: python -m py_compile scripts/validate-pre-unreal-content-platform.py
+
+      - name: Parse readiness PowerShell
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/run-pre-unreal-readiness.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
