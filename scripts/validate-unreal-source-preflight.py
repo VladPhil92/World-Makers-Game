@@ -118,6 +118,44 @@ def main() -> None:
         fail("WorldMakers.Build.cs must expose ModuleDirectory for module-root-qualified includes")
     if '"ProceduralMeshComponent"' not in build_rules:
         fail("WorldMakers must declare the ProceduralMeshComponent module dependency")
+    if '"HTTP"' not in build_rules or '"Json"' not in build_rules:
+        fail("WorldMakers cloud sync requires explicit HTTP and Json module dependencies")
+
+    cloud_sync_header = require_file(SOURCE / "Online" / "WMCloudSyncSubsystem.h")
+    cloud_sync_source = require_file(SOURCE / "Online" / "WMCloudSyncSubsystem.cpp")
+    require_tokens(
+        cloud_sync_header,
+        (
+            "UGameInstanceSubsystem",
+            "Configure(const FString& InApiBaseUrl, const FString& InAccessToken)",
+            "CreateSyncEventId",
+            "PullPlayerState",
+            "PushPlayerState",
+            "ExpectedRevision",
+            "EventId",
+        ),
+        "WMCloudSyncSubsystem.h",
+    )
+    require_tokens(
+        cloud_sync_source,
+        (
+            'TEXT("/api/worldmakers/player-state")',
+            'TEXT("Authorization")',
+            'TEXT("Bearer %s")',
+            'TEXT("Idempotency-Key")',
+            'TEXT("expectedRevision")',
+            'TEXT("saves")',
+            'TEXT("missions")',
+            'TEXT("discoveries")',
+            'TEXT("achievements")',
+            "https://",
+        ),
+        "WMCloudSyncSubsystem.cpp",
+    )
+    if "supabase.co" in (cloud_sync_header + cloud_sync_source).lower():
+        fail("Unreal runtime must never connect directly to Supabase; CTG One is the trust boundary")
+    if re.search(r"service[_-]?role|WORLDMAKERS_BRIDGE_HMAC_SECRET", cloud_sync_header + cloud_sync_source, re.IGNORECASE):
+        fail("Unreal runtime source must never contain privileged World Makers credentials")
 
     if "bUseUnity = false;" not in build_rules:
         duplicate_helpers = find_duplicate_unity_helpers()
@@ -243,6 +281,7 @@ def main() -> None:
         f"engine={engine_version}, authored_map={map_status}, "
         f"tracked_uasset_count={uasset_count}, tracked_umap_count={umap_count}, "
         "native_readiness_orchestrator=present, engine_autodiscovery=present, "
+        "cloud_sync=ctg_one_authenticated_idempotent, "
         "unity_mode=disabled, material_vector_api=ue58. "
         "Native UE build/test certification remains a separate gate."
     )
