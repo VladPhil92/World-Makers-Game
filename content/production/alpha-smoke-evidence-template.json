@@ -1,0 +1,27 @@
+{
+  "schema": "worldmakers.alpha-smoke-evidence.v1",
+  "status": "pending",
+  "buildId": "",
+  "repositoryCommit": "",
+  "targetId": "",
+  "platform": "",
+  "device": "",
+  "testedAtUtc": "",
+  "tester": "",
+  "checks": {
+    "installLaunch": false,
+    "certificationMapLoad": false,
+    "firstPersonControl": false,
+    "observeScan": false,
+    "scienceInteraction": false,
+    "buildPlace": false,
+    "saveReload": false,
+    "backgroundResume": false,
+    "cleanExit": false
+  },
+  "crashes": 0,
+  "fatalErrors": 0,
+  "blockingIssues": [],
+  "evidenceFiles": [],
+  "notes": ""
+}
