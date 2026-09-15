@@ -1,0 +1,31 @@
+{
+  "schema": "worldmakers.alpha-build-manifest.v1",
+  "status": "pending",
+  "buildId": "",
+  "releaseChannel": "internal-alpha",
+  "repositoryCommit": "",
+  "engineVersion": "5.8.2",
+  "targetId": "",
+  "unrealPlatform": "",
+  "configuration": "Development",
+  "buildHost": {
+    "os": "",
+    "runner": "",
+    "machineClass": ""
+  },
+  "builtAtUtc": "",
+  "archiveRoot": "",
+  "artifactFiles": [],
+  "aggregateArtifactSha256": "",
+  "aggregateArtifactBytes": 0,
+  "signing": {
+    "requiredForExternalDistribution": true,
+    "status": "pending",
+    "identity": ""
+  },
+  "source": {
+    "branch": "",
+    "originMainCommit": "",
+    "cleanWorktree": false
+  }
+}
