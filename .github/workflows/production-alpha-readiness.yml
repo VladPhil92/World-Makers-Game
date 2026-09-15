@@ -1,0 +1,66 @@
+name: Production Alpha Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/production-alpha-*'
+      - 'content/production/alpha-*'
+      - 'content/production/g4-device-performance-stability-v1.json'
+      - 'scripts/build-production-alpha.ps1'
+      - 'scripts/assess-production-alpha-readiness.py'
+      - 'scripts/validate-production-alpha-readiness.py'
+      - 'scripts/run-production-alpha-readiness.ps1'
+      - 'docs/production-alpha-readiness.md'
+      - 'WorldMakers-ProductionAlpha-*.cmd'
+      - '.github/workflows/production-alpha-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/production-alpha-*'
+      - 'content/production/alpha-*'
+      - 'content/production/g4-device-performance-stability-v1.json'
+      - 'scripts/build-production-alpha.ps1'
+      - 'scripts/assess-production-alpha-readiness.py'
+      - 'scripts/validate-production-alpha-readiness.py'
+      - 'scripts/run-production-alpha-readiness.ps1'
+      - 'docs/production-alpha-readiness.md'
+      - 'WorldMakers-ProductionAlpha-*.cmd'
+      - '.github/workflows/production-alpha-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-production-alpha-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Production Alpha source contract
+        run: python scripts/validate-production-alpha-readiness.py
+      - name: Compile Production Alpha Python tooling
+        run: |
+          python -m py_compile scripts/assess-production-alpha-readiness.py
+          python -m py_compile scripts/validate-production-alpha-readiness.py
+      - name: Run fail-closed Production Alpha assessor self-test
+        run: python scripts/assess-production-alpha-readiness.py --self-test
+      - name: Parse Production Alpha PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @(
+            'scripts/build-production-alpha.ps1',
+            'scripts/run-production-alpha-readiness.ps1'
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "$file: $($_.Message)" }
+              exit 1
+            }
+          }
+          Write-Host 'Production Alpha PowerShell syntax PASS.'
