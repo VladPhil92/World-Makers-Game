@@ -34,7 +34,7 @@ def main():
     contains(ASSESSOR,["Immutable promotion failed","payload SHA-256 differs from RC","unsafe open chat did not block","missing rollback drill did not block","LAUNCH_APPROVED"])
     contains(RUNNER,["production-release-readiness.json","release-candidate-readiness.json","NON_CERTIFYING_PASS","origin/main"])
     contains(WORKFLOW,["Production Release Readiness","--self-test","Parser]::ParseFile"])
-    contains(DOC,["Production Release Readiness","immutable","5%","rollback","Production Release Execution"])
+    contains(DOC,["Production Release Readiness","No rebuild is allowed","5%","rollback","Production Release Execution"])
     contains(LAUNCHER,["run-production-release-readiness.ps1"])
     print("Production Release source validation PASS: immutable promotion/distribution/rollout/operations/approval contracts are coherent and fail closed pending real launch evidence.")
     return 0
