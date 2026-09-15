@@ -13,6 +13,7 @@ FILES = {
     "parent_client": ROOT / "apps/parent-portal/src/domain/supabase-client.mjs",
     "migration": ROOT / "infra/supabase/migrations/20260915202500_secure_dashboard_profile_bridge_v1.sql",
     "performance_migration": ROOT / "infra/supabase/migrations/20260915204000_optimize_family_rls_and_invite_indexes_v1.sql",
+    "privacy_migration": ROOT / "infra/supabase/migrations/20260915205500_cascade_child_player_profile_privacy_delete_v1.sql",
     "advisor_doc": ROOT / "docs/cloud-runtime-security-advisor-baseline.md",
     "workflow": ROOT / ".github/workflows/cloud-runtime-readiness.yml",
 }
@@ -36,6 +37,7 @@ def main() -> int:
     parent_client = text("parent_client")
     migration = text("migration")
     performance_migration = text("performance_migration")
+    privacy_migration = text("privacy_migration")
     advisor_doc = text("advisor_doc")
     workflow = text("workflow")
 
@@ -54,6 +56,12 @@ def main() -> int:
     require("family_invites_created_by_idx" in performance_migration, "created_by foreign key index hardening missing")
     require("family_invites_used_by_idx" in performance_migration, "used_by foreign key index hardening missing")
     require(performance_migration.count("(select auth.uid())") >= 10, "RLS auth.uid() init-plan optimization incomplete")
+
+    require("wm_children_cascade_player_profile_delete" in privacy_migration, "privacy cascade trigger missing")
+    require("before delete on public.children" in privacy_migration.lower(), "privacy cascade must execute in the child deletion transaction")
+    require("delete from public.player_profiles" in privacy_migration.lower(), "privacy cascade must remove the linked player profile")
+    require("revoke all on function public.wm_cascade_child_player_profile_delete()" in privacy_migration.lower(), "privacy trigger function must not be externally callable")
+
     require("accepted-by-design" in advisor_doc, "advisor SECURITY DEFINER disposition must remain explicit")
     require("rls_enabled_no_policy" in advisor_doc and "anon_security_definer_function_executable" in advisor_doc, "advisor baseline must name intentional findings")
 
