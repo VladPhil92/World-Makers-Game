@@ -77,7 +77,7 @@ def main() -> int:
     contains(ASSESSOR, [
         "External Alpha must be CERTIFIED", "independent rebuild payload digest does not reproduce canonical payload",
         "saveUpgradeCompatibilityPassed", "Known critical/high vulnerabilities must be zero",
-        "Release notes SHA-256 mismatch", "Rollback package SHA-256 mismatch", "unsafe open chat did not block",
+        '"Release notes"', '"Rollback package"', "SHA-256 mismatch", "unsafe open chat did not block",
     ])
     contains(SBOM, ["SPDX-2.3", "package-lock.json", "WorldMakers.uproject", "UNREAL_ENGINE_VERSION"])
     contains(RUNNER, ["release-candidate-readiness.json", "external-alpha-readiness.json", "NON_CERTIFYING_PASS", "origin/main"])
