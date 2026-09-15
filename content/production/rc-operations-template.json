@@ -8,6 +8,14 @@
   "sbom": {"format": "", "file": "", "sha256": "", "dependencyProvenanceVerified": false, "criticalVulnerabilities": 0, "highVulnerabilities": 0},
   "crashDiagnostics": {"symbolsRetained": false, "symbolsUploaded": false, "productionTelemetryRouteVerified": false},
   "signing": {"androidVerified": false, "ipadosVerified": false},
-  "releaseDiscipline": {"releaseNotesPrepared": false, "rollbackPackagePrepared": false, "rollbackProcedureVerified": false, "rollbackPackageSha256": ""},
+  "releaseDiscipline": {
+    "releaseNotesPrepared": false,
+    "releaseNotesFile": "",
+    "releaseNotesSha256": "",
+    "rollbackPackagePrepared": false,
+    "rollbackPackageFile": "",
+    "rollbackPackageSha256": "",
+    "rollbackProcedureVerified": false
+  },
   "safety": {"childPiiCollected": false, "openChatEnabled": false, "realMoneyOrTokenEarningEnabled": false}
 }
