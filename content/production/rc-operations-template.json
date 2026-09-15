@@ -1,0 +1,13 @@
+{
+  "schema": "worldmakers.rc-operations.v1",
+  "status": "pending",
+  "releaseVersion": "",
+  "repositoryCommit": "",
+  "reviewedAtUtc": "",
+  "reviewer": "",
+  "sbom": {"format": "", "file": "", "sha256": "", "dependencyProvenanceVerified": false, "criticalVulnerabilities": 0, "highVulnerabilities": 0},
+  "crashDiagnostics": {"symbolsRetained": false, "symbolsUploaded": false, "productionTelemetryRouteVerified": false},
+  "signing": {"androidVerified": false, "ipadosVerified": false},
+  "releaseDiscipline": {"releaseNotesPrepared": false, "rollbackPackagePrepared": false, "rollbackProcedureVerified": false, "rollbackPackageSha256": ""},
+  "safety": {"childPiiCollected": false, "openChatEnabled": false, "realMoneyOrTokenEarningEnabled": false}
+}
