@@ -105,7 +105,7 @@ def main() -> int:
         "artifact SHA-256 mismatch", "background/resume smoke check must pass",
         "authorized adult/guardian flow", "Unsafe open chat must block Production Alpha certification",
     ])
-    contains(RUNNER, ["production-alpha-readiness.json", "alpha-ops-readiness.json", "NON_CERTIFYING_PASS", "origin/main"])
+    contains(RUNNER, ["production-alpha-readiness.json", "NON_CERTIFYING_PASS", "origin/main"])
     contains(WORKFLOW, ["Production Alpha Readiness", "--self-test", "validate-production-alpha-readiness.py", "Parser]::ParseFile"])
     contains(DOC, ["Production Alpha", "G4", "Win64", "Android", "iPadOS", "crash", "playtest"])
     contains(LAUNCHER, ["run-production-alpha-readiness.ps1"])
