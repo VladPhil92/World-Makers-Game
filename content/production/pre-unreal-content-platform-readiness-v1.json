@@ -1,0 +1,45 @@
+{
+  "schema": "worldmakers.pre-unreal-content-platform-readiness.v1",
+  "version": 1,
+  "status": "source-readiness-gate-active",
+  "purpose": "Prove that every source-side gameplay, content, visual, audio, input, UI, accessibility, localization, cloud and platform contract needed for native Unreal materialization exists before recommending entry into the Unreal authoring phase.",
+  "engine": {
+    "requiredVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject"
+  },
+  "requiredDomains": [
+    {"id": "gameplay-runtime", "evidence": "game/Source/WorldMakers", "required": true},
+    {"id": "mission-science-content", "evidence": "game/Content/WorldMakers/Missions", "required": true},
+    {"id": "visual-animation-vfx", "evidence": "game/Content/WorldMakers/Visual", "required": true},
+    {"id": "audio", "evidence": "game/Content/WorldMakers/Audio/audio-design-v1.json", "required": true},
+    {"id": "input", "evidence": "game/Content/WorldMakers/Input/input-readiness-v1.json", "required": true},
+    {"id": "ui", "evidence": "game/Content/WorldMakers/UI/ui-production-readiness-v1.json", "required": true},
+    {"id": "accessibility-localization", "evidence": "game/Content/WorldMakers/Accessibility/accessibility-localization-v1.json", "required": true},
+    {"id": "platforms", "evidence": "game/Content/WorldMakers/Platforms/platform-readiness-v1.json", "required": true},
+    {"id": "cloud-runtime", "evidence": "apps/worldmakers-api", "required": true},
+    {"id": "packaging-certification", "evidence": "content/production/production-release-readiness-v1.json", "required": true}
+  ],
+  "sourceGate": {
+    "enhancedInputEnabled": true,
+    "audioSemanticBoundaryRequired": true,
+    "accessibilityRuntimeRequired": true,
+    "touchLayoutRequired": true,
+    "localizationCultures": ["en", "es-419"],
+    "targetPlatforms": ["Win64", "Android", "IOS"],
+    "nativeBinaryAssetsRequiredBeforeGate": false,
+    "nativeBinaryAssetsMustNotBeFabricated": true,
+    "mapMustBeCreatedByUnreal": true
+  },
+  "exitCriteria": {
+    "allSourceDomainsPresent": true,
+    "sourceValidationPasses": true,
+    "repositoryQualityPasses": true,
+    "cloudRuntimeSourceValidationPasses": true,
+    "noOpenPullRequestsRequiredForHandoff": true,
+    "nextPhase": "native-unreal-materialization"
+  },
+  "truthBoundary": {
+    "thisGateCanCertify": "source readiness for native materialization",
+    "thisGateCannotCertify": ["native Unreal compilation", "real .uasset quality", "real .umap quality", "device performance", "store packaging"]
+  }
+}
