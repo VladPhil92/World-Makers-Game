@@ -115,7 +115,7 @@ $Rows = @()
 $AggregateLines = @()
 $TotalBytes = [int64]0
 foreach ($File in $Files) {
-    $Relative = [IO.Path]::GetRelativePath($ArchivePath, $File.FullName).Replace('\\','/')
+    $Relative = [IO.Path]::GetRelativePath($ArchivePath, $File.FullName).Replace('\','/')
     $Hash = Get-Sha256 $File.FullName
     $Size = [int64]$File.Length
     $TotalBytes += $Size
