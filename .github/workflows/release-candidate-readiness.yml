@@ -1,0 +1,75 @@
+name: Release Candidate Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/release-candidate-*'
+      - 'content/production/rc-*'
+      - 'content/production/external-alpha-playtest-v1.json'
+      - 'scripts/assess-release-candidate-readiness.py'
+      - 'scripts/generate-release-candidate-sbom.py'
+      - 'scripts/validate-release-candidate-readiness.py'
+      - 'scripts/run-release-candidate-readiness.ps1'
+      - 'docs/release-candidate-readiness.md'
+      - 'WorldMakers-ReleaseCandidate-Certify.cmd'
+      - '.github/workflows/release-candidate-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/release-candidate-*'
+      - 'content/production/rc-*'
+      - 'content/production/external-alpha-playtest-v1.json'
+      - 'scripts/assess-release-candidate-readiness.py'
+      - 'scripts/generate-release-candidate-sbom.py'
+      - 'scripts/validate-release-candidate-readiness.py'
+      - 'scripts/run-release-candidate-readiness.ps1'
+      - 'docs/release-candidate-readiness.md'
+      - 'WorldMakers-ReleaseCandidate-Certify.cmd'
+      - '.github/workflows/release-candidate-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-candidate-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Release Candidate source contract
+        run: python scripts/validate-release-candidate-readiness.py
+      - name: Compile Release Candidate tooling
+        run: |
+          python -m py_compile scripts/assess-release-candidate-readiness.py
+          python -m py_compile scripts/generate-release-candidate-sbom.py
+          python -m py_compile scripts/validate-release-candidate-readiness.py
+      - name: Run fail-closed Release Candidate assessor self-test
+        run: python scripts/assess-release-candidate-readiness.py --self-test
+      - name: Exercise deterministic SPDX SBOM generation
+        run: |
+          python scripts/generate-release-candidate-sbom.py --commit 1111111111111111111111111111111111111111 --output /tmp/worldmakers.spdx.json
+          python - <<'PY'
+          import json
+          p = json.load(open('/tmp/worldmakers.spdx.json', encoding='utf-8'))
+          assert p['spdxVersion'] == 'SPDX-2.3'
+          assert p['name'].startswith('World-Makers-RC-')
+          assert len(p['packages']) >= 2
+          print('Release Candidate SBOM generation PASS.')
+          PY
+      - name: Parse Release Candidate PowerShell orchestration
+        shell: pwsh
+        run: |
+          $files = @('scripts/run-release-candidate-readiness.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "${file}: $($_.Message)" }
+              exit 1
+            }
+          }
+          Write-Host 'Release Candidate PowerShell syntax PASS.'
