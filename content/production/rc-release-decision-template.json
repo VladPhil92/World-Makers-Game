@@ -1,0 +1,12 @@
+{
+  "schema": "worldmakers.rc-release-decision.v1",
+  "status": "pending",
+  "releaseVersion": "",
+  "repositoryCommit": "",
+  "decision": "HOLD",
+  "decidedAtUtc": "",
+  "approvals": {"qa": false, "engineering": false, "childSafety": false, "product": false, "securitySupplyChain": false},
+  "reviewers": {"qa": "", "engineering": "", "childSafety": "", "product": "", "securitySupplyChain": ""},
+  "knownBlockingIssues": [],
+  "notes": ""
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "worldmakers.release-candidate-readiness.v1",
+  "version": 1,
+  "status": "source-ready-release-evidence-required",
+  "engine": {
+    "expectedVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject"
+  },
+  "dependencies": {
+    "externalAlphaContract": "content/production/external-alpha-playtest-v1.json",
+    "externalAlphaResult": "artifacts/external-alpha/external-alpha-readiness.json"
+  },
+  "releaseChannel": "release-candidate",
+  "requiredTargets": ["windows-reference", "android-alpha", "ipados-alpha"],
+  "freeze": {
+    "semanticVersionRequired": true,
+    "releaseCandidatePrereleaseRequired": true,
+    "singleBuildCommitRequired": true,
+    "cleanMainRequired": true,
+    "originMainMatchRequired": true,
+    "contentFreezeRequired": true,
+    "dependencyFreezeRequired": true,
+    "configurationFreezeRequired": true
+  },
+  "reproducibility": {
+    "independentRebuildRequired": true,
+    "normalizedPayloadDigestRequired": true,
+    "payloadDigestMustMatch": true,
+    "allTargetsRequired": true,
+    "sameEngineVersionRequired": true
+  },
+  "supplyChain": {
+    "sbomRequired": true,
+    "allowedSbomFormats": ["SPDX-2.3", "CycloneDX-1.6"],
+    "sbomSha256Required": true,
+    "dependencyProvenanceRequired": true,
+    "knownCriticalVulnerabilitiesAllowed": 0,
+    "knownHighVulnerabilitiesAllowed": 0,
+    "buildProvenanceRequired": true
+  },
+  "regression": {
+    "allTargetsRequired": true,
+    "fullCriticalJourneyRequired": true,
+    "saveUpgradeCompatibilityRequired": true,
+    "freshInstallRequired": true,
+    "upgradeInstallRequired": true,
+    "backgroundResumeRequiredOnMobile": true,
+    "offlineRecoveryRequired": true,
+    "crashesAllowed": 0,
+    "fatalErrorsAllowed": 0,
+    "dataLossAllowed": 0,
+    "openP0Allowed": 0,
+    "openP1Allowed": 0
+  },
+  "operations": {
+    "releaseNotesRequired": true,
+    "rollbackPackageRequired": true,
+    "rollbackProcedureVerified": true,
+    "crashSymbolsRequired": true,
+    "symbolUploadVerified": true,
+    "distributionSigningVerifiedForMobile": true,
+    "productionTelemetryRouteVerified": true,
+    "childPiiAllowed": false,
+    "openChatAllowed": false,
+    "realMoneyOrTokenEarningAllowed": false
+  },
+  "promotion": {
+    "humanGoNoGoRequired": true,
+    "qaApprovalRequired": true,
+    "engineeringApprovalRequired": true,
+    "childSafetyApprovalRequired": true,
+    "productApprovalRequired": true,
+    "securitySupplyChainApprovalRequired": true,
+    "decisionMustMatchBuildCommit": true,
+    "decisionMustMatchReleaseVersion": true
+  },
+  "evidence": {
+    "freezeManifest": "artifacts/release-candidate/freeze-manifest.json",
+    "reproducibility": "artifacts/release-candidate/reproducibility.json",
+    "regression": "artifacts/release-candidate/regression.json",
+    "operations": "artifacts/release-candidate/operations.json",
+    "releaseDecision": "artifacts/release-candidate/release-decision.json"
+  },
+  "certification": {
+    "requiresExternalAlphaCertifiedSameCommit": true,
+    "requiresCleanCurrentMain": true,
+    "canonicalResult": "artifacts/release-candidate/release-candidate-readiness.json",
+    "resultStates": ["CERTIFIED", "BLOCKED", "NON_CERTIFYING_PASS"]
+  },
+  "exit": {
+    "nextPhase": "production-release-readiness",
+    "meaning": "a frozen, reproducible, regression-clean, supply-chain-audited and rollback-ready candidate is eligible for final production release approval"
+  }
+}

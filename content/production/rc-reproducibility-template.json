@@ -1,0 +1,12 @@
+{
+  "schema": "worldmakers.rc-reproducibility.v1",
+  "status": "pending",
+  "releaseVersion": "",
+  "repositoryCommit": "",
+  "engineVersion": "5.8.2",
+  "targets": [
+    {"targetId": "windows-reference", "canonicalPayloadSha256": "", "independentRebuildPayloadSha256": "", "rebuildHost": "", "verifiedAtUtc": ""},
+    {"targetId": "android-alpha", "canonicalPayloadSha256": "", "independentRebuildPayloadSha256": "", "rebuildHost": "", "verifiedAtUtc": ""},
+    {"targetId": "ipados-alpha", "canonicalPayloadSha256": "", "independentRebuildPayloadSha256": "", "rebuildHost": "", "verifiedAtUtc": ""}
+  ]
+}
