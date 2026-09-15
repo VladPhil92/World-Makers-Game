@@ -12,6 +12,8 @@ FILES = {
     "player_store": ROOT / "apps/player-dashboard/src/domain/supabase-profile-store.mjs",
     "parent_client": ROOT / "apps/parent-portal/src/domain/supabase-client.mjs",
     "migration": ROOT / "infra/supabase/migrations/20260915202500_secure_dashboard_profile_bridge_v1.sql",
+    "performance_migration": ROOT / "infra/supabase/migrations/20260915204000_optimize_family_rls_and_invite_indexes_v1.sql",
+    "advisor_doc": ROOT / "docs/cloud-runtime-security-advisor-baseline.md",
     "workflow": ROOT / ".github/workflows/cloud-runtime-readiness.yml",
 }
 
@@ -33,6 +35,8 @@ def main() -> int:
     player_store = text("player_store")
     parent_client = text("parent_client")
     migration = text("migration")
+    performance_migration = text("performance_migration")
+    advisor_doc = text("advisor_doc")
     workflow = text("workflow")
 
     require("https:" in gateway and "redirect: 'error'" in gateway, "runtime gateway must enforce HTTPS/no redirects")
@@ -46,6 +50,12 @@ def main() -> int:
     require("pg_advisory_xact_lock" in migration, "profile mutations must serialize first-write races")
     require("ec77329d084a6b40a6e54993cbca1ba2c789c837e02b61eb3a53a72cb6598991" in migration, "profile bridge digest drift")
     require("grant execute" in migration and "to anon, service_role" in migration, "secure wrapper RPC grants are incomplete")
+
+    require("family_invites_created_by_idx" in performance_migration, "created_by foreign key index hardening missing")
+    require("family_invites_used_by_idx" in performance_migration, "used_by foreign key index hardening missing")
+    require(performance_migration.count("(select auth.uid())") >= 10, "RLS auth.uid() init-plan optimization incomplete")
+    require("accepted-by-design" in advisor_doc, "advisor SECURITY DEFINER disposition must remain explicit")
+    require("rls_enabled_no_policy" in advisor_doc and "anon_security_definer_function_executable" in advisor_doc, "advisor baseline must name intentional findings")
 
     combined_apps = player_store + parent_client + gateway + server
     require("SUPABASE_SERVICE_ROLE_KEY" not in combined_apps, "app/runtime source must not depend on a Supabase service-role key")
