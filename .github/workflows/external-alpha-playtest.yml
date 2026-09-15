@@ -1,0 +1,57 @@
+name: External Alpha Playtest
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/external-alpha-*'
+      - 'content/production/production-alpha-readiness-v1.json'
+      - 'scripts/assess-external-alpha-playtest.py'
+      - 'scripts/validate-external-alpha-playtest.py'
+      - 'scripts/run-external-alpha-playtest-readiness.ps1'
+      - 'docs/external-alpha-playtest.md'
+      - 'WorldMakers-ExternalAlpha-Certify.cmd'
+      - '.github/workflows/external-alpha-playtest.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/external-alpha-*'
+      - 'content/production/production-alpha-readiness-v1.json'
+      - 'scripts/assess-external-alpha-playtest.py'
+      - 'scripts/validate-external-alpha-playtest.py'
+      - 'scripts/run-external-alpha-playtest-readiness.ps1'
+      - 'docs/external-alpha-playtest.md'
+      - 'WorldMakers-ExternalAlpha-Certify.cmd'
+      - '.github/workflows/external-alpha-playtest.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-external-alpha-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate External Alpha source contract
+        run: python scripts/validate-external-alpha-playtest.py
+      - name: Compile External Alpha Python tooling
+        run: |
+          python -m py_compile scripts/assess-external-alpha-playtest.py
+          python -m py_compile scripts/validate-external-alpha-playtest.py
+      - name: Run fail-closed External Alpha assessor self-test
+        run: python scripts/assess-external-alpha-playtest.py --self-test
+      - name: Parse External Alpha PowerShell orchestration
+        shell: pwsh
+        run: |
+          $file = 'scripts/run-external-alpha-playtest-readiness.ps1'
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error "${file}: $($_.Message)" }
+            exit 1
+          }
+          Write-Host 'External Alpha PowerShell syntax PASS.'

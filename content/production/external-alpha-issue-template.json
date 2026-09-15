@@ -1,0 +1,18 @@
+{
+  "schema": "worldmakers.external-alpha-issue.v1",
+  "status": "pending",
+  "issueId": "",
+  "buildCommit": "",
+  "severity": "P3",
+  "category": "gameplay",
+  "state": "open",
+  "sourceSessionIdHash": "",
+  "reproducible": false,
+  "saveCorruption": false,
+  "confirmedChildSafetyIncident": false,
+  "containsChildPii": false,
+  "containsRawIdentity": false,
+  "containsFreeTextChildData": false,
+  "resolutionVerified": false,
+  "notes": ""
+}

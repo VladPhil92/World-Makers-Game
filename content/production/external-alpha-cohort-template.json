@@ -1,0 +1,21 @@
+{
+  "schema": "worldmakers.external-alpha-cohort.v1",
+  "status": "pending",
+  "buildCommit": "",
+  "cohortId": "",
+  "plannedUniqueTesters": 0,
+  "platformMinimums": {
+    "Win64": 4,
+    "Android": 6,
+    "iPadOS": 6
+  },
+  "minorTestingEnabled": false,
+  "guardianOrAuthorizedAdultFlowVerified": false,
+  "privacyReviewApproved": false,
+  "childSafetyReviewApproved": false,
+  "rawIdentityDataStored": false,
+  "openChatEnabled": false,
+  "realMoneyOrTokenEarningEnabled": false,
+  "feedbackRequestsChildPii": false,
+  "notes": ""
+}
