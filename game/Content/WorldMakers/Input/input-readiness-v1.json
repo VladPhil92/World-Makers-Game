@@ -1,0 +1,51 @@
+{
+  "schema": "worldmakers.input-readiness.v1",
+  "status": "source-ready-native-input-assets-required",
+  "strategy": {
+    "primary": "Enhanced Input",
+    "legacyMappingsRetainedDuringMigration": true,
+    "stableSemanticIds": true,
+    "runtimeSecretsInInputAssets": false
+  },
+  "actions": [
+    "input.move",
+    "input.look",
+    "input.jump",
+    "input.interact",
+    "input.observe",
+    "input.build.place",
+    "input.build.rotate",
+    "input.build.remove",
+    "input.build.move",
+    "input.build.cycle",
+    "input.cancel",
+    "input.undo",
+    "input.redo",
+    "input.measure",
+    "input.mission.cycle",
+    "input.pause"
+  ],
+  "devices": {
+    "keyboardMouse": {"required": true, "pointerLook": true},
+    "gamepad": {"required": true, "leftStickMove": true, "rightStickLook": true},
+    "touch": {
+      "required": true,
+      "landscape": true,
+      "leftVirtualStick": true,
+      "rightDragLook": true,
+      "minimumTouchTargetDp": 48,
+      "controls": ["touch.move", "touch.look", "touch.interact", "touch.jump", "touch.observe", "touch.build-primary", "touch.pause"]
+    }
+  },
+  "accessibility": {
+    "remappingRequiredForKeyboardGamepad": true,
+    "holdToggleChoiceRequired": true,
+    "leftHandedTouchLayoutRequired": true,
+    "sensitivityControlsRequired": true,
+    "invertYSupported": true
+  },
+  "nativeAuthoring": {
+    "requiredAssets": ["InputAction assets", "InputMappingContext desktop", "InputMappingContext gamepad", "InputMappingContext touch", "touch control widget"],
+    "nativeEnhancedInputAssetsPresent": false
+  }
+}
