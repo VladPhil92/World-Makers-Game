@@ -1,0 +1,43 @@
+{
+  "schema": "worldmakers.ui-production-readiness.v1",
+  "status": "source-ready-native-widget-authoring-required",
+  "design": {
+    "visualLanguage": "premium-stylized-science-adventure",
+    "responsive": true,
+    "safeAreaAware": true,
+    "minimumTouchTargetDp": 48,
+    "minimumBodyTextSp": 18,
+    "maximumContinuousTextWidthCharacters": 70,
+    "noCriticalMeaningByColorAlone": true
+  },
+  "requiredSurfaces": [
+    {"id": "ui.hud.first-person", "purpose": "reticle, contextual interaction, objective state and non-blocking feedback"},
+    {"id": "ui.hud.build", "purpose": "build catalog, validity, rotate/remove/move state and resource-free child-safe construction feedback"},
+    {"id": "ui.panel.observe", "purpose": "science observation and discovery evidence"},
+    {"id": "ui.panel.mission", "purpose": "mission objective, progress and evidence"},
+    {"id": "ui.panel.pause", "purpose": "resume, settings, accessibility, save status and exit"},
+    {"id": "ui.panel.settings", "purpose": "audio, controls, accessibility, language and graphics"},
+    {"id": "ui.overlay.presentation", "purpose": "short discovery/build/science reveals without forced camera lock"},
+    {"id": "ui.touch.controls", "purpose": "landscape tablet controls and contextual actions"}
+  ],
+  "states": ["default", "focused", "pressed", "disabled", "success", "warning", "error", "loading", "offline"],
+  "navigation": {
+    "keyboard": true,
+    "gamepad": true,
+    "touch": true,
+    "focusVisible": true,
+    "focusTrapProhibitedOutsideModal": true,
+    "backAlwaysEscapesNonCriticalModal": true
+  },
+  "motion": {
+    "reducedMotionSupported": true,
+    "maxRevealDurationSec": 2.5,
+    "noGlobalTimeScaleForUI": true,
+    "noForcedViewTarget": true
+  },
+  "nativeAuthoring": {
+    "preferredTechnology": "UMG/Common Slate primitives",
+    "requiredWidgetAssets": ["first-person HUD", "build HUD", "observe panel", "mission panel", "pause/settings", "touch controls", "presentation overlay"],
+    "nativeWidgetAssetsPresent": false
+  }
+}
