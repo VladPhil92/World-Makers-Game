@@ -1,0 +1,59 @@
+name: Cloud Runtime Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'apps/worldmakers-api/**'
+      - 'apps/player-dashboard/**'
+      - 'apps/parent-portal/**'
+      - 'infra/supabase/migrations/**'
+      - 'scripts/validate-cloud-runtime-readiness.py'
+      - '.github/workflows/cloud-runtime-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/worldmakers-api/**'
+      - 'apps/player-dashboard/**'
+      - 'apps/parent-portal/**'
+      - 'infra/supabase/migrations/**'
+      - 'scripts/validate-cloud-runtime-readiness.py'
+      - '.github/workflows/cloud-runtime-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-cloud-runtime:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate cloud runtime contract
+        run: python scripts/validate-cloud-runtime-readiness.py
+
+      - name: Check Player Dashboard
+        working-directory: apps/player-dashboard
+        run: |
+          npm ci
+          npm run lint
+          npm test
+
+      - name: Check Parent Portal
+        working-directory: apps/parent-portal
+        run: |
+          npm ci
+          npm run lint
+          npm test
+
+      - name: Check World Makers Runtime API
+        working-directory: apps/worldmakers-api
+        run: |
+          npm ci
+          npm run lint
+          npm test

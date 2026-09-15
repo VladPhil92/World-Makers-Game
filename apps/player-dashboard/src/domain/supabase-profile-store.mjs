@@ -5,35 +5,49 @@ function safeProfileId(value) {
   return value;
 }
 
-// Legacy dashboard profiles remain on their established RPC contract, but those
-// RPCs are no longer callable with the public anon role. This adapter runs only
-// inside the Node server process and therefore requires the Supabase service-role
-// credential. Never expose this key to browser code, launch tickets or the Unreal
-// runtime. New CTG One runtime synchronization uses the separate signed bridge.
+function requireBridgeSecret(value) {
+  if (typeof value !== 'string' || value.length < 48) {
+    throw new TypeError('Supabase profile store requires WORLD_MAKERS_PROFILE_BRIDGE_SECRET.');
+  }
+  return value;
+}
+
+// Dashboard persistence uses an anon-key reachable SECURITY DEFINER wrapper,
+// but the wrapper itself requires a high-entropy server-only bridge secret.
+// Neither the secret nor any privileged Supabase credential is exposed to the
+// browser, launch tickets, or the game runtime.
 export class SupabaseProfileStore {
   #url;
-  #serviceRoleKey;
+  #anonKey;
+  #bridgeSecret;
 
-  constructor({ url, serviceRoleKey }) {
-    if (!url || !serviceRoleKey) throw new TypeError('Supabase profile store requires a url and server-only service-role key.');
-    this.#url = url;
-    this.#serviceRoleKey = serviceRoleKey;
+  constructor({ url, anonKey, bridgeSecret = process.env.WORLD_MAKERS_PROFILE_BRIDGE_SECRET ?? '' }) {
+    if (!url || !anonKey) throw new TypeError('Supabase profile store requires a url and anon key.');
+    this.#url = url.replace(/\/$/, '');
+    this.#anonKey = anonKey;
+    this.#bridgeSecret = requireBridgeSecret(bridgeSecret);
   }
 
-  async #rpc(name, args) {
-    const response = await fetch(`${this.#url}/rest/v1/rpc/${name}`, {
+  async #rpc(operation, { playerProfileId, expectedRevision = null, payload = null }) {
+    const response = await fetch(`${this.#url}/rest/v1/rpc/wm_secure_player_profile`, {
       method: 'POST',
       headers: {
-        apikey: this.#serviceRoleKey,
-        Authorization: `Bearer ${this.#serviceRoleKey}`,
+        apikey: this.#anonKey,
+        Authorization: `Bearer ${this.#anonKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(args),
+      body: JSON.stringify({
+        p_operation: operation,
+        p_player_profile_id: playerProfileId,
+        p_expected_revision: expectedRevision,
+        p_payload: payload,
+        p_server_secret: this.#bridgeSecret,
+      }),
     });
     const text = await response.text();
     const body = text ? JSON.parse(text) : null;
     if (!response.ok) {
-      const message = body?.message || body?.error_description || 'Supabase profile store request failed.';
+      const message = body?.message || body?.error_description || body?.error || 'Supabase profile store request failed.';
       if (message.includes('profile_conflict')) throw new ProfileConflictError('Profile revision conflict.');
       throw new Error(message);
     }
@@ -42,11 +56,12 @@ export class SupabaseProfileStore {
 
   async get(playerProfileId) {
     const id = safeProfileId(playerProfileId);
-    return this.#rpc('wm_get_player_profile', { p_player_profile_id: id });
+    return this.#rpc('get', { playerProfileId: id });
   }
 
   async put(profile, { expectedRevision = null } = {}) {
-    safeProfileId(profile?.playerProfileId);
-    return this.#rpc('wm_put_player_profile', { p_profile: profile, p_expected_revision: expectedRevision });
+    const id = safeProfileId(profile?.playerProfileId);
+    if (!Number.isInteger(expectedRevision) || expectedRevision < 0) throw new TypeError('expectedRevision must be a non-negative integer.');
+    return this.#rpc('put', { playerProfileId: id, expectedRevision, payload: profile });
   }
 }

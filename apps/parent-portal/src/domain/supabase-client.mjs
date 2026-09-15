@@ -1,7 +1,7 @@
 // Thin fetch-based Supabase client. No npm dependency, matches this app's zero-dependency policy.
-// The anon key used here must be treated as a SERVER secret, not a public/browser key: several
-// operations in this module (and in player-dashboard's Supabase profile store) rely on
-// SECURITY DEFINER RPCs and RLS policies that trust any caller holding it. Never send it to a browser.
+// The anon key is a publishable transport credential. Sensitive player-profile administration
+// is additionally protected by WORLD_MAKERS_PROFILE_BRIDGE_SECRET and never relies on anon-key
+// possession alone.
 
 export class SupabaseAuthError extends Error {
   constructor(message, status) {
@@ -37,6 +37,7 @@ export function createSupabaseClient({ url, anonKey }) {
   requireConfig(url, anonKey);
   const authBase = `${url}/auth/v1`;
   const restBase = `${url}/rest/v1`;
+  const profileBridgeSecret = process.env.WORLD_MAKERS_PROFILE_BRIDGE_SECRET ?? '';
 
   async function signUp({ email, password, displayName }) {
     const response = await fetch(`${authBase}/signup`, {
@@ -79,7 +80,33 @@ export function createSupabaseClient({ url, anonKey }) {
     return parseJsonOrThrow(response, SupabaseQueryError);
   }
 
+  async function secureDeletePlayerProfile(args) {
+    if (profileBridgeSecret.length < 48) {
+      throw new SupabaseAuthError('Player profile administration is not configured.', 503);
+    }
+    const playerProfileId = String(args?.p_player_profile_id ?? '');
+    const response = await fetch(`${restBase}/rpc/wm_secure_player_profile`, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_operation: 'delete',
+        p_player_profile_id: playerProfileId,
+        p_expected_revision: null,
+        p_payload: null,
+        p_server_secret: profileBridgeSecret,
+      }),
+    });
+    return parseJsonOrThrow(response, SupabaseQueryError);
+  }
+
   async function rpc(functionName, args, { accessToken = anonKey } = {}) {
+    if (functionName === 'wm_delete_player_profile') {
+      return secureDeletePlayerProfile(args);
+    }
     const response = await fetch(`${restBase}/rpc/${functionName}`, {
       method: 'POST',
       headers: {
