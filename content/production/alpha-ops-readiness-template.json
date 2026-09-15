@@ -1,0 +1,28 @@
+{
+  "schema": "worldmakers.alpha-ops-readiness.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "reviewedAtUtc": "",
+  "reviewer": "",
+  "crashTelemetry": {
+    "collectorConfigured": false,
+    "symbolsRetained": false,
+    "buildCommitCorrelation": false,
+    "platformVersionCorrelation": false,
+    "childPiiCollected": false,
+    "freeTextChildDataCollected": false
+  },
+  "releaseDiscipline": {
+    "internalAlphaChannelDefined": false,
+    "rollbackOrWithdrawalProcedureDefined": false,
+    "knownBlockingIssues": [],
+    "releaseNotesPrepared": false
+  },
+  "playtestSafety": {
+    "authorizedAdultFlowDefined": false,
+    "realMoneyOrTokenEarningEnabled": false,
+    "openChatEnabled": false,
+    "feedbackRequestsChildPii": false,
+    "minimumExternalTesterTarget": 5
+  }
+}
