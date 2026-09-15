@@ -12,7 +12,7 @@ Immediately after applying the migration, the previous `unindexed_foreign_keys` 
 
 `player_profiles`, `wm_bridge_nonces`, `wm_bridge_events`, and `family_invites` can report `rls_enabled_no_policy` because direct row access is intentionally denied to ordinary roles. Their supported operations are mediated by narrowly-scoped functions and/or authenticated family flows. Adding permissive table policies merely to silence the advisor would weaken the boundary.
 
-## Intentional SECURITY DEFINER RPC exposure
+## Intentional anonymous SECURITY DEFINER bridge exposure
 
 Supabase can report `anon_security_definer_function_executable` for:
 
@@ -26,9 +26,19 @@ The `anon` role is only the PostgREST transport role. Neither function authorize
 
 The secret/HMAC values are never committed, sent to browsers, or sent to game clients. Legacy arbitrary-profile RPCs remain revoked from public, anon and authenticated roles.
 
-These findings are therefore **accepted-by-design**, not ignored. Any future change that removes the in-function authentication, exposes either secret to a client, or broadens the RPC payload must reopen this security review.
+## Intentional authenticated SECURITY DEFINER family operations
+
+Supabase can report `authenticated_security_definer_function_executable` for:
+
+- `wm_create_family_invite`
+- `wm_redeem_family_invite`
+
+These functions are intentionally callable only by the authenticated role and derive authorization from `auth.uid()` inside the database function. `wm_create_family_invite` verifies that the caller is already a member of the target family before issuing an invite. `wm_redeem_family_invite` locks the invite row, rejects missing/used/expired invites, uses `auth.uid()` as the joining guardian identity, rejects an existing membership, and refuses to abandon a non-empty existing family. Direct access to the `family_invites` table remains deny-all under RLS.
+
+These advisor findings are therefore **accepted-by-design**, not ignored. Any future change that removes in-function authentication/authorization, exposes a bridge secret to a client, trusts a caller-supplied guardian identity, or broadens these RPC payloads must reopen this security review.
 
 Supabase remediation references:
 - https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
+- https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
 - https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
 - https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan
