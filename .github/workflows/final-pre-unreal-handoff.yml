@@ -1,0 +1,90 @@
+name: Final Pre-Unreal Handoff
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/final-pre-unreal-handoff-v1.json'
+      - 'content/production/pre-unreal-cloud-e2e-template.json'
+      - 'content/production/pre-unreal-content-platform-readiness-v1.json'
+      - 'apps/worldmakers-api/**'
+      - 'game/**'
+      - 'scripts/validate-pre-unreal-content-platform.py'
+      - 'scripts/validate-cloud-runtime-readiness.py'
+      - 'scripts/validate-unreal-source-preflight.py'
+      - 'scripts/validate-unreal-production-baseline.py'
+      - 'scripts/validate-final-pre-unreal-handoff.py'
+      - 'scripts/assess-final-pre-unreal-handoff.py'
+      - 'scripts/probe-pre-unreal-cloud-e2e.py'
+      - 'scripts/run-final-pre-unreal-handoff.ps1'
+      - 'WorldMakers-FinalPreUnreal-Certify.cmd'
+      - 'docs/final-pre-unreal-handoff.md'
+      - '.github/workflows/final-pre-unreal-handoff.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/final-pre-unreal-handoff-v1.json'
+      - 'content/production/pre-unreal-cloud-e2e-template.json'
+      - 'apps/worldmakers-api/**'
+      - 'game/**'
+      - 'scripts/validate-final-pre-unreal-handoff.py'
+      - 'scripts/assess-final-pre-unreal-handoff.py'
+      - 'scripts/probe-pre-unreal-cloud-e2e.py'
+      - 'scripts/run-final-pre-unreal-handoff.ps1'
+      - '.github/workflows/final-pre-unreal-handoff.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-final-pre-unreal-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate prior Pre-Unreal source gate
+        run: python scripts/validate-pre-unreal-content-platform.py
+
+      - name: Validate Cloud Runtime source boundary
+        run: python scripts/validate-cloud-runtime-readiness.py
+
+      - name: Validate Unreal source preflight
+        run: python scripts/validate-unreal-source-preflight.py
+
+      - name: Validate production baseline
+        run: python scripts/validate-unreal-production-baseline.py
+
+      - name: Validate Final Pre-Unreal source infrastructure
+        run: python scripts/validate-final-pre-unreal-handoff.py
+
+      - name: Compile final handoff Python tools
+        run: |
+          python -m py_compile scripts/validate-final-pre-unreal-handoff.py
+          python -m py_compile scripts/assess-final-pre-unreal-handoff.py
+          python -m py_compile scripts/probe-pre-unreal-cloud-e2e.py
+
+      - name: Run fail-closed assessor self-test
+        run: python scripts/assess-final-pre-unreal-handoff.py --self-test
+
+      - name: Parse final handoff PowerShell runner
+        shell: pwsh
+        run: |
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/run-final-pre-unreal-handoff.ps1'),
+            [ref]$null,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: Declare CI truth boundary
+        run: echo 'Source CI cannot certify PRE_UNREAL_READY; live custom-domain and authenticated CTG One E2E evidence are mandatory.'
