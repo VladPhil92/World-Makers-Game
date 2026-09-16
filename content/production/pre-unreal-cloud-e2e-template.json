@@ -1,0 +1,46 @@
+{
+  "schema": "worldmakers.pre-unreal-cloud-e2e-evidence.v1",
+  "status": "pending",
+  "repositoryCommit": "",
+  "observedAtUtc": "",
+  "observer": "",
+  "railway": {
+    "projectName": "World Makers Web",
+    "environment": "production",
+    "services": [
+      {"name": "parent-portal", "deploymentStatus": "pending"},
+      {"name": "player-dashboard", "deploymentStatus": "pending"},
+      {"name": "worldmakers-api", "deploymentStatus": "pending"}
+    ]
+  },
+  "domains": [
+    {"service": "worldmakers-api", "host": "api.worldmakers.ctgone.com", "path": "/api/ready", "dnsResolved": false, "httpsHealthy": false, "statusCode": null},
+    {"service": "player-dashboard", "host": "play.worldmakers.ctgone.com", "path": "/api/health", "dnsResolved": false, "httpsHealthy": false, "statusCode": null},
+    {"service": "parent-portal", "host": "parents.worldmakers.ctgone.com", "path": "/api/health", "dnsResolved": false, "httpsHealthy": false, "statusCode": null}
+  ],
+  "ctgOneE2E": {
+    "realBearerUsed": false,
+    "bearerPersisted": false,
+    "getPlayerStatePassed": false,
+    "initialRevision": null,
+    "putPlayerStatePassed": false,
+    "writeRevision": null,
+    "idempotentRetryPassed": false,
+    "retryRevision": null,
+    "revisionConflictPassed": false,
+    "supabasePersistenceObserved": false,
+    "temporaryProbeDataCleaned": false
+  },
+  "security": {
+    "secretValuesRecorded": false,
+    "bearerValueRecorded": false,
+    "childPiiRecorded": false,
+    "openChatEnabled": false,
+    "userVoiceCaptureEnabled": false,
+    "runtimeClientContainsPrivilegedCredential": false
+  },
+  "evidence": {
+    "sanitizedResponseHashes": [],
+    "notes": []
+  }
+}
