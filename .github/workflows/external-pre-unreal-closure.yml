@@ -1,0 +1,70 @@
+name: External Pre-Unreal Closure
+
+on:
+  pull_request:
+    paths:
+      - 'content/production/pre-unreal-public-endpoints-v1.json'
+      - 'scripts/probe-pre-unreal-public-health.py'
+      - '.github/workflows/external-pre-unreal-closure.yml'
+      - 'docs/external-pre-unreal-closure.md'
+  push:
+    branches: [main]
+    paths:
+      - 'content/production/pre-unreal-public-endpoints-v1.json'
+      - 'scripts/probe-pre-unreal-public-health.py'
+      - '.github/workflows/external-pre-unreal-closure.yml'
+      - 'docs/external-pre-unreal-closure.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-probe-public-surface:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile probe
+        run: python -m py_compile scripts/probe-pre-unreal-public-health.py
+
+      - name: Run probe classifier self-test
+        run: python scripts/probe-pre-unreal-public-health.py --self-test
+
+      - name: Revalidate Final Pre-Unreal source gate
+        run: |
+          python scripts/validate-pre-unreal-content-platform.py
+          python scripts/validate-cloud-runtime-readiness.py
+          python scripts/validate-unreal-source-preflight.py
+          python scripts/validate-unreal-production-baseline.py
+          python scripts/validate-final-pre-unreal-handoff.py
+
+      - name: Collect live public DNS and HTTPS evidence
+        run: >-
+          python scripts/probe-pre-unreal-public-health.py
+          --repository-commit "${{ github.sha }}"
+          --observer "github-actions-public-internet"
+          --soft-fail
+
+      - name: Show sanitized live result
+        run: cat artifacts/pre-unreal-handoff/public-health.json
+
+      - name: Upload public-health evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-unreal-public-health-${{ github.sha }}
+          path: artifacts/pre-unreal-handoff/public-health.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Truth boundary
+        run: |
+          echo 'This workflow is diagnostic external evidence only.'
+          echo 'A green workflow does NOT mean PRE_UNREAL_READY.'
+          echo 'Authenticated CTG One E2E remains a separate required gate.'
