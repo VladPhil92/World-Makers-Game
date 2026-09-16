@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/enter-native-unreal-materialization.ps1'
+      - 'scripts/report-native-unreal-bringup.ps1'
       - 'scripts/validate-native-materialization-entry.py'
       - 'WorldMakers-NativeMaterialize.cmd'
       - 'docs/native-unreal-materialization-entry.md'
@@ -17,6 +18,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/enter-native-unreal-materialization.ps1'
+      - 'scripts/report-native-unreal-bringup.ps1'
       - 'scripts/validate-native-materialization-entry.py'
       - 'WorldMakers-NativeMaterialize.cmd'
       - 'docs/native-unreal-materialization-entry.md'
@@ -27,6 +29,12 @@ on:
       - '.gitattributes'
       - '.github/workflows/native-unreal-materialization-entry.yml'
   workflow_dispatch:
+    inputs:
+      run_native_bringup:
+        description: 'Run the non-certifying UE 5.8.2 bring-up on the self-hosted Windows runner'
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -49,3 +57,53 @@ jobs:
         run: |
           echo 'Hosted validation checks orchestration/source integrity only.'
           echo 'It does not run Unreal, create a .umap, certify G1/G2, or produce native/device evidence.'
+
+  native-bringup:
+    name: Execute UE 5.8.2 native bring-up
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_native_bringup && vars.UNREAL_SELF_HOSTED_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, unreal]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 0
+          clean: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute G1 then author the real G2 certification map
+        id: bringup
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $runnerArgs = @(
+            '-EvidenceDir', 'artifacts\native-materialization',
+            '-AllowPreUnrealBlockedForDevelopment',
+            '-AllowNonMain',
+            '-StopBlockingProcesses'
+          )
+          $engineRoot = '${{ vars.UNREAL_ENGINE_ROOT }}'
+          if (-not [string]::IsNullOrWhiteSpace($engineRoot)) {
+            $runnerArgs += @('-EngineRoot', $engineRoot)
+          }
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\enter-native-unreal-materialization.ps1 @runnerArgs
+          exit $LASTEXITCODE
+      - name: Publish first actionable native blocker
+        if: always()
+        shell: pwsh
+        run: .\scripts\report-native-unreal-bringup.ps1 -EvidenceDir 'artifacts\native-materialization'
+      - name: Upload native bring-up evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-unreal-bringup-${{ github.sha }}
+          path: |
+            artifacts/native-materialization/**
+            game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Preserve fail-closed bring-up result
+        if: ${{ steps.bringup.outcome != 'success' }}
+        shell: pwsh
+        run: throw 'Native Unreal bring-up failed. Read the job summary and uploaded evidence for the first classified blocker.'
