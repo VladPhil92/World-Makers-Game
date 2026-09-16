@@ -1,0 +1,78 @@
+{
+  "schema": "worldmakers.final-pre-unreal-handoff.v1",
+  "version": 1,
+  "status": "audit-gate-active-external-evidence-required",
+  "purpose": "Close the final source, cloud and operational handoff boundary before World Makers is declared ready for native Unreal materialization.",
+  "engine": {
+    "requiredVersion": "5.8.2",
+    "project": "game/WorldMakers.uproject"
+  },
+  "dependencies": {
+    "preUnrealSourceContract": "content/production/pre-unreal-content-platform-readiness-v1.json",
+    "cloudRuntimeValidator": "scripts/validate-cloud-runtime-readiness.py",
+    "sourceReadinessValidator": "scripts/validate-pre-unreal-content-platform.py",
+    "sourcePreflightValidator": "scripts/validate-unreal-source-preflight.py",
+    "productionBaselineValidator": "scripts/validate-unreal-production-baseline.py"
+  },
+  "requiredExternalEvidence": {
+    "railway": {
+      "projectName": "World Makers Web",
+      "environment": "production",
+      "requiredServices": ["parent-portal", "player-dashboard", "worldmakers-api"],
+      "requiredDeploymentStatus": "SUCCESS"
+    },
+    "customDomains": [
+      {"service": "worldmakers-api", "host": "api.worldmakers.ctgone.com", "requiredPath": "/api/ready"},
+      {"service": "player-dashboard", "host": "play.worldmakers.ctgone.com", "requiredPath": "/api/health"},
+      {"service": "parent-portal", "host": "parents.worldmakers.ctgone.com", "requiredPath": "/api/health"}
+    ],
+    "cloudPlayerStateE2E": {
+      "realCtgOneBearerRequired": true,
+      "bearerMustNeverBePersisted": true,
+      "getRequired": true,
+      "putRequired": true,
+      "idempotentRetryRequired": true,
+      "revisionConflictRequired": true,
+      "supabasePersistenceObservationRequired": true
+    }
+  },
+  "securityInvariants": {
+    "noChildPiiInEvidence": true,
+    "noSecretValuesInEvidence": true,
+    "noBearerInEvidence": true,
+    "noOpenChat": true,
+    "noUserVoiceCapture": true,
+    "noSupabaseServiceRoleInClient": true,
+    "noDatabasePasswordInClient": true,
+    "noBridgeHmacSecretInClient": true,
+    "httpsOnlyRuntimeApi": true
+  },
+  "certification": {
+    "officialState": "PRE_UNREAL_READY",
+    "resultPath": "artifacts/pre-unreal-handoff/final-pre-unreal-handoff.json",
+    "externalEvidencePath": "artifacts/pre-unreal-handoff/cloud-e2e.json",
+    "requiresCleanCurrentMain": true,
+    "requiresSameRepositoryCommit": true,
+    "sourceCiMayCertifyOfficialState": false,
+    "states": ["PRE_UNREAL_READY", "NON_CERTIFYING_PASS", "BLOCKED"]
+  },
+  "exitCriteria": {
+    "sourceReadinessPasses": true,
+    "cloudRuntimeSourceValidationPasses": true,
+    "railwayHealthy": true,
+    "customDomainsHealthy": true,
+    "cloudPlayerStateE2EPasses": true,
+    "securityInvariantsPass": true,
+    "noOpenPullRequestsAtHandoff": true,
+    "nextPhase": "native-unreal-materialization"
+  },
+  "truthBoundary": {
+    "preUnrealReadyMeans": "Every known source-side and external cloud dependency required before native authoring has passed its explicit handoff gate.",
+    "preUnrealReadyDoesNotMean": [
+      "native Unreal compilation has passed",
+      "real .uasset or .umap assets have been authored",
+      "representative device performance has passed",
+      "store packaging has passed"
+    ]
+  }
+}
