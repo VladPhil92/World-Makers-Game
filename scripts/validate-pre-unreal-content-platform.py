@@ -114,7 +114,7 @@ def validate_contracts(audio: dict, inputs: dict, ui: dict, accessibility: dict,
     require(source_gate.get("enhancedInputEnabled") is True, "Enhanced Input gate disabled")
     require(source_gate.get("nativeBinaryAssetsMustNotBeFabricated") is True, "native fabrication boundary missing")
     require(source_gate.get("mapMustBeCreatedByUnreal") is True, "map authoring boundary missing")
-    require(pre.get("exitCriteria", {}).get("nextPhase") == "native-unreal-materialization", "next phase mismatch")
+    require(pre.get("exitCriteria", {}).get("nextPhase") == "final-pre-unreal-handoff", "next phase mismatch")
 
 
 def validate_source_wiring(audio: dict, inputs: dict) -> None:
@@ -226,7 +226,7 @@ def main() -> int:
         else:
             run_validation()
             print("Pre-Unreal Content & Platform source readiness: PASS")
-            print("PASS certifies source readiness only; native Unreal assets, maps and device evidence remain intentionally unclaimed.")
+            print("PASS certifies source readiness only; final external handoff evidence remains required before native materialization.")
     except (ValidationError, json.JSONDecodeError) as exc:
         raise SystemExit(f"Pre-Unreal Content & Platform validation FAILED: {exc}")
     return 0
