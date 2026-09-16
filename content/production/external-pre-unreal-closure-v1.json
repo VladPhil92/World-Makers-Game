@@ -1,0 +1,31 @@
+{
+  "schema": "worldmakers.external-pre-unreal-closure.v1",
+  "version": 1,
+  "status": "execution-active-live-public-evidence-required",
+  "dependsOn": "worldmakers.final-pre-unreal-handoff.v1",
+  "purpose": "Execute the remaining public-network and authenticated cloud closure work without conflating diagnostic success with PRE_UNREAL_READY.",
+  "publicEvidence": {
+    "inventory": "content/production/pre-unreal-public-endpoints-v1.json",
+    "probe": "scripts/probe-pre-unreal-public-health.py",
+    "result": "artifacts/pre-unreal-handoff/public-health.json",
+    "required": true
+  },
+  "authenticatedEvidence": {
+    "probe": "scripts/probe-pre-unreal-cloud-e2e.py",
+    "result": "artifacts/pre-unreal-handoff/cloud-e2e.json",
+    "required": true,
+    "credentialMustRemainEphemeral": true
+  },
+  "exitCriteria": {
+    "allCustomDomainsHealthy2xx": true,
+    "railwayProductionServicesHealthy": true,
+    "authenticatedPlayerStateE2EPassed": true,
+    "finalPreUnrealHandoffEmitsPreUnrealReady": true,
+    "nextPhase": "native-unreal-materialization"
+  },
+  "truthBoundary": {
+    "diagnosticWorkflowMayCertifyPreUnrealReady": false,
+    "sourceCiMayCertifyPreUnrealReady": false,
+    "nativeUnrealWorkAuthorizedOnlyAfterFinalGate": true
+  }
+}

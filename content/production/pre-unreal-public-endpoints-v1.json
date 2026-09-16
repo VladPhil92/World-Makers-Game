@@ -1,0 +1,42 @@
+{
+  "schema": "worldmakers.pre-unreal-public-endpoints.v1",
+  "version": 1,
+  "status": "external-closure-active",
+  "project": "World Makers Web",
+  "environment": "production",
+  "services": [
+    {
+      "service": "worldmakers-api",
+      "customHost": "api.worldmakers.ctgone.com",
+      "railwayHost": "worldmakers-api-production.up.railway.app",
+      "healthPath": "/api/ready"
+    },
+    {
+      "service": "player-dashboard",
+      "customHost": "play.worldmakers.ctgone.com",
+      "railwayHost": "player-dashboard-production-271b.up.railway.app",
+      "healthPath": "/api/health"
+    },
+    {
+      "service": "parent-portal",
+      "customHost": "parents.worldmakers.ctgone.com",
+      "railwayHost": "parent-portal-production-e6d0.up.railway.app",
+      "healthPath": "/api/health"
+    }
+  ],
+  "truthBoundary": {
+    "publicHealthCanProve": [
+      "public DNS resolution",
+      "TLS/HTTPS reachability",
+      "2xx health endpoint response",
+      "whether the Railway fallback remains reachable when a custom host is not"
+    ],
+    "publicHealthCannotProve": [
+      "authenticated CTG One player-state reads or writes",
+      "idempotency",
+      "revision-conflict behavior",
+      "Supabase persistence",
+      "PRE_UNREAL_READY"
+    ]
+  }
+}
