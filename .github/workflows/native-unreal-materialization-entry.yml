@@ -1,0 +1,51 @@
+name: Native Unreal Materialization Entry
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/enter-native-unreal-materialization.ps1'
+      - 'scripts/validate-native-materialization-entry.py'
+      - 'WorldMakers-NativeMaterialize.cmd'
+      - 'docs/native-unreal-materialization-entry.md'
+      - 'content/production/final-pre-unreal-handoff-v1.json'
+      - 'scripts/run-g1-native-certification.ps1'
+      - 'scripts/run-g2-authored-certification.ps1'
+      - 'scripts/unreal/author-g2-certification-map.py'
+      - '.gitattributes'
+      - '.github/workflows/native-unreal-materialization-entry.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/enter-native-unreal-materialization.ps1'
+      - 'scripts/validate-native-materialization-entry.py'
+      - 'WorldMakers-NativeMaterialize.cmd'
+      - 'docs/native-unreal-materialization-entry.md'
+      - 'content/production/final-pre-unreal-handoff-v1.json'
+      - 'scripts/run-g1-native-certification.ps1'
+      - 'scripts/run-g2-authored-certification.ps1'
+      - 'scripts/unreal/author-g2-certification-map.py'
+      - '.gitattributes'
+      - '.github/workflows/native-unreal-materialization-entry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-controlled-entry:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile validator
+        run: python -m py_compile scripts/validate-native-materialization-entry.py
+      - name: Validate native materialization entry contract
+        run: python scripts/validate-native-materialization-entry.py
+      - name: Truth boundary
+        run: |
+          echo 'Hosted validation checks orchestration/source integrity only.'
+          echo 'It does not run Unreal, create a .umap, certify G1/G2, or produce native/device evidence.'
