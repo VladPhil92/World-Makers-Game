@@ -18,8 +18,8 @@ $G1EvidenceDir = Join-Path $EvidenceDir 'g1'
 $G2EvidenceDir = Join-Path $EvidenceDir 'g2'
 $G1ResultPath = Join-Path $RepoRoot (Join-Path $G1EvidenceDir 'g1-native-readiness.json')
 $G2AuthorReportPath = Join-Path $RepoRoot (Join-Path $G2EvidenceDir 'g2-author-report.json')
-$MapRelativePath = 'game\Content\WorldMakers\Maps\WM_PrototypeCertification.umap'
-$MapDiskPath = Join-Path $RepoRoot $MapRelativePath
+$MapGitPath = 'game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap'
+$MapDiskPath = Join-Path $RepoRoot ($MapGitPath -replace '/', '\')
 
 New-Item -ItemType Directory -Force -Path $EvidencePath | Out-Null
 if (Test-Path $ResultPath -PathType Leaf) { Remove-Item $ResultPath -Force }
@@ -37,6 +37,23 @@ function Get-GitValue([string[]]$Args) {
     return $Value
 }
 
+function Invoke-ChildPowerShell([string]$ScriptPath, [string[]]$Arguments, [string]$Label) {
+    & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Label failed with exit code $LASTEXITCODE."
+    }
+}
+
+function Test-PreUnrealAuthorization([object]$PreUnreal, [string]$Commit) {
+    return [bool](
+        $PreUnreal -and
+        $PreUnreal.schema -eq 'worldmakers.final-pre-unreal-handoff-result.v1' -and
+        $PreUnreal.status -eq 'PRE_UNREAL_READY' -and
+        [bool]$PreUnreal.preUnrealReady -and
+        $PreUnreal.repositoryCommit -eq $Commit
+    )
+}
+
 function Write-EntryResult {
     param(
         [Parameter(Mandatory = $true)][string]$Status,
@@ -52,7 +69,7 @@ function Write-EntryResult {
     $OriginMain = Get-GitValue @('rev-parse', 'origin/main')
     $MapPresent = Test-Path $MapDiskPath -PathType Leaf
     $MapHash = if ($MapPresent) { (Get-FileHash -Algorithm SHA256 $MapDiskPath).Hash.ToLowerInvariant() } else { $null }
-    $LfsOutput = if ($MapPresent) { (& git -C $RepoRoot check-attr filter -- $MapRelativePath 2>$null | Out-String).Trim() } else { '' }
+    $LfsOutput = if ($MapPresent) { (& git -C $RepoRoot check-attr filter -- $MapGitPath 2>$null | Out-String).Trim() } else { '' }
     $LfsTracked = $MapPresent -and $LfsOutput -match 'filter:\s*lfs'
 
     [ordered]@{
@@ -76,7 +93,7 @@ function Write-EntryResult {
         }
         authoredMap = [ordered]@{
             packagePath = '/Game/WorldMakers/Maps/WM_PrototypeCertification'
-            diskPath = 'game/Content/WorldMakers/Maps/WM_PrototypeCertification.umap'
+            diskPath = $MapGitPath
             present = $MapPresent
             gitLfsTracked = $LfsTracked
             sha256 = $MapHash
@@ -90,9 +107,14 @@ function Write-EntryResult {
             'Create passed G2 manual route evidence bound to the committed HEAD.',
             'Run WorldMakers-G2-Certify.cmd from clean current main.'
         ) } else { @() }
-        truthBoundary = 'AUTHORING_COMPLETE_COMMIT_REQUIRED means Unreal created/reconciled the real map after a native G1 pass; it is not G2 certification, visual certification, device certification, or a production build.'
+        truthBoundary = 'AUTHORING_COMPLETE_COMMIT_REQUIRED means Unreal created/reconciled the real map after an acceptable native G1 pass; it is not G2 certification, visual certification, device certification, or a production build.'
     } | ConvertTo-Json -Depth 8 | Set-Content -Path $ResultPath -Encoding UTF8
 }
+
+$PreUnreal = $null
+$G1 = $null
+$PreUnrealAuthorized = $false
+$DevelopmentOverrideUsed = $false
 
 try {
     & git -C $RepoRoot fetch origin main --quiet
@@ -103,18 +125,12 @@ try {
     $OriginMain = Get-GitValue @('rev-parse', 'origin/main')
     $WorkingTree = @(& git -C $RepoRoot status --porcelain --untracked-files=all)
     $PreUnreal = Read-JsonIfPresent $PreUnrealResultPath
+    $PreUnrealAuthorized = Test-PreUnrealAuthorization $PreUnreal $Commit
+    $DevelopmentOverrideUsed = -not $PreUnrealAuthorized -and [bool]$AllowPreUnrealBlockedForDevelopment
 
-    $PreUnrealAuthorized = (
-        $PreUnreal -and
-        $PreUnreal.schema -eq 'worldmakers.final-pre-unreal-handoff-result.v1' -and
-        $PreUnreal.status -eq 'PRE_UNREAL_READY' -and
-        [bool]$PreUnreal.preUnrealReady -and
-        $PreUnreal.repositoryCommit -eq $Commit
-    )
-
-    if (-not $PreUnrealAuthorized -and -not $AllowPreUnrealBlockedForDevelopment) {
+    if (-not $PreUnrealAuthorized -and -not $DevelopmentOverrideUsed) {
         $Observed = if ($PreUnreal) { [string]$PreUnreal.status } else { 'missing' }
-        throw "Final Pre-Unreal handoff has not authorized native materialization for this commit (observed: $Observed). Finish the public HTTPS + authenticated CTG One E2E closure and run WorldMakers-FinalPreUnreal-Certify.cmd, or use -AllowPreUnrealBlockedForDevelopment only for non-certifying local development."
+        throw "Final Pre-Unreal handoff has not authorized native materialization for this commit (observed: $Observed). Finish public HTTPS + authenticated CTG One E2E closure and run WorldMakers-FinalPreUnreal-Certify.cmd, or use -AllowPreUnrealBlockedForDevelopment only for non-certifying local development."
     }
 
     if ($PreUnrealAuthorized) {
@@ -135,9 +151,7 @@ try {
     if ($AllowNonMain) { $G1Args += '-AllowNonMain' }
     if ($AllowDirtyWorktree) { $G1Args += '-AllowDirtyWorktree' }
     if ($StopBlockingProcesses) { $G1Args += '-StopBlockingProcesses' }
-
-    & $G1Script @G1Args
-    if ($LASTEXITCODE -ne 0) { throw 'G1 native certification runner failed.' }
+    Invoke-ChildPowerShell $G1Script $G1Args 'G1 native certification runner'
 
     $G1 = Read-JsonIfPresent $G1ResultPath
     if ($null -eq $G1) { throw 'G1 result evidence is missing after the native run.' }
@@ -156,20 +170,18 @@ try {
     if ($AllowNonMain) { $G2Args += '-AllowNonMain' }
     if ($AllowDirtyWorktree) { $G2Args += '-AllowDirtyWorktree' }
     if ($StopBlockingProcesses) { $G2Args += '-StopBlockingProcesses' }
-
-    & $G2Script @G2Args
-    if ($LASTEXITCODE -ne 0) { throw 'G2 Unreal map authoring runner failed.' }
+    Invoke-ChildPowerShell $G2Script $G2Args 'G2 Unreal map authoring runner'
 
     if (-not (Test-Path $MapDiskPath -PathType Leaf)) {
         throw 'Unreal returned from G2 authoring without creating WM_PrototypeCertification.umap.'
     }
 
-    $LfsOutput = (& git -C $RepoRoot check-attr filter -- $MapRelativePath 2>$null | Out-String).Trim()
+    $LfsOutput = (& git -C $RepoRoot check-attr filter -- $MapGitPath 2>$null | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $LfsOutput -notmatch 'filter:\s*lfs') {
         throw 'WM_PrototypeCertification.umap is not covered by Git LFS filter=lfs.'
     }
 
-    Write-EntryResult -Status 'AUTHORING_COMPLETE_COMMIT_REQUIRED' -PreUnreal $PreUnreal -G1 $G1 -PreUnrealAuthorized $PreUnrealAuthorized -DevelopmentOverrideUsed ([bool]$AllowPreUnrealBlockedForDevelopment)
+    Write-EntryResult -Status 'AUTHORING_COMPLETE_COMMIT_REQUIRED' -PreUnreal $PreUnreal -G1 $G1 -PreUnrealAuthorized $PreUnrealAuthorized -DevelopmentOverrideUsed $DevelopmentOverrideUsed
 
     Write-Host ''
     Write-Host 'WORLD MAKERS NATIVE MATERIALIZATION: AUTHORING COMPLETE' -ForegroundColor Green
@@ -178,16 +190,6 @@ try {
     Write-Host "Evidence: $ResultPath"
 }
 catch {
-    $PreUnreal = Read-JsonIfPresent $PreUnrealResultPath
-    $G1 = Read-JsonIfPresent $G1ResultPath
-    $Commit = Get-GitValue @('rev-parse', 'HEAD')
-    $PreUnrealAuthorized = (
-        $PreUnreal -and
-        $PreUnreal.schema -eq 'worldmakers.final-pre-unreal-handoff-result.v1' -and
-        $PreUnreal.status -eq 'PRE_UNREAL_READY' -and
-        [bool]$PreUnreal.preUnrealReady -and
-        $PreUnreal.repositoryCommit -eq $Commit
-    )
-    Write-EntryResult -Status 'BLOCKED' -Blockers @($_.Exception.Message) -PreUnreal $PreUnreal -G1 $G1 -PreUnrealAuthorized $PreUnrealAuthorized -DevelopmentOverrideUsed ([bool]$AllowPreUnrealBlockedForDevelopment)
+    Write-EntryResult -Status 'BLOCKED' -Blockers @($_.Exception.Message) -PreUnreal $PreUnreal -G1 $G1 -PreUnrealAuthorized $PreUnrealAuthorized -DevelopmentOverrideUsed $DevelopmentOverrideUsed
     throw "Native Unreal materialization entry is BLOCKED. Inspect $ResultPath. Root cause: $($_.Exception.Message)"
 }
